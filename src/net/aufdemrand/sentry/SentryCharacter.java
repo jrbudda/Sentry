@@ -1,15 +1,14 @@
 package net.aufdemrand.sentry;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.event.NPCClickEvent;
+import net.citizensnpcs.api.event.NPCDespawnEvent;
+import net.citizensnpcs.api.event.NPCSpawnEvent;
 import net.citizensnpcs.api.exception.NPCLoadException;
 import net.citizensnpcs.api.npc.character.Character;
-import net.citizensnpcs.api.npc.character.CharacterFactory;
-import net.citizensnpcs.api.trait.trait.Equipment;
-import net.citizensnpcs.api.trait.trait.Inventory;
-import net.citizensnpcs.api.trait.trait.Owner;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.api.npc.NPC;
 
@@ -20,28 +19,38 @@ import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.EntityEffect;
 import org.bukkit.Material;
-// import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.*;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.LazyMetadataValue;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
-// import org.bukkit.craftbukkit.*;
 
+public class SentryCharacter extends Character implements Listener {
 
-public class SentryCharacter extends Character {
-
-	static Sentry plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
-
+	private Sentry plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
+	
+	public Map<Integer, SentryInstance> initializedSentries = new HashMap<Integer, SentryInstance>();
+	
+	public void onSpawn(NPCSpawnEvent event) {
+		
+		plugin.getServer().broadcastMessage("NPC SPAWNED!");
+		
+		SentryInstance thisInstance = new SentryInstance(plugin);
+		thisInstance.initialize(event.getNPC());
+		initializedSentries.put(event.getNPC().getId(), thisInstance);
+	}
+	
+	public void onDespawn(NPCDespawnEvent event) {
+		
+		plugin.getServer().broadcastMessage("NPC DESPAWNED!");
+		
+		initializedSentries.get(event.getNPC().getId()).deactivate();
+		initializedSentries.remove(event.getNPC().getId());
+	}
+	
+	
 	@Override
 	public void load(DataKey arg0) throws NPCLoadException {
 		// TODO Auto-generated method stub
-		
-		
-		
-	
-		
 	}
 
 	@Override
@@ -51,14 +60,11 @@ public class SentryCharacter extends Character {
 
 	@Override
 	public void onRightClick(NPC npc, Player player) {
-		if(npc.getCharacter() == CitizensAPI.getCharacterManager().getCharacter("sentry")) {
-
-			
-		}
+	
 	}
 
 
-	
+
 	
 	
 	@Override
@@ -121,7 +127,7 @@ public class SentryCharacter extends Character {
 				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
 				player.sendMessage(ChatColor.GREEN + "*** You lay a mortal blow to the Sentry!");
 				npc.getBukkitEntity().getLocation().getWorld().spawn(npc.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
-				plugin.RespawnSentry.put(npc, System.currentTimeMillis() + 20000);
+			//	plugin.RespawnSentry.put(npc, System.currentTimeMillis() + 20000);
 			
 				finaldamage = npc.getBukkitEntity().getHealth();
 				npc.getBukkitEntity().damage(finaldamage);
