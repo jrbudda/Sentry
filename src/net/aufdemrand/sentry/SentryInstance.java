@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Creature;
 import org.bukkit.entity.LivingEntity;
 
 import net.citizensnpcs.api.npc.NPC;
@@ -17,7 +18,7 @@ public class SentryInstance {
 	/* Technicals */
 	public SentryInstance thisInstance = this;
 	private Integer taskID = null;
-	private enum Status { isDEAD, isHOSTILE, isLOOKING, isDYING }
+	private enum Status { isDEAD, isHOSTILE, isLOOKING, isDYING, isSTUCK }
 	private Long isRespawnable = System.currentTimeMillis();
 
 	/* Internals */
@@ -44,6 +45,9 @@ public class SentryInstance {
 		currentTarget = theEntity;
 	}
 
+	public LivingEntity getTarget() {
+		return ((Creature) theSentry.getBukkitEntity()).getTarget();
+	}
 
 
 
@@ -78,7 +82,25 @@ public class SentryInstance {
 				}
 
 				else if (sentryStatus == Status.isHOSTILE && theSentry.isSpawned()) {			
+					if (getTarget() != null) {
+						
+						if (getTarget() == currentTarget) {
+							// Carry on.
+						}
+						
+						else if (getTarget() != currentTarget) {
+							if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) < sentryRange) 
+								theSentry.getAI().setTarget(currentTarget, true);
+							else sentryStatus = Status.isLOOKING;
+						}
+					}
+					
+					else if (getTarget() == null) {
+						sentryStatus = Status.isLOOKING;
+						currentTarget = null;
+					}
 
+	
 				}
 
 				else if (sentryStatus == Status.isLOOKING && theSentry.isSpawned()) {
@@ -90,6 +112,12 @@ public class SentryInstance {
 		}, 5, 5);
 	}
 
+	
+	
 
+	public void deactivate() {
+		plugin.getServer().getScheduler().cancelTask(taskID);
+
+	}
 
 }

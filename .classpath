@@ -2,8 +2,8 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="C:/Users/mobileauf/Denizen/lib/citizensapi-2.0-SNAPSHOT (4).jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jeremy/Downloads/citizensapi-2.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="/Denizen/lib/Vault.jar"/>
-	<classpathentry kind="lib" path="C:/Users/mobileauf/Parrot/lib/bukkit.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Jeremy/Mimic/lib/bukkit-1.2.3-R0.2-20120309.202157-8.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

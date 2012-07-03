@@ -47,83 +47,26 @@ public class Sentry extends JavaPlugin {
 	public Map<NPC, Integer> SentryHealth = new HashMap<NPC, Integer>();
 	public Map<NPC, Location> LocationMonitor = new HashMap<NPC, Location>();
 	public static Permission perms = null;
-	public boolean debug;
+	public boolean debug = false;;
 
+	
+	
 	@Override
 	public void onEnable() {
 
-		debug = false;
 		setupPermissions();
 		CitizensAPI.getCharacterManager().registerCharacter(new CharacterFactory(SentryCharacter.class).withName("sentry"));
-
-		//	getServer().getPluginManager().registerEvents(new SentryListener(this), this);
-
-		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-			@Override
-			public void run() { searchForTargets(); }
-		}, 10, 10);
-
-
-		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-			@Override
-			public void run() { 
-
-				/////////////////////////
-				// Respawn Dead Guards
-				///////////////////////
-
-				if (!RespawnSentry.isEmpty()) {
-					for (Entry<NPC, Long> theSentry : RespawnSentry.entrySet()) {
-						if (System.currentTimeMillis() >= theSentry.getValue()) {
-							theSentry.getKey().spawn(SentryLocation.get(theSentry.getKey()));			
-							theSentry.getKey().getBukkitEntity().setHealth(SentryHealth.get(theSentry.getKey()));
-							if (debug) getServer().broadcastMessage("Respawning dead Sentry: " + theSentry.getKey().getName());
-						}
-					}
-				}
-
-
-				/////////////////////////
-				// Respawn Stuck Guards
-				///////////////////////
-
-				try {
-
-					if (!LocationMonitor.isEmpty()) {
-						for (Entry<NPC, Location> theSentry : LocationMonitor.entrySet()) {
-
-							if (theSentry.getKey().getBukkitEntity().getLocation().distance(theSentry.getValue()) < 1 && 
-									theSentry.getKey().getBukkitEntity().getLocation().distance(SentryLocation.get(theSentry.getKey())) > 3) {
-
-								theSentry.getKey().getBukkitEntity().getWorld().playEffect(theSentry.getKey().getBukkitEntity().getLocation(), Effect.POTION_BREAK, 0);
-								if (debug) getServer().broadcastMessage("Respawning stuck Sentry: " + theSentry.getKey().getName());
-								theSentry.getKey().despawn();
-								theSentry.getKey().spawn(SentryLocation.get(theSentry.getKey()));			
-								theSentry.getKey().getBukkitEntity().setHealth(SentryHealth.get(theSentry.getKey()));
-							}
-						}
-					}
-				}
-				catch (java.lang.NullPointerException e) {
-
-				}
-
-			}
-		}, 350, 350);
-
 
 		this.getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 			@Override
 			public void run() { loadHashMaps(); }
 		}, 60);
-
-
-
-
+	
 	}
 
 
 	private boolean setupPermissions() {
+
 		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
 		perms = rsp.getProvider();
 		return perms != null;
@@ -132,6 +75,7 @@ public class Sentry extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+
 		getLogger().log(Level.INFO, " v" + getDescription().getVersion() + " disabled.");
 		Bukkit.getServer().getScheduler().cancelTasks(this);
 	}
@@ -167,27 +111,16 @@ public class Sentry extends JavaPlugin {
 				SentryHealth.put(thisSentry, getConfig().getInt(thisSentry.getName() + "." + thisSentry.getId() + ".Health"));
 			}
 
-
-
 			if (getConfig().contains(thisSentry.getName() + "." + thisSentry.getId() + ".Speed")) {
 				SentrySpeed.put(thisSentry, getConfig().getDouble(thisSentry.getName() + "." + thisSentry.getId() + ".Speed"));
 			}
 
 			else SentrySpeed.put(thisSentry, .2);
 
-
-
 			if (getConfig().contains(thisSentry.getName() + "." + thisSentry.getId() + ".Targets")) {
 				SentryAllowedTargets.put(thisSentry, getConfig().getStringList(thisSentry.getName() + "." + thisSentry.getId() + ".Targets"));
 			}
-
-
-
-
-
-
 		}
-
 	}
 
 
