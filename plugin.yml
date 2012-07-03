@@ -1,0 +1,17 @@
+name: Sentry
+author: aufdemrand
+version: 0.75
+main: net.aufdemrand.sentry.Sentry
+depend:
+  - Citizens
+  - Vault
+commands:
+  sentry:
+    description: Lists sentry commands.
+    usage: /sentry help
+    permission: sentry.basic
+
+permissions:
+  sentry.basic:
+    description: Allows use of /sentry command
+    default: op
