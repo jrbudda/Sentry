@@ -1,6 +1,8 @@
 package net.aufdemrand.sentry;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -27,7 +29,7 @@ public class Sentry extends JavaPlugin {
 	public boolean debug = false;;
 	public SentryCharacter interaction = new SentryCharacter();
 
-	
+	public Map<Integer, SentryInstance> initializedSentries = new HashMap<Integer, SentryInstance>();
 	
 	@Override
 	public void onEnable() {
@@ -128,7 +130,7 @@ public class Sentry extends JavaPlugin {
 		else if (args[0].equalsIgnoreCase("guard")) {
 			player.sendMessage(ChatColor.GREEN + "Sentry now guarding this position.");   // Talk to the player.
 			
-			interaction.initializedSentries.get(ThisNPC.getId()).guardPosts.add(player.getLocation());
+			initializedSentries.get(ThisNPC.getId()).guardPosts.add(player.getLocation());
 
 			getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Guarding Location", 
 					player.getWorld().getName() + ";" +
@@ -155,7 +157,7 @@ public class Sentry extends JavaPlugin {
 				getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Health", HPs);
 
 				player.sendMessage(ChatColor.GREEN + "Sentry health set to " + Integer.valueOf(args[1]) + ".");   // Talk to the player.
-				interaction.initializedSentries.get(ThisNPC.getId()).sentryHealth = HPs;
+				initializedSentries.get(ThisNPC.getId()).sentryHealth = HPs;
 				saveConfig();
 				return true;
 			}
@@ -180,7 +182,7 @@ public class Sentry extends JavaPlugin {
 					getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Speed", Double.valueOf(args[1]));
 
 					player.sendMessage(ChatColor.GREEN + "Sentry speed set to " + Double.valueOf(args[1]) + ".");   // Talk to the player.
-					interaction.initializedSentries.get(ThisNPC.getId()).sentrySpeed = Double.valueOf(args[1]);
+					initializedSentries.get(ThisNPC.getId()).sentrySpeed = Double.valueOf(args[1]);
 					saveConfig();
 				}
 
@@ -210,7 +212,7 @@ public class Sentry extends JavaPlugin {
 					saveConfig();
 					player.sendMessage(ChatColor.GREEN + "Target added. Now targeting " + currentList.toString());
 					
-					interaction.initializedSentries.get(ThisNPC.getId()).validTargets.add(args[2].toUpperCase());
+					initializedSentries.get(ThisNPC.getId()).validTargets.add(args[2].toUpperCase());
 					
 					return true;
 				}
@@ -223,7 +225,7 @@ public class Sentry extends JavaPlugin {
 					saveConfig();
 					player.sendMessage(ChatColor.GREEN + "Target removed. Now targeting " + currentList.toString());
 					
-					interaction.initializedSentries.get(ThisNPC.getId()).validTargets.remove(args[2].toUpperCase());
+					initializedSentries.get(ThisNPC.getId()).validTargets.remove(args[2].toUpperCase());
 					
 					return true;
 				}

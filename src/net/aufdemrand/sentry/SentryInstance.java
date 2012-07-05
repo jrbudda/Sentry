@@ -5,16 +5,24 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.entity.Creature;
+import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
+import net.citizensnpcs.npc.entity.EntityHumanNPC;
 
 import net.citizensnpcs.api.npc.NPC;
+import net.minecraft.server.Entity;
+import net.minecraft.server.EntityLiving;
 
 public class SentryInstance {
 
 	/* plugin Constructer */
 	Sentry plugin;
-	public SentryInstance(Sentry plugin) { this.plugin = plugin; }
+	public SentryInstance(Sentry plugin) { 
+		this.plugin = plugin;
+		isRespawnable = System.currentTimeMillis();
+		
+	
+	}
 
 	/* Technicals */
 	public SentryInstance thisInstance = this;
@@ -30,7 +38,7 @@ public class SentryInstance {
 	/* Setables */
 	public List<String> validTargets = new ArrayList<String>();
 	private Integer sentryRange = 10;
-	public Integer sentryHealth = 10;
+	public Integer sentryHealth = 100;
 	public Double sentrySpeed = 0.2;
 	private boolean sentryIsAggressive = false;
 	public List<Location> guardPosts = new ArrayList<Location>();
@@ -50,7 +58,7 @@ public class SentryInstance {
 	}
 
 	public LivingEntity getTarget() {
-		return ((Creature) theSentry.getBukkitEntity()).getTarget();
+		return ((org.bukkit.entity.NPC) theSentry.getBukkitEntity()).getTarget();
 	}
 
 
@@ -59,8 +67,9 @@ public class SentryInstance {
 
 	public void initialize(NPC npc) {
 
-		theSentry = npc;
+		plugin.getServer().broadcastMessage("NPC " + npc.getName() + " INITIALIZING!");
 
+		this.theSentry = npc;
 
 		/* Read locations */
 		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".List Locations")) {
@@ -99,9 +108,18 @@ public class SentryInstance {
 		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Effect")) 
 			sentryRange = plugin.getConfig().getInt(theSentry.getName() + "." + theSentry.getId() + ".Effect");
 
+		
+		plugin.getServer().broadcastMessage("SETTING HEALTH TO " + sentryHealth + "!");
 
-		((LivingEntity) theSentry).setHealth(sentryHealth);
+		EntityHumanNPC ehnpc = (EntityHumanNPC) npc;
+		
+		ehnpc.setHealth(sentryHealth);
+		
+		plugin.getServer().broadcastMessage("HEALTH SET TO " + theSentry.getBukkitEntity().getHealth() + "!");
 
+		
+//		((EntityLiving) es).setHealth(100);
+		
 		sentryStatus = Status.isLOOKING;
 
 		guard();
@@ -114,6 +132,10 @@ public class SentryInstance {
 
 
 	public void guard() {
+		
+		plugin.getServer().broadcastMessage("NPC GUARDING!");
+
+		
 		taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
 
 			@Override
