@@ -1,4 +1,4 @@
-package net.aufdemrand.sentry;
+/*package net.aufdemrand.sentry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -154,3 +154,4 @@ public class SentryCharacter extends Character implements Listener {
 
 }
 
+*/

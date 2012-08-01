@@ -1,5 +1,7 @@
 package net.aufdemrand.sentry;
 
+
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,7 +9,7 @@ import java.util.logging.Level;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.npc.character.CharacterFactory;
+import net.citizensnpcs.api.trait.TraitInfo;
 import net.citizensnpcs.api.trait.trait.Owner;
 import net.milkbowl.vault.permission.Permission;
 
@@ -27,7 +29,7 @@ public class Sentry extends JavaPlugin {
 
 	public static Permission perms = null;
 	public boolean debug = false;;
-	public SentryCharacter interaction = new SentryCharacter();
+	public SentryInstance interaction = new SentryInstance(this);
 
 	public Map<Integer, SentryInstance> initializedSentries = new HashMap<Integer, SentryInstance>();
 	
@@ -35,8 +37,9 @@ public class Sentry extends JavaPlugin {
 	public void onEnable() {
 
 		setupPermissions();
-		CitizensAPI.getCharacterManager().registerCharacter(new CharacterFactory(interaction.getClass()).withName("sentry"));
+		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
 		getServer().getPluginManager().registerEvents(interaction, this);
+		
 	}
 
 
@@ -112,7 +115,7 @@ public class Sentry extends JavaPlugin {
 		}
 
 
-		NPC ThisNPC = CitizensAPI.getNPCRegistry().getNPC(player.getMetadata("selected").get(0).asInt());      // Gets NPC Selected
+		NPC ThisNPC = CitizensAPI.getNPCRegistry().getById(player.getMetadata("selected").get(0).asInt());      // Gets NPC Selected
 
 
 		if (!ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
@@ -120,7 +123,7 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 
-		if (ThisNPC.getCharacter() == null || !ThisNPC.getCharacter().getName().equals("sentry")) {
+		if (!ThisNPC.hasTrait(SentryTrait.class)) {
 			player.sendMessage(ChatColor.RED + "That command must be performed on a sentry!");
 			return true;
 		}
