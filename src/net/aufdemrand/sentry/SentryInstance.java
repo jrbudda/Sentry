@@ -16,6 +16,11 @@ import java.util.Random;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import net.citizensnpcs.api.event.NPCLeftClickEvent;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
+
+import net.citizensnpcs.npc.entity.CitizensHumanNPC;
 import net.citizensnpcs.npc.entity.EntityHumanNPC;
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -31,13 +36,13 @@ public class SentryInstance implements Listener {
 
 	/* plugin Constructer */
 	Sentry plugin;
+
 	public SentryInstance(Sentry plugin) { 
 		this.plugin = plugin;
 		isRespawnable = System.currentTimeMillis();
-		
-	
+
 	}
-	
+
 	/* Technicals */
 	public SentryInstance thisInstance = this;
 	private Integer taskID = null;
@@ -46,16 +51,20 @@ public class SentryInstance implements Listener {
 
 	/* Internals */
 	private LivingEntity currentTarget = null;
-	private Status sentryStatus = null;
+	public Status sentryStatus = Status.isDYING;
 	private NPC theSentry = null;
 
 	/* Setables */
 	public List<String> validTargets = new ArrayList<String>();
 	private Integer sentryRange = 10;
-	public Integer sentryHealth = 100;
-	public Double sentrySpeed = 0.2;
+	public Integer sentryHealth = 20;
+	public Double sentrySpeed = 1.0;
+	public Double sentryWeight = 1.0;
 	private boolean sentryIsAggressive = false;
+	public Boolean LuckyHits = true;
+	public Boolean Invincible = false;
 	public List<Location> guardPosts = new ArrayList<Location>();
+	public Integer RespawnDelaySeconds = 10;
 
 	/* Helper methods */
 	public NPC getSentry() {
@@ -74,8 +83,6 @@ public class SentryInstance implements Listener {
 	public LivingEntity getTarget() {
 		return ((org.bukkit.entity.NPC) theSentry.getBukkitEntity()).getTarget();
 	}
-
-
 
 
 
@@ -122,81 +129,95 @@ public class SentryInstance implements Listener {
 		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Effect")) 
 			sentryRange = plugin.getConfig().getInt(theSentry.getName() + "." + theSentry.getId() + ".Effect");
 
-		
+
 		plugin.getServer().broadcastMessage("SETTING HEALTH TO " + sentryHealth + "!");
 
-		EntityHumanNPC ehnpc = (EntityHumanNPC) npc;
-		
-		ehnpc.setHealth(sentryHealth);
-		
+
+		this.theSentry.getBukkitEntity().setHealth(sentryHealth);
+
 		plugin.getServer().broadcastMessage("HEALTH SET TO " + theSentry.getBukkitEntity().getHealth() + "!");
 
-		
-//		((EntityLiving) es).setHealth(100);
-		
-		sentryStatus = Status.isLOOKING;
 
+		sentryStatus=Status.isSTUCK;
+		
 		guard();
 
 
 	}
 
-
-
-	public void guard() {
+	
+	
+private class derp implements Runnable {
+	@Override
+	public void run() { 
 		
-		plugin.getServer().broadcastMessage("NPC GUARDING!");
+		plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus);
 
+		sentryStatus=Status.isDEAD;
 		
-		taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new Runnable() {
+		if (sentryStatus == Status.isDEAD &&  System.currentTimeMillis() > isRespawnable) {
+			// Respawn
+			theSentry.spawn(theSentry.getBukkitEntity().getLocation());
+		}
 
-			@Override
-			public void run() { 
-				if (sentryStatus == Status.isDEAD && isRespawnable > System.currentTimeMillis()) {
-					// Respawn
+		else if (sentryStatus == Status.isHOSTILE && theSentry.isSpawned()) {			
+			if (getTarget() != null) {
+
+				if (getTarget() == currentTarget) {
+					// Carry on.
 				}
 
-				else if (sentryStatus == Status.isHOSTILE && theSentry.isSpawned()) {			
-					if (getTarget() != null) {
+				else if (getTarget() != currentTarget) {
+					if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) < sentryRange){
+						theSentry.getNavigator().setTarget(currentTarget, true);
 
-						if (getTarget() == currentTarget) {
-							// Carry on.
-						}
-
-						else if (getTarget() != currentTarget) {
-							if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) < sentryRange){
-							theSentry.getNavigator().setTarget(currentTarget, true);
-											
-							}
-							
-								//theSentry.getAI().setTarget(currentTarget, true);
-							else sentryStatus = Status.isLOOKING;
-						}
 					}
 
-					else if (getTarget() == null) {
-
-						if (!guardPosts.isEmpty())
-
-							if (theSentry.getBukkitEntity().getLocation().distance(guardPosts.get(0)) > 16) 
-							theSentry.getNavigator().setTarget(guardPosts.get(0));
-								//theSentry.getAI().setDestination(guardPosts.get(0));
-
-
-						sentryStatus = Status.isLOOKING;
-						currentTarget = null;
-					}
-
-
-				}
-
-				else if (sentryStatus == Status.isLOOKING && theSentry.isSpawned()) {
-					plugin.findTarget(thisInstance, sentryRange);
-					if (currentTarget != null) sentryStatus = Status.isHOSTILE;
+					//theSentry.getAI().setTarget(currentTarget, true);
+					else sentryStatus = Status.isLOOKING;
 				}
 			}
 
-		}, 5, 5);
+			else if (getTarget() == null) {
+
+				if (!guardPosts.isEmpty())
+
+					if (theSentry.getBukkitEntity().getLocation().distance(guardPosts.get(0)) > 16) 
+						theSentry.getNavigator().setTarget(guardPosts.get(0));
+				//theSentry.getAI().setDestination(guardPosts.get(0));
+
+
+			//	sentryStatus = Status.isLOOKING;
+				currentTarget = null;
+			}
+
+
+		}
+
+		else if (sentryStatus == Status.isLOOKING && theSentry.isSpawned()) {
+			plugin.findTarget(thisInstance, sentryRange);
+			if (currentTarget != null) sentryStatus = Status.isHOSTILE;
+		}
+		
+			plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus + theSentry.getFullName());
+	}
+
+	
+
+	
+	
+	}
+
+	
+
+
+	public void guard() {
+
+		plugin.getServer().broadcastMessage("NPC GUARDING!");
+							
+	
+		taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new derp(),5,40);
+		
 	}
 
 
@@ -204,40 +225,43 @@ public class SentryInstance implements Listener {
 		plugin.getServer().getScheduler().cancelTask(taskID);
 	}
 
-	@EventHandler
-	public void load(DataKey arg0) throws NPCLoadException {
-		// TODO Auto-generated method stub
-	}
 
 	@EventHandler
-	public void save(DataKey arg0) {
-		// TODO Auto-generated method stub
-	}
-
-	@EventHandler
-	public void onRightClick(NPC npc, Player player) {
+	public void onRightClick(NPCRightClickEvent  event) {
 
 	}
 
 
-
-
-
 	@EventHandler
-	public void onLeftClick(NPC npc, Player player) {
+	public void onLeftClick(NPCLeftClickEvent  event) {
 
+		Player player = event.getClicker();
+		NPC npc = event.getNPC();
 
-			ItemStack iteminhand = player.getItemInHand();
+		plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus );
+		
+		 SentryInstance.this.sentryStatus = Status.isSTUCK;
 
-			double damagemodifer = 1;
+		 
+			plugin.getServer().broadcastMessage("Sentry Run: " + SentryInstance.this.sentryStatus + npc.getFullName());
+		 
+		ItemStack iteminhand = player.getItemInHand();
 
-			if (iteminhand.getType().equals(Material.WOOD_SWORD)) damagemodifer =  1.25;
-			if (iteminhand.getType().equals(Material.IRON_SWORD)) damagemodifer =  1.50;
-			if (iteminhand.getType().equals(Material.GOLD_SWORD)) damagemodifer =  1.75;
-			if (iteminhand.getType().equals(Material.DIAMOND_SWORD)) damagemodifer =  2.0;
+		double damagemodifer = 1.0;
+
+		if (iteminhand.getType().equals(Material.WOOD_SWORD)) damagemodifer =  1.25;
+		if (iteminhand.getType().equals(Material.IRON_SWORD)) damagemodifer =  1.50;
+		if (iteminhand.getType().equals(Material.GOLD_SWORD)) damagemodifer =  1.75;
+		if (iteminhand.getType().equals(Material.DIAMOND_SWORD)) damagemodifer =  2.0;
+
+		if(Invincible) damagemodifer =0.0;
+
+		if(LuckyHits && !Invincible){
 
 			Random r = new Random();
 			int luckeyhit = r.nextInt(100);
+
+			if (damagemodifer == 1.0) luckeyhit += 50; //use a weapon, dummy
 
 			if (luckeyhit < 5) {
 
@@ -265,33 +289,36 @@ public class SentryInstance implements Listener {
 			}
 
 			else npc.getBukkitEntity().playEffect(EntityEffect.HURT);
+		}
 
+		if (damagemodifer > 0) {
 			Vector newVec = player.getLocation().getDirection().multiply(1.75);
-			newVec.setY(newVec.getY()/1.1);
+			newVec.setY(newVec.getY()/sentryWeight);
 			npc.getBukkitEntity().setVelocity(newVec);
-
-
-			int finaldamage = (int) Math.round(damagemodifer);
+		}
 
 
 
-			if 	(npc.getBukkitEntity().getHealth() - finaldamage <= 0)  {
-				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
-				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
-				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
-				player.sendMessage(ChatColor.GREEN + "*** You lay a mortal blow to the Sentry!");
-				npc.getBukkitEntity().getLocation().getWorld().spawn(npc.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
-				//	plugin.RespawnSentry.put(npc, System.currentTimeMillis() + 20000);
+		int finaldamage = (int) Math.round(damagemodifer);
 
-				finaldamage = npc.getBukkitEntity().getHealth();
-				npc.getBukkitEntity().damage(finaldamage);
 
-			}
+		if 	(npc.getBukkitEntity().getHealth() - finaldamage <= 0)  {
+			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds*1000 ;
+			npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
+			npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
+			npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
+			player.sendMessage(ChatColor.GREEN + "*** You lay a mortal blow to the Sentry!");
+			npc.getBukkitEntity().getLocation().getWorld().spawn(npc.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
 
-			else npc.getBukkitEntity().damage(finaldamage);
-			// npc.getBukkitEntity().damage(finaldamage, player);
+			finaldamage = npc.getBukkitEntity().getHealth();
+			npc.getBukkitEntity().damage(finaldamage);
+	
+		}
 
-		
+		else npc.getBukkitEntity().damage(finaldamage);
+		// npc.getBukkitEntity().damage(finaldamage, player);
+
+
 	}
 
 

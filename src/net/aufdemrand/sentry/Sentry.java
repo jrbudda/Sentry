@@ -29,7 +29,6 @@ public class Sentry extends JavaPlugin {
 
 	public static Permission perms = null;
 	public boolean debug = false;;
-	public SentryInstance interaction = new SentryInstance(this);
 
 	public Map<Integer, SentryInstance> initializedSentries = new HashMap<Integer, SentryInstance>();
 	
@@ -38,7 +37,7 @@ public class Sentry extends JavaPlugin {
 
 		setupPermissions();
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
-		getServer().getPluginManager().registerEvents(interaction, this);
+		getServer().getPluginManager().registerEvents(new SentryInstance(this), this);
 		
 	}
 
@@ -257,13 +256,6 @@ public class Sentry extends JavaPlugin {
 	}
 
 
-
-
-
-
-
-	
-	
 
 	@SuppressWarnings("deprecation")
 	public void findTarget (SentryInstance theSentry, Integer Range) {
