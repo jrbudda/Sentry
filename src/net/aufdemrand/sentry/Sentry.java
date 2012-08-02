@@ -31,14 +31,14 @@ public class Sentry extends JavaPlugin {
 	public boolean debug = false;;
 
 	public Map<Integer, SentryInstance> initializedSentries = new HashMap<Integer, SentryInstance>();
-	
+
 	@Override
 	public void onEnable() {
 
 		setupPermissions();
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
-	
-		
+
+
 	}
 
 
@@ -88,7 +88,9 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "/sentry health [1-20]");
 			player.sendMessage(ChatColor.GOLD + "  Sets the Sentry's health points.");
 			player.sendMessage(ChatColor.GOLD + "/sentry invincible");
-			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry invincible.");
+			player.sendMessage(ChatColor.GOLD + "  Sets the Sentry's health points.");
+			player.sendMessage(ChatColor.GOLD + "/sentry retaliate");
+			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to respond to all attackers.");
 			player.sendMessage(ChatColor.GOLD + "/sentry save|reload");
 			player.sendMessage(ChatColor.GOLD + "  Saves or reloads the config.yml.");
 			return true;
@@ -115,8 +117,15 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 
+		NPC ThisNPC;
 
-		NPC ThisNPC = CitizensAPI.getNPCRegistry().getById(player.getMetadata("selected").get(0).asInt());      // Gets NPC Selected
+		if(!player.getMetadata("selected").isEmpty() ){
+			ThisNPC = CitizensAPI.getNPCRegistry().getById(player.getMetadata("selected").get(0).asInt());      // Gets NPC Selected
+		}
+		else{
+			player.sendMessage(ChatColor.RED + "You must have a NPC selected to use this command");
+			return true;
+		}
 
 
 		if (!ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
@@ -133,7 +142,7 @@ public class Sentry extends JavaPlugin {
 
 		else if (args[0].equalsIgnoreCase("guard")) {
 			player.sendMessage(ChatColor.GREEN + "Sentry now guarding this position.");   // Talk to the player.
-			
+
 			initializedSentries.get(ThisNPC.getId()).guardPosts.add(player.getLocation());
 
 			getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Guarding Location", 
@@ -147,20 +156,37 @@ public class Sentry extends JavaPlugin {
 		}
 		else if (args[0].equalsIgnoreCase("invincible")) {
 			SentryInstance inst = initializedSentries.get(ThisNPC.getId());
-	if (inst.Invincible) {
-		player.sendMessage(ChatColor.GREEN + "Sentry now takes damage..");   // Talk to the player.
+			if (inst.Invincible) {
+				player.sendMessage(ChatColor.GREEN + "Sentry now takes damage..");   // Talk to the player.
 			}
-	else{
-		player.sendMessage(ChatColor.GREEN + "Sentry now INVINCIBLE.");   // Talk to the player.
-	}
+			else{
+				player.sendMessage(ChatColor.GREEN + "Sentry now INVINCIBLE.");   // Talk to the player.
+			}
 
-	inst.Invincible = !inst.Invincible;
-	getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Invincible",inst.Invincible );
+			inst.Invincible = !inst.Invincible;
+			getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Invincible",inst.Invincible );
 
-		
+
 			saveConfig();
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("retaliate")) {
+			SentryInstance inst = initializedSentries.get(ThisNPC.getId());
+			if (inst.Retaliate) {
+				player.sendMessage(ChatColor.GREEN + "Sentry will not retaliate.");   // Talk to the player.
+			}
+			else{
+				player.sendMessage(ChatColor.GREEN + "Sentry will retalitate against all attackers.");   // Talk to the player.
+			}
+
+			inst.Retaliate = !inst.Retaliate;
+			getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Retaliate",inst.Retaliate );
+
+
+			saveConfig();
+			return true;
+		}
+
 
 		else if (args[0].equalsIgnoreCase("health")) {
 			if (args[1].isEmpty()) {
@@ -215,15 +241,15 @@ public class Sentry extends JavaPlugin {
 
 
 		else if (args[0].equalsIgnoreCase("target")) {
-		if (args.length<2 ){
-			player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [Entity|Player|Group]");
-			player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [Entity|Player|Group]");
-			player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
-			return true;
-		}
+			if (args.length<2 ){
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
+				return true;
+			}
 			else if (args[1].isEmpty()) {
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [Entity|Player|Group]");
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [Entity|Player|Group]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
 				return true;
 
@@ -237,9 +263,9 @@ public class Sentry extends JavaPlugin {
 					getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Targets", currentList);
 					saveConfig();
 					player.sendMessage(ChatColor.GREEN + "Target added. Now targeting " + currentList.toString());
-					
+
 					initializedSentries.get(ThisNPC.getId()).validTargets.add(args[2].toUpperCase());
-					
+
 					return true;
 				}
 
@@ -250,9 +276,9 @@ public class Sentry extends JavaPlugin {
 					getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Targets", currentList);
 					saveConfig();
 					player.sendMessage(ChatColor.GREEN + "Target removed. Now targeting " + currentList.toString());
-					
+
 					initializedSentries.get(ThisNPC.getId()).validTargets.remove(args[2].toUpperCase());
-					
+
 					return true;
 				}
 
@@ -281,95 +307,8 @@ public class Sentry extends JavaPlugin {
 
 
 
-	@SuppressWarnings("deprecation")
-	public void findTarget (SentryInstance theSentry, Integer Range) {
-
-		List<Entity> EntitiesWithinRange = theSentry.getSentry().getBukkitEntity().getNearbyEntities(Range, Range, Range);
-		LivingEntity theTarget = null;
-		Double distanceToBeat = new Double(Range);
-
-		getServer().broadcastMessage("Targets scanned : " + EntitiesWithinRange.toString());
-
-		try {
-			for (Entity aTarget : EntitiesWithinRange) {
-
-				if (aTarget instanceof Player) {
-
-					if (theSentry.containsTarget("ENTITY:PLAYER")) {
-						if (((Player) aTarget).getLocation()
-								.distance(theSentry.getSentry()
-										.getBukkitEntity().getLocation()) < distanceToBeat) {
-							distanceToBeat = aTarget.getLocation().distance(theSentry.getSentry()
-									.getBukkitEntity().getLocation());
-							theTarget = (LivingEntity) aTarget;
-						}
-					}
 
 
-					else if (theSentry.containsTarget("PLAYER:" + ((Player) aTarget).getName().toUpperCase())) {
-						if (((Player) aTarget).getLocation()
-								.distance(theSentry.getSentry()
-										.getBukkitEntity().getLocation()) < distanceToBeat) {
-							distanceToBeat = aTarget.getLocation().distance(theSentry.getSentry()
-									.getBukkitEntity().getLocation());
-							theTarget = (LivingEntity) aTarget;
-						}
-					}
-
-					else if (theSentry.containsTarget("GROUP:")) {
-						String[] groups = perms.getPlayerGroups((Player) aTarget);
-						for (int i = 0; i < groups.length; i++ ) {
-							if (theSentry.containsTarget("GROUP:" + groups[i].toLowerCase())) {
-								if (((Player) aTarget).getLocation()
-										.distance(theSentry.getSentry()
-												.getBukkitEntity().getLocation()) < distanceToBeat) {
-									distanceToBeat = aTarget.getLocation().distance(theSentry.getSentry()
-											.getBukkitEntity().getLocation());
-									theTarget = (LivingEntity) aTarget;	
-								}						
-							}
-						}
-					}
-				}
-
-				else if (aTarget instanceof Monster) {
-					if (theSentry.containsTarget("ENTITY:MONSTER")) {
-						if (((Monster) aTarget).getLocation()
-								.distance(theSentry.getSentry()
-										.getBukkitEntity().getLocation()) < distanceToBeat) {
-							distanceToBeat = aTarget.getLocation().distance(theSentry.getSentry()
-									.getBukkitEntity().getLocation());
-							theTarget = (LivingEntity) aTarget;
-						}
-					}
-				}
-
-				else if (aTarget instanceof Creature) {
-					if (theSentry.containsTarget("ENTITY:" + ((Creature) aTarget).getType())) {
-						if (((Creature) aTarget).getLocation()
-								.distance(theSentry.getSentry()
-										.getBukkitEntity().getLocation()) < distanceToBeat) {
-							distanceToBeat = aTarget.getLocation().distance(theSentry.getSentry()
-									.getBukkitEntity().getLocation());
-							theTarget = (LivingEntity) aTarget;
-						}
-					}
-				}
-			}
-			
-			if (theTarget != null) theSentry.setTarget(theTarget);
-			
-		} catch (java.lang.NullPointerException e) {
-		
-			
-			
-		}
-		
-		return;
-	}
-
-	
-	
 
 	// End of CLASS
 

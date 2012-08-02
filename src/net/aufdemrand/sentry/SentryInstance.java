@@ -15,7 +15,9 @@ import java.util.Random;
 
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.entity.Creature;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import net.citizensnpcs.api.event.NPCLeftClickEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
@@ -30,8 +32,6 @@ import net.citizensnpcs.api.ai.Navigator;
 import net.citizensnpcs.api.exception.NPCLoadException;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.util.DataKey;
-import net.minecraft.server.Entity;
-import net.minecraft.server.EntityLiving;
 
 public class SentryInstance implements Listener {
 
@@ -65,6 +65,7 @@ public class SentryInstance implements Listener {
 	private boolean sentryIsAggressive = false;
 	public Boolean LuckyHits = true;
 	public Boolean Invincible = false;
+	public Boolean Retaliate = true;
 	public List<Location> guardPosts = new ArrayList<Location>();
 	public Integer RespawnDelaySeconds = 10;
 
@@ -129,11 +130,14 @@ public class SentryInstance implements Listener {
 		if (plugin.getConfig().contains(config + ".Range")) 
 			sentryRange = plugin.getConfig().getInt(config + ".Range");
 
-		if (plugin.getConfig().contains(config + ".Effect")) 
-			sentryRange = plugin.getConfig().getInt(config + ".Effect");
+	//	if (plugin.getConfig().contains(config + ".Effect")) 
+		//	sentryRange = plugin.getConfig().getInt(config + ".Effect");
 
 		if (plugin.getConfig().contains(config + ".Invincible")) 
-			sentryRange = plugin.getConfig().getInt(config + ".Invincible");
+			Invincible = plugin.getConfig().getBoolean(config + ".Invincible");
+		
+		if (plugin.getConfig().contains(config + ".Retaliate")) 
+			Retaliate = plugin.getConfig().getBoolean(config + ".Retaliate");
 
 		this.theSentry.getBukkitEntity().setHealth(sentryHealth);
 
@@ -144,12 +148,9 @@ public class SentryInstance implements Listener {
 	}
 
 
-
 	private class derp implements Runnable {
 		@Override
 		public void run() { 
-
-			plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus);
 
 
 			if (sentryStatus == Status.isDEAD &&  System.currentTimeMillis() > isRespawnable) {
@@ -158,41 +159,34 @@ public class SentryInstance implements Listener {
 			}
 
 			else if (sentryStatus == Status.isHOSTILE && theSentry.isSpawned()) {			
+			
 				if (getTarget() != null) {
-
 					if (getTarget() == currentTarget) {
-						// Carry on.
+						// Did it get away?
+						if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) > sentryRange){
+							theSentry.getNavigator().setTarget(null, false);
+						}
 					}
 
 					else if (getTarget() != currentTarget) {
-						if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) < sentryRange){
-							theSentry.getNavigator().setTarget(currentTarget, true);
-
-						}
-
-						//theSentry.getAI().setTarget(currentTarget, true);
-						else sentryStatus = Status.isLOOKING;
+						plugin.getServer().broadcastMessage("Attacking " + getTarget().toString());
+						theSentry.getNavigator().setTarget(currentTarget, true);
 					}
 				}
 
+								
 				else if (getTarget() == null) {
-
 					if (!guardPosts.isEmpty())
-
 						if (theSentry.getBukkitEntity().getLocation().distance(guardPosts.get(0)) > 16) 
 							theSentry.getNavigator().setTarget(guardPosts.get(0));
-					//theSentry.getAI().setDestination(guardPosts.get(0));
-
-
-					//	sentryStatus = Status.isLOOKING;
-					currentTarget = null;
+					 sentryStatus = Status.isLOOKING;
 				}
 
 
 			}
 
 			else if (sentryStatus == Status.isLOOKING && theSentry.isSpawned()) {
-				plugin.findTarget(thisInstance, sentryRange);
+				findTarget( sentryRange);
 				if (currentTarget != null) sentryStatus = Status.isHOSTILE;
 			}
 
@@ -208,9 +202,11 @@ public class SentryInstance implements Listener {
 
 		plugin.getServer().broadcastMessage("NPC GUARDING!");
 
-		if(taskID!=null)plugin.getServer().getScheduler().cancelTask(taskID);
+		if(taskID!=null) {
+			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new derp(),5,40);			
+		}
 
-		taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new derp(),5,40);
+
 
 	}
 
@@ -232,6 +228,11 @@ public class SentryInstance implements Listener {
 		Player player = event.getClicker();
 		NPC npc = event.getNPC();
 
+		if (this.Retaliate && sentryStatus = Status.isLOOKING) {
+			this.currentTarget = player;
+			sentryStatus = Status.isHOSTILE;
+		}
+		
 		ItemStack iteminhand = player.getItemInHand();
 
 		double damagemodifer = 1.0;
@@ -253,32 +254,32 @@ public class SentryInstance implements Listener {
 			if (luckeyhit < 5) {
 
 				damagemodifer =  damagemodifer * 2.00;
-				player.sendMessage(ChatColor.RED + "*** You maim the Sentry!");
+				player.sendMessage(ChatColor.RED + "*** You maim " + theSentry.getName());
 				npc.getBukkitEntity().playEffect(EntityEffect.HURT);
 			}
 			else if (luckeyhit < 15) {
 
 				damagemodifer =  damagemodifer * 1.50;
-				player.sendMessage(ChatColor.GOLD + "*** You dismember the Sentry!");
+				player.sendMessage(ChatColor.GOLD + "*** You dismember " + theSentry.getName());
 				npc.getBukkitEntity().playEffect(EntityEffect.HURT);
 			}
 			else if (luckeyhit < 25) {
 
 				damagemodifer =  damagemodifer * 1.50;
-				player.sendMessage(ChatColor.YELLOW + "*** You injure the Sentry!");
+				player.sendMessage(ChatColor.YELLOW + "*** You injure " + theSentry.getName());
 				npc.getBukkitEntity().playEffect(EntityEffect.HURT);
 			}
 			else if (luckeyhit > 95) {
 
 				damagemodifer =  0;
-				player.sendMessage(ChatColor.GRAY + "*** You miss the Sentry!");
+				player.sendMessage(ChatColor.GRAY + "*** You miss " + theSentry.getName());
 
 			}
-
-			else npc.getBukkitEntity().playEffect(EntityEffect.HURT);
+		
 		}
 
 		if (damagemodifer > 0) {
+			 npc.getBukkitEntity().playEffect(EntityEffect.HURT);
 			Vector newVec = player.getLocation().getDirection().multiply(1.75);
 			newVec.setY(newVec.getY()/sentryWeight);
 			npc.getBukkitEntity().setVelocity(newVec);
@@ -308,6 +309,92 @@ public class SentryInstance implements Listener {
 	}
 
 
+
+	public void findTarget ( Integer Range) {
+
+		List<Entity> EntitiesWithinRange = this.getSentry().getBukkitEntity().getNearbyEntities(Range, Range, Range);
+		LivingEntity theTarget = null;
+		Double distanceToBeat = new Double(Range);
+
+		plugin.getServer().broadcastMessage("Targets scanned : " + EntitiesWithinRange.toString());
+	
+			for (Entity aTarget : EntitiesWithinRange) {
+
+				if (aTarget instanceof Player) {
+
+					if (this.containsTarget("ENTITY:PLAYER")) {
+						if (((Player) aTarget).getLocation()
+								.distance(this.getSentry()
+										.getBukkitEntity().getLocation()) < distanceToBeat) {
+							distanceToBeat = aTarget.getLocation().distance(this.getSentry()
+									.getBukkitEntity().getLocation());
+							theTarget = (LivingEntity) aTarget;
+						}
+					}
+
+					else if (this.containsTarget("PLAYER:" + ((Player) aTarget).getName().toUpperCase())) {
+						if (((Player) aTarget).getLocation()
+								.distance(this.getSentry()
+										.getBukkitEntity().getLocation()) < distanceToBeat) {
+							distanceToBeat = aTarget.getLocation().distance(this.getSentry()
+									.getBukkitEntity().getLocation());
+							theTarget = (LivingEntity) aTarget;
+						}
+					}
+
+					else if (this.containsTarget("GROUP:")) {
+						String[] groups = Sentry.perms.getPlayerGroups((Player) aTarget);
+						for (int i = 0; i < groups.length; i++ ) {
+							if (this.containsTarget("GROUP:" + groups[i].toLowerCase())) {
+								if (((Player) aTarget).getLocation()
+										.distance(this.getSentry()
+												.getBukkitEntity().getLocation()) < distanceToBeat) {
+									distanceToBeat = aTarget.getLocation().distance(this.getSentry()
+											.getBukkitEntity().getLocation());
+									theTarget = (LivingEntity) aTarget;	
+								}						
+							}
+						}
+					}
+				}
+
+				else if (aTarget instanceof Monster) {
+					if (this.containsTarget("ENTITY:MONSTER")) {
+						if (((Monster) aTarget).getLocation()
+								.distance(this.getSentry()
+										.getBukkitEntity().getLocation()) < distanceToBeat) {
+							distanceToBeat = aTarget.getLocation().distance(this.getSentry()
+									.getBukkitEntity().getLocation());
+							theTarget = (LivingEntity) aTarget;
+						}
+					}
+				}
+
+				else if (aTarget instanceof Creature) {
+					if (this.containsTarget("ENTITY:" + ((Creature) aTarget).getType())) {
+						if (((Creature) aTarget).getLocation()
+								.distance(this.getSentry()
+										.getBukkitEntity().getLocation()) < distanceToBeat) {
+							distanceToBeat = aTarget.getLocation().distance(this.getSentry()
+									.getBukkitEntity().getLocation());
+							theTarget = (LivingEntity) aTarget;
+						}
+					}
+				}
+			}
+			
+			if (theTarget != null) 
+				{
+				this.setTarget(theTarget);
+				plugin.getServer().broadcastMessage("Targeting: " + theTarget.toString());
+				}
+			
+	
+		
+		return;
+	}
+
+	
 
 }
 
