@@ -37,7 +37,7 @@ public class Sentry extends JavaPlugin {
 
 		setupPermissions();
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
-		getServer().getPluginManager().registerEvents(new SentryInstance(this), this);
+	
 		
 	}
 
@@ -87,6 +87,8 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  Sets speed modifier.");
 			player.sendMessage(ChatColor.GOLD + "/sentry health [1-20]");
 			player.sendMessage(ChatColor.GOLD + "  Sets the Sentry's health points.");
+			player.sendMessage(ChatColor.GOLD + "/sentry invincible");
+			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry invincible.");
 			player.sendMessage(ChatColor.GOLD + "/sentry save|reload");
 			player.sendMessage(ChatColor.GOLD + "  Saves or reloads the config.yml.");
 			return true;
@@ -143,6 +145,22 @@ public class Sentry extends JavaPlugin {
 			saveConfig();
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("invincible")) {
+			SentryInstance inst = initializedSentries.get(ThisNPC.getId());
+	if (inst.Invincible) {
+		player.sendMessage(ChatColor.GREEN + "Sentry now takes damage..");   // Talk to the player.
+			}
+	else{
+		player.sendMessage(ChatColor.GREEN + "Sentry now INVINCIBLE.");   // Talk to the player.
+	}
+
+	inst.Invincible = !inst.Invincible;
+	getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".Invincible",inst.Invincible );
+
+		
+			saveConfig();
+			return true;
+		}
 
 		else if (args[0].equalsIgnoreCase("health")) {
 			if (args[1].isEmpty()) {
@@ -175,7 +193,7 @@ public class Sentry extends JavaPlugin {
 			else {
 				if (Double.valueOf(args[1]) <= 1.5 && Double.valueOf(args[1]) >= 0.0) { 
 
-					if (Double.valueOf(args[1]) > .49) {
+					if (Double.valueOf(args[1]) > 1.49) {
 						player.sendMessage(ChatColor.GOLD + "Caution! Speeds this high can get weird!");
 						player.sendMessage(ChatColor.GOLD + "It's best that the Sentry be on flat-ish terrain");
 						player.sendMessage(ChatColor.GOLD + "when using unusually high speeds.");
@@ -197,7 +215,13 @@ public class Sentry extends JavaPlugin {
 
 
 		else if (args[0].equalsIgnoreCase("target")) {
-			if (args[1].isEmpty()) {
+		if (args.length<2 ){
+			player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [Entity|Player|Group]");
+			player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [Entity|Player|Group]");
+			player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
+			return true;
+		}
+			else if (args[1].isEmpty()) {
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [Entity|Player|Group]");
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [Entity|Player|Group]");
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
@@ -264,7 +288,7 @@ public class Sentry extends JavaPlugin {
 		LivingEntity theTarget = null;
 		Double distanceToBeat = new Double(Range);
 
-		//	getServer().broadcastMessage("Targets scanned : " + EntitiesWithinRange.toString());
+		getServer().broadcastMessage("Targets scanned : " + EntitiesWithinRange.toString());
 
 		try {
 			for (Entity aTarget : EntitiesWithinRange) {

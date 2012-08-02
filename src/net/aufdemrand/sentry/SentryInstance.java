@@ -22,6 +22,7 @@ import net.citizensnpcs.api.event.NPCRightClickEvent;
 
 import net.citizensnpcs.npc.entity.CitizensHumanNPC;
 import net.citizensnpcs.npc.entity.EntityHumanNPC;
+import net.citizensnpcs.trait.CurrentLocation;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.ai.GoalController;
@@ -55,6 +56,7 @@ public class SentryInstance implements Listener {
 	private NPC theSentry = null;
 
 	/* Setables */
+	public SentryTrait myTrait; 
 	public List<String> validTargets = new ArrayList<String>();
 	private Integer sentryRange = 10;
 	public Integer sentryHealth = 20;
@@ -81,7 +83,8 @@ public class SentryInstance implements Listener {
 	}
 
 	public LivingEntity getTarget() {
-		return ((org.bukkit.entity.NPC) theSentry.getBukkitEntity()).getTarget();
+		if(theSentry.getNavigator().getEntityTarget() == null) return null;
+		return theSentry.getNavigator().getEntityTarget().getTarget();
 	}
 
 
@@ -91,10 +94,12 @@ public class SentryInstance implements Listener {
 		plugin.getServer().broadcastMessage("NPC " + npc.getName() + " INITIALIZING!");
 
 		this.theSentry = npc;
+		
+		String config = theSentry.getName() + "." + theSentry.getId();
 
-		/* Read locations */
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".List Locations")) {
-			List<String> guardLocationList = plugin.getConfig().getStringList(theSentry.getName() + "." + theSentry.getId() + ".List Locations");
+			/* Read locations */
+		if (plugin.getConfig().contains(config + ".List Locations")) {
+			List<String> guardLocationList = plugin.getConfig().getStringList(config + ".List Locations");
 			for (String locationString : guardLocationList) {
 				String[] split = locationString.split(";");
 				try {
@@ -107,117 +112,106 @@ public class SentryInstance implements Listener {
 
 		}
 
-
 		/* Read targets */
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Targets")) 
-			validTargets.addAll(plugin.getConfig().getStringList(theSentry.getName() + "." + theSentry.getId() + ".Targets"));
-
+		if (plugin.getConfig().contains(config + ".Targets")) 
+			validTargets.addAll(plugin.getConfig().getStringList(config + ".Targets"));
 
 		/* Read Stats */
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Health")) 
-			sentryHealth = plugin.getConfig().getInt(theSentry.getName() + "." + theSentry.getId() + ".Health");
+		if (plugin.getConfig().contains(config + ".Health")) 
+			sentryHealth = plugin.getConfig().getInt(config + ".Health");
 
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Aggressive")) 
-			sentryIsAggressive = plugin.getConfig().getBoolean(theSentry.getName() + "." + theSentry.getId() + ".Aggressive");
+		if (plugin.getConfig().contains(config + ".Aggressive")) 
+			sentryIsAggressive = plugin.getConfig().getBoolean(config + ".Aggressive");
 
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Health")) 
-			sentryHealth = plugin.getConfig().getInt(theSentry.getName() + "." + theSentry.getId() + ".Health");
+		if (plugin.getConfig().contains(config + ".Health")) 
+			sentryHealth = plugin.getConfig().getInt(config + ".Health");
 
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Range")) 
-			sentryRange = plugin.getConfig().getInt(theSentry.getName() + "." + theSentry.getId() + ".Range");
+		if (plugin.getConfig().contains(config + ".Range")) 
+			sentryRange = plugin.getConfig().getInt(config + ".Range");
 
-		if (plugin.getConfig().contains(theSentry.getName() + "." + theSentry.getId() + ".Effect")) 
-			sentryRange = plugin.getConfig().getInt(theSentry.getName() + "." + theSentry.getId() + ".Effect");
+		if (plugin.getConfig().contains(config + ".Effect")) 
+			sentryRange = plugin.getConfig().getInt(config + ".Effect");
 
-
-		plugin.getServer().broadcastMessage("SETTING HEALTH TO " + sentryHealth + "!");
-
+		if (plugin.getConfig().contains(config + ".Invincible")) 
+			sentryRange = plugin.getConfig().getInt(config + ".Invincible");
 
 		this.theSentry.getBukkitEntity().setHealth(sentryHealth);
 
-		plugin.getServer().broadcastMessage("HEALTH SET TO " + theSentry.getBukkitEntity().getHealth() + "!");
+		sentryStatus=Status.isLOOKING;
 
-
-		sentryStatus=Status.isSTUCK;
-		
 		guard();
 
-
 	}
 
-	
-	
-private class derp implements Runnable {
-	@Override
-	public void run() { 
-		
-		plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus);
 
-		sentryStatus=Status.isDEAD;
-		
-		if (sentryStatus == Status.isDEAD &&  System.currentTimeMillis() > isRespawnable) {
-			// Respawn
-			theSentry.spawn(theSentry.getBukkitEntity().getLocation());
-		}
 
-		else if (sentryStatus == Status.isHOSTILE && theSentry.isSpawned()) {			
-			if (getTarget() != null) {
+	private class derp implements Runnable {
+		@Override
+		public void run() { 
 
-				if (getTarget() == currentTarget) {
-					// Carry on.
-				}
+			plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus);
 
-				else if (getTarget() != currentTarget) {
-					if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) < sentryRange){
-						theSentry.getNavigator().setTarget(currentTarget, true);
 
+			if (sentryStatus == Status.isDEAD &&  System.currentTimeMillis() > isRespawnable) {
+				// Respawn
+				theSentry.spawn(theSentry.getTrait(CurrentLocation.class).getLocation());
+			}
+
+			else if (sentryStatus == Status.isHOSTILE && theSentry.isSpawned()) {			
+				if (getTarget() != null) {
+
+					if (getTarget() == currentTarget) {
+						// Carry on.
 					}
 
-					//theSentry.getAI().setTarget(currentTarget, true);
-					else sentryStatus = Status.isLOOKING;
+					else if (getTarget() != currentTarget) {
+						if (currentTarget.getLocation().distance(theSentry.getBukkitEntity().getLocation()) < sentryRange){
+							theSentry.getNavigator().setTarget(currentTarget, true);
+
+						}
+
+						//theSentry.getAI().setTarget(currentTarget, true);
+						else sentryStatus = Status.isLOOKING;
+					}
 				}
+
+				else if (getTarget() == null) {
+
+					if (!guardPosts.isEmpty())
+
+						if (theSentry.getBukkitEntity().getLocation().distance(guardPosts.get(0)) > 16) 
+							theSentry.getNavigator().setTarget(guardPosts.get(0));
+					//theSentry.getAI().setDestination(guardPosts.get(0));
+
+
+					//	sentryStatus = Status.isLOOKING;
+					currentTarget = null;
+				}
+
+
 			}
 
-			else if (getTarget() == null) {
-
-				if (!guardPosts.isEmpty())
-
-					if (theSentry.getBukkitEntity().getLocation().distance(guardPosts.get(0)) > 16) 
-						theSentry.getNavigator().setTarget(guardPosts.get(0));
-				//theSentry.getAI().setDestination(guardPosts.get(0));
-
-
-			//	sentryStatus = Status.isLOOKING;
-				currentTarget = null;
+			else if (sentryStatus == Status.isLOOKING && theSentry.isSpawned()) {
+				plugin.findTarget(thisInstance, sentryRange);
+				if (currentTarget != null) sentryStatus = Status.isHOSTILE;
 			}
-
 
 		}
 
-		else if (sentryStatus == Status.isLOOKING && theSentry.isSpawned()) {
-			plugin.findTarget(thisInstance, sentryRange);
-			if (currentTarget != null) sentryStatus = Status.isHOSTILE;
-		}
-		
-			plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus + theSentry.getFullName());
+
+
 	}
 
-	
-
-	
-	
-	}
-
-	
 
 
 	public void guard() {
 
 		plugin.getServer().broadcastMessage("NPC GUARDING!");
-							
-	
+
+		if(taskID!=null)plugin.getServer().getScheduler().cancelTask(taskID);
+
 		taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new derp(),5,40);
-		
+
 	}
 
 
@@ -238,13 +232,6 @@ private class derp implements Runnable {
 		Player player = event.getClicker();
 		NPC npc = event.getNPC();
 
-		plugin.getServer().broadcastMessage("Sentry Run: " + sentryStatus );
-		
-		 SentryInstance.this.sentryStatus = Status.isSTUCK;
-
-		 
-			plugin.getServer().broadcastMessage("Sentry Run: " + SentryInstance.this.sentryStatus + npc.getFullName());
-		 
 		ItemStack iteminhand = player.getItemInHand();
 
 		double damagemodifer = 1.0;
@@ -298,21 +285,20 @@ private class derp implements Runnable {
 		}
 
 
-
 		int finaldamage = (int) Math.round(damagemodifer);
 
 
 		if 	(npc.getBukkitEntity().getHealth() - finaldamage <= 0)  {
-			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds*1000 ;
+
 			npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
 			npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
 			npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
 			player.sendMessage(ChatColor.GREEN + "*** You lay a mortal blow to the Sentry!");
 			npc.getBukkitEntity().getLocation().getWorld().spawn(npc.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
-
 			finaldamage = npc.getBukkitEntity().getHealth();
 			npc.getBukkitEntity().damage(finaldamage);
-	
+			sentryStatus = Status.isDEAD;
+			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds*1000 ;
 		}
 
 		else npc.getBukkitEntity().damage(finaldamage);
