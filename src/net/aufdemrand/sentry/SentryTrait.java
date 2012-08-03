@@ -26,23 +26,27 @@ public class SentryTrait extends Trait implements Toggleable {
 
 				plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
 
-				plugin.getServer().broadcastMessage("NPC SPAWNED!");
-
-				 thisInstance = new SentryInstance(plugin);
-				 thisInstance.myTrait = this;
-					plugin.initializedSentries.put(this.getNPC().getId(), thisInstance);
-			plugin.getServer().getPluginManager().registerEvents(thisInstance, plugin);
-							
+									
 	}
 
 
 	@Override
 	public void onSpawn() {
+		
+		if (!this.getNPC().hasTrait(SentryTrait.class)) return;
+		
+		if (thisInstance ==null) {
+			plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
+			 thisInstance = new SentryInstance(plugin);
+			 thisInstance.myTrait = this;
+				plugin.initializedSentries.put(this.getNPC().getId(), thisInstance);
+				plugin.getServer().getPluginManager().registerEvents(thisInstance, plugin);
+		}
+		
+		
 		thisInstance.initialize(this.getNPC());	
 		
 	}
-
-
 
 	@Override
 	public void onRemove() {

@@ -155,8 +155,11 @@ public class SentryInstance implements Listener {
 
 	public void setTarget(LivingEntity theEntity) {
 
+		if (!myNPC.isSpawned()) return;
+		
 		Material weapon = Material.AIR;
 
+				
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
 			weapon = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand().getType();
 		}
@@ -367,12 +370,18 @@ public class SentryInstance implements Listener {
 	@EventHandler
 	public void onDamage(NPCDamageByEntityEvent  event) {
 
+		if (!event.getNPC().hasTrait(SentryTrait.class)) return;
+		
 		if (event.getNPC() != myNPC){
 			//what?
 			//plugin.getServer().broadcastMessage("Not ME!!!");
 			myNPC = event.getNPC();
 		}
 
+		if (!myNPC.isSpawned()) {
+	//\\how did youg get here?
+			return;
+		}
 
 		NPC npc = event.getNPC();
 		Player player = null;	
@@ -468,6 +477,7 @@ public class SentryInstance implements Listener {
 
 				if (myNPC.getBukkitEntity() instanceof HumanEntity && this.DestroyInventory) {
 					 ((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
+					 ((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
 				}
 				
 				sentryStatus = Status.isDEAD;
