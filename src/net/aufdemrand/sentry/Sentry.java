@@ -17,10 +17,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Creature;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,8 +33,6 @@ public class Sentry extends JavaPlugin {
 
 		setupPermissions();
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
-
-
 	}
 
 
@@ -88,9 +82,13 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "/sentry health [1-20]");
 			player.sendMessage(ChatColor.GOLD + "  Sets the Sentry's health points.");
 			player.sendMessage(ChatColor.GOLD + "/sentry invincible");
-			player.sendMessage(ChatColor.GOLD + "  Sets the Sentry's health points.");
+			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to take no damage or knockback.");
 			player.sendMessage(ChatColor.GOLD + "/sentry retaliate");
-			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to respond to all attackers.");
+			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to always attack an attacker.");
+			player.sendMessage(ChatColor.GOLD + "/sentry criticals");
+			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to take critical hits and misses");
+			player.sendMessage(ChatColor.GOLD + "/sentry drops");
+			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to drop equipped items on death");
 			player.sendMessage(ChatColor.GOLD + "/sentry save|reload");
 			player.sendMessage(ChatColor.GOLD + "  Saves or reloads the config.yml.");
 			return true;
@@ -186,6 +184,38 @@ public class Sentry extends JavaPlugin {
 			saveConfig();
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("criticals")) {
+			SentryInstance inst = initializedSentries.get(ThisNPC.getId());
+			if (inst.LuckyHits) {
+				player.sendMessage(ChatColor.GREEN + "Sentry will take normal damamge.");   // Talk to the player.
+			}
+			else{
+				player.sendMessage(ChatColor.GREEN + "Sentry will take critical hits.");   // Talk to the player.
+			}
+
+			inst.LuckyHits = !inst.LuckyHits;
+			getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".CriticalHits",inst.LuckyHits );
+
+
+			saveConfig();
+			return true;
+		}
+		else if (args[0].equalsIgnoreCase("drops")) {
+			SentryInstance inst = initializedSentries.get(ThisNPC.getId());
+			if (inst.DestroyInventory) {
+				player.sendMessage(ChatColor.GREEN + "Sentry will drop items");   // Talk to the player.
+			}
+			else{
+				player.sendMessage(ChatColor.GREEN + "Sentry will not drop items.");   // Talk to the player.
+			}
+
+			inst.DestroyInventory = !inst.DestroyInventory;
+			getConfig().set(ThisNPC.getName() + "." + ThisNPC.getId() + ".DestroyInventory",inst.DestroyInventory );
+
+
+			saveConfig();
+			return true;
+		}
 
 
 		else if (args[0].equalsIgnoreCase("health")) {
@@ -241,22 +271,17 @@ public class Sentry extends JavaPlugin {
 
 
 		else if (args[0].equalsIgnoreCase("target")) {
+			
 			if (args.length<2 ){
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
 				return true;
 			}
-			else if (args[1].isEmpty()) {
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
-				return true;
 
-			}
 			else {
 
-				if (args[1].equals("add") && !args[2].isEmpty()) {
+				if (args[1].equals("add") && args.length > 2) {
 
 					List<String> currentList = getConfig().getStringList(ThisNPC.getName() + "." + ThisNPC.getId() + ".Targets");
 					currentList.add(args[2].toUpperCase());
@@ -269,7 +294,7 @@ public class Sentry extends JavaPlugin {
 					return true;
 				}
 
-				else if (args[1].equals("remove") && !args[2].isEmpty()) {
+				else if (args[1].equals("remove") && args.length > 2) {
 
 					List<String> currentList = getConfig().getStringList(ThisNPC.getName() + "." + ThisNPC.getId() + ".Targets");
 					if (currentList.contains(args[2].toLowerCase())) currentList.remove(args[2].toLowerCase());
@@ -294,8 +319,8 @@ public class Sentry extends JavaPlugin {
 
 				else {
 
-					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [Entity|Player|Group]");
-					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [Entity|Player|Group]");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [ENTITY:Name, PLAYER:Name, GROUP:Name, ENTITY:MONSTER]");
 					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
 					return true;
 				}
@@ -304,8 +329,6 @@ public class Sentry extends JavaPlugin {
 
 		return true;
 	}
-
-
 
 
 

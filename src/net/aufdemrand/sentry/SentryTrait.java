@@ -1,13 +1,6 @@
 package net.aufdemrand.sentry;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
-
-import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.exception.NPCLoadException;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
@@ -16,7 +9,6 @@ import net.citizensnpcs.trait.Toggleable;
 
 public class SentryTrait extends Trait implements Toggleable {
 
-	private Map<String, Boolean> triggerMap = new HashMap<String, Boolean>();
 	private Sentry plugin;
 
 	private boolean isToggled = true;
@@ -40,8 +32,7 @@ public class SentryTrait extends Trait implements Toggleable {
 				 thisInstance.myTrait = this;
 					plugin.initializedSentries.put(this.getNPC().getId(), thisInstance);
 			plugin.getServer().getPluginManager().registerEvents(thisInstance, plugin);
-			
-					
+							
 	}
 
 
