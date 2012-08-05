@@ -1,24 +1,26 @@
 package net.aufdemrand.sentry;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.EntityEffect;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.util.Vector;
+
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Creature;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 
+
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+
+
 import net.citizensnpcs.api.event.NPCDamageByEntityEvent;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.trait.CurrentLocation;
@@ -27,7 +29,7 @@ import net.citizensnpcs.api.npc.NPC;
 import net.minecraft.server.EntityLiving;
 
 
-public class SentryInstance implements Listener {
+public class SentryInstance  {
 
 	/* plugin Constructer */
 	Sentry plugin;
@@ -39,12 +41,13 @@ public class SentryInstance implements Listener {
 
 	/* Technicals */
 	private Integer taskID = null;
-	private enum Status { isDEAD, isHOSTILE, isLOOKING, isDYING, isSTUCK }
+	public enum Status { isDEAD, isHOSTILE, isLOOKING, isDYING, isSTUCK }
 	private Long isRespawnable = System.currentTimeMillis();
+	private long oktoFire = System.currentTimeMillis();
 	private LivingEntity projectileTarget;
 	/* Internals */
-	private Status sentryStatus = Status.isDYING;
-	private NPC myNPC = null;
+	Status sentryStatus = Status.isDYING;
+	public  NPC myNPC = null;
 
 	/* Setables */
 	public SentryTrait myTrait; 
@@ -57,9 +60,10 @@ public class SentryInstance implements Listener {
 	public Boolean Invincible = false;
 	public Boolean Retaliate = true;
 	public Boolean DestroyInventory = true;
-	public List<Location> guardPosts = new ArrayList<Location>();
 	public Integer RespawnDelaySeconds = 10;
-
+	public  Integer Armor = 0;
+	public Integer Strength = 0;
+	public double AttackRateSeconds = 2.0;
 
 	public boolean containsTarget(String theTarget) {
 		if (validTargets.contains(theTarget)) return true;
@@ -91,251 +95,264 @@ public class SentryInstance implements Listener {
 		handle.as = handle.yaw;
 	}
 
-
+	private void faceForward() {
+		EntityLiving handle = ((CraftLivingEntity) this.myNPC.getBukkitEntity()).getHandle();
+		handle.as = handle.yaw;
+		handle.pitch = 0;
+	}
 
 	public void Fire(LivingEntity theEntity){
 
-		faceEntity(myNPC.getBukkitEntity(), theEntity);		
+		double v  = 27;
+		double g = 20;
 
-		Projectile theArrow =myNPC.getBukkitEntity().launchProjectile(myProjectile);
-		//	theArrow.setShooter(myNPC.getBukkitEntity());
-		Vector victor = new Vector();
+		Effect effect = null;
 
-		victor = theEntity.getLocation().subtract( myNPC.getBukkitEntity().getLocation()).toVector();
+		if (myProjectile == Arrow.class)
+		{
+			effect = Effect.BOW_FIRE;
+		}
+		else if (myProjectile == SmallFireball.class)
+		{
+			effect = Effect.BLAZE_SHOOT;
+			v = 5000.0; 
+			g = .01;
+		}
+		else  {
+			v = 17.75; 
+			g = 12.5;
 
+		}
+
+		//calc shooting spot.
+		Location loco =  myNPC.getBukkitEntity().getEyeLocation();
+		Vector norman = theEntity.getEyeLocation().subtract(loco).toVector();
+		double mag = Math.sqrt(Math.pow(norman.getX(), 2) + Math.pow(norman.getY(), 2)  + Math.pow(norman.getZ(), 2)) ;
+		norman.multiply(1/mag);
+		Location loc =loco.add(norman);
+
+		//Calc range		
+		Vector victor = theEntity.getEyeLocation().subtract(loc).toVector();
+		mag = Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getY(), 2)  + Math.pow(victor.getZ(), 2)) ;
 		Double dist =  Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getZ(), 2));
 
 		if(dist == 0) return;
 
 		Double elev = victor.getY();
 
-		Double v = 24.0; //1/Math.cos(launchAngle) * Math.sqrt((8.5*Math.pow(dist, 2))/(dist*Math.tan(launchAngle) + elev));
-		Double g = 17.0;
-		//aim  above target
-
 		double v2 = Math.pow(v,2);
 		double v4 = Math.pow(v,4);
 		double derp =  g*(g*Math.pow(dist,2)+2*elev*v2);
 
+		Double launchAngle;
+
+
+		//Check unhittable.
 		if( v4 < derp) {
 			//target unreachable
-			this.projectileTarget = null;
+
+			// use this to fire at optimal max angle launchAngle = Math.atan( ( 2*g*elev + v2) / (2*g*elev + 2*v2));
+
+			setTarget(null);
+			return;
+		}
+		else {
+			//calc angle
+			launchAngle = Math.atan( (v2-   Math.sqrt(v4 - derp))/(g*dist));
+
+		}
+
+
+		boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity)theEntity).getHandle()); 
+
+		if(!LOS) {
+			//target cant be seen..
+			setTarget(null);
 			return;
 		}
 
 
-		Double launchAngle = Math.atan( (v2-   Math.sqrt(v4 - derp))/(g*dist));
-		//Double launchAngle =  Math.PI/4 ;
 
+		//OK we're shooting
+		//go twang
+		if (effect!=null)	myNPC.getBukkitEntity().getWorld().playEffect(myNPC.getBukkitEntity().getLocation(), effect, null);
+		//look at target
+		faceEntity(myNPC.getBukkitEntity(), theEntity);		
 
 		//Apply angle 
 		victor.setY(Math.tan(launchAngle)* dist);
 
-		double mag = Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getY(), 2)  + Math.pow(victor.getZ(), 2)) ;
-
-		//normalize the vector
+		//normalize vector
 		victor.multiply(1/mag);
 
-		//calulate launch velocity
-
-		//	Double v = Math.sqrt(dist*18);
-
-	//	plugin.getServer().broadcastMessage(elev.toString() + ":" +dist.toString());			
-		//plugin.getServer().broadcastMessage(launchAngle.toString() + ":" +v.toString());	
-
 		//apply power
-		victor.multiply(v/18);
+		victor.multiply(v/20);
 
+		if (myProjectile == SmallFireball.class){
+			//this dont do nuffin
+			victor.multiply(1/20);
+		}
+
+
+		//Shoot!
+		//	Projectile theArrow =myNPC.getBukkitEntity().launchProjectile(myProjectile);
+
+		Projectile	theArrow = myNPC.getBukkitEntity().getWorld().spawn(loc,myProjectile);
+		theArrow.setShooter(myNPC.getBukkitEntity());
 		theArrow.setVelocity(victor);
-	//	plugin.getServer().broadcastMessage(victor.toString());	
-	}
-
-
-	private Class<?extends Projectile> myProjectile ;
-
-	public void setTarget(LivingEntity theEntity) {
-
-		if (!myNPC.isSpawned()) return;
-		
-		Material weapon = Material.AIR;
-
-				
-		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
-			weapon = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand().getType();
-		}
-		
-		switch (weapon){
-		case BOW:
-			myProjectile = org.bukkit.entity.Arrow.class;
-
-			if (theEntity != null){
-				projectileTarget = theEntity;
-			}
-			break;
-		case BLAZE_ROD: 
-			myProjectile = org.bukkit.entity.SmallFireball.class;
-
-			if (theEntity != null){
-				projectileTarget = theEntity;
-			}
-			break;
-		case SNOW_BALL:
-			myProjectile = org.bukkit.entity.Snowball.class;
-
-			if (theEntity != null){
-				projectileTarget = theEntity;
-			}
-			break;
-		case EGG:
-			myProjectile = org.bukkit.entity.Egg.class;
-
-			if (theEntity != null){
-				projectileTarget = theEntity;
-			}
-
-			break;
-		case POTION:
-			myProjectile = org.bukkit.entity.ThrownPotion.class;
-
-			if (theEntity != null){
-				projectileTarget = theEntity;
-			}
-
-			break;
-		case RAW_FISH:
-			myProjectile = org.bukkit.entity.Fish.class;
-
-			if (theEntity != null){
-				projectileTarget = theEntity;
-			}
-
-			break;
-
-		default:
-			//Manual Attack
-			projectileTarget = null;
-			if (theEntity ==null){
-				//		myNPC.getNavigator().cancelNavigation();	
-				myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);
-			}
-			else
-			{
-				myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
-				myNPC.getNavigator().setTarget(theEntity, true);			
-			}
-			break;
-
-		}
 
 	}
+
 
 	public LivingEntity getTarget() {
 		if(myNPC.getNavigator().getEntityTarget() == null) return null;
 		return myNPC.getNavigator().getEntityTarget().getTarget();
 	}
 
-	public void initialize(NPC npc) {
+	private Class<?extends Projectile> myProjectile ;
 
-	//	plugin.getServer().broadcastMessage("NPC " + npc.getName() + " INITIALIZING!");
+	public void setTarget(LivingEntity theEntity) {
 
-		this.myNPC = npc;
+		if (!myNPC.isSpawned()) return;
 
-		String config = myNPC.getName() + "." + myNPC.getId();
-
-		/* Read locations */
-		if (plugin.getConfig().contains(config + ".List Locations")) {
-			List<String> guardLocationList = plugin.getConfig().getStringList(config + ".List Locations");
-			for (String locationString : guardLocationList) {
-				String[] split = locationString.split(";");
-				try {
-					guardPosts.add(new Location(Bukkit.getServer().getWorld(split[0]),
-							Double.valueOf(split[1]),
-							Double.valueOf(split[2]),
-							Double.valueOf(split[3])));
-				} catch (Throwable e) { }
+		if (theEntity ==null){
+			if (myNPC.hasTrait(Waypoints.class)){
+				if (myNPC.getTrait(Waypoints.class).getCurrentProvider() != null){
+					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);	
+				}
 			}
+
+
+			sentryStatus = Status.isLOOKING;
+			projectileTarget = null;	
+			faceForward();
+			return;
 		}
 
-		/* Read targets */
-		if (plugin.getConfig().contains(config + ".Targets")) 
-			validTargets.addAll(plugin.getConfig().getStringList(config + ".Targets"));
+		Material weapon = Material.AIR;
 
-		/* Read Stats */
-		if (plugin.getConfig().contains(config + ".Health")) 
-			sentryHealth = plugin.getConfig().getInt(config + ".Health");
+		faceEntity(myNPC.getBukkitEntity(), theEntity);		
 
-		if (plugin.getConfig().contains(config + ".Health")) 
-			sentryHealth = plugin.getConfig().getInt(config + ".Health");
+		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
+			weapon = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand().getType();
+		}
 
-		if (plugin.getConfig().contains(config + ".Range")) 
-			sentryRange = plugin.getConfig().getInt(config + ".Range");
+		switch (weapon){
+		case BOW:
+			myProjectile = org.bukkit.entity.Arrow.class;
+			projectileTarget = theEntity;
+			break;
+		case BLAZE_ROD: 
+			myProjectile = org.bukkit.entity.SmallFireball.class;
+			projectileTarget = theEntity;
+			break;
+		case SNOW_BALL:
+			myProjectile = org.bukkit.entity.Snowball.class;
+			projectileTarget = theEntity;
+			break;
+		case EGG:
+			myProjectile = org.bukkit.entity.Egg.class;
+			projectileTarget = theEntity;
+			break;
+		case POTION:
+			myProjectile = org.bukkit.entity.ThrownPotion.class;
+			projectileTarget = theEntity;
 
-		//	if (plugin.getConfig().contains(config + ".Effect")) 
-		//	sentryRange = plugin.getConfig().getInt(config + ".Effect");
+			break;
 
-		if (plugin.getConfig().contains(config + ".Invincible")) 
-			Invincible = plugin.getConfig().getBoolean(config + ".Invincible");
+		default:
+			//Manual Attack
+			projectileTarget = null;
+
+			myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
+			myNPC.getNavigator().setTarget(theEntity, true);			
+
+			break;
+
+		}
+
+	}
 
 
-		if (plugin.getConfig().contains(config + ".DestroyInventory")) 
-			DestroyInventory = plugin.getConfig().getBoolean(config + ".DestroyInventory");
-		
-		if (plugin.getConfig().contains(config + ".Retaliate")) 
-			Retaliate = plugin.getConfig().getBoolean(config + ".Retaliate");
 
-		if (plugin.getConfig().contains(config + ".CriticalHits")) 
-			LuckyHits = plugin.getConfig().getBoolean(config + ".CriticalHits");
+	public void initialize() {
+
+		//	plugin.getServer().broadcastMessage("NPC " + npc.getName() + " INITIALIZING!");
+
+
+		//check for illegal values
+
+		if (sentryWeight <=0) sentryWeight = 1.0;
+		if (AttackRateSeconds > 30) AttackRateSeconds = 30.0;
+
+		if (sentryHealth<0) sentryHealth =0;
+
+		if (sentryRange <1) sentryRange = 1;
+		if (sentryRange >100) sentryRange = 100;
+
+		if (sentryWeight <=0) sentryWeight = 1.0;
+
+		if (RespawnDelaySeconds < 1 ) RespawnDelaySeconds =1;
 
 		this.myNPC.getBukkitEntity().setHealth(sentryHealth);
 
-		sentryStatus=Status.isLOOKING;
 
-	//	plugin.getServer().broadcastMessage("NPC GUARDING!");
+		this.setTarget(null);
+
+		//	plugin.getServer().broadcastMessage("NPC GUARDING!");
 
 		if(taskID==null) {
-			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(),5,40);			
+			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(),20,10);			
 		}
+
 	}
 
 	private class SentryLogicRunnable implements Runnable {
 		@Override
 		public void run() { 
 
-
+			//	plugin.getServer().broadcastMessage("tick " + sentryStatus);
 
 			if (sentryStatus == Status.isDEAD &&  System.currentTimeMillis() > isRespawnable) {
 				// Respawn
+
+				//		Location loc = myNPC.getTrait(CurrentLocation.class).getLocation();
+				//	if (myNPC.hasTrait(Waypoints.class)){
+				//Waypoints wp = myNPC.getTrait(Waypoints.class);
+				//	wp.getCurrentProvider()
+				//	}
+
+				//	plugin.getServer().broadcastMessage("Spawning...");
 				myNPC.spawn(myNPC.getTrait(CurrentLocation.class).getLocation());
 			}
 
 			else if (sentryStatus == Status.isHOSTILE && myNPC.isSpawned()) {			
 
 				if (projectileTarget != null){
-
+					//have a projectile target
 					if( !projectileTarget.isDead()){
-						Fire(projectileTarget);
-						return;	
+						if (System.currentTimeMillis() > oktoFire) {
+							//Fire!
+							Fire(projectileTarget);
+							oktoFire = (long) (System.currentTimeMillis() + AttackRateSeconds*1000);
+						}
+						return;	//keep at it
 					}
-
+					//is dead
+					setTarget(null);
 				}
 
-				if (getTarget() != null) {
+				else if (getTarget() != null) {
 					// Did it get away?
 					if (getTarget().getLocation().distance(myNPC.getBukkitEntity().getLocation()) > sentryRange){
+						//it got away...
 						setTarget(null);
-					//	plugin.getServer().broadcastMessage("it got away!");
-						sentryStatus = Status.isLOOKING;
 					}
 				}
 
 				else  {
-					//Target dead?
-					//			if (!guardPosts.isEmpty())
-					//			if (myNPC.getBukkitEntity().getLocation().distance(guardPosts.get(0)) > 16) 
-					//			myNPC.getNavigator().setTarget(guardPosts.get(0));
-				//	plugin.getServer().broadcastMessage("Target null");
+					//melee target died
 					setTarget(null);
-					sentryStatus = Status.isLOOKING;
 				}
 			}
 
@@ -343,9 +360,10 @@ public class SentryInstance implements Listener {
 				LivingEntity target = findTarget( sentryRange);
 				if (target !=null){
 					sentryStatus = Status.isHOSTILE;
-				//	plugin.getServer().broadcastMessage("Target selected: " + target.toString());	
+					//	plugin.getServer().broadcastMessage("Target selected: " + target.toString());	
 					setTarget(target);
 				}
+				else setTarget(null);
 
 
 			}
@@ -367,11 +385,14 @@ public class SentryInstance implements Listener {
 	}
 
 
-	@EventHandler
+	public enum hittype {normal, miss, block,  injure, main, disembowel}
+
+
+
 	public void onDamage(NPCDamageByEntityEvent  event) {
 
 		if (!event.getNPC().hasTrait(SentryTrait.class)) return;
-		
+
 		if (event.getNPC() != myNPC){
 			//what?
 			//plugin.getServer().broadcastMessage("Not ME!!!");
@@ -379,191 +400,239 @@ public class SentryInstance implements Listener {
 		}
 
 		if (!myNPC.isSpawned()) {
-	//\\how did youg get here?
+			//\\how did youg get here?
 			return;
 		}
 
 		NPC npc = event.getNPC();
-		Player player = null;	
+		LivingEntity player = null;	
 
-		if(Invincible) event.setDamage(0);
+		hittype hit = hittype.normal;
+
 
 		int finaldamage = event.getDamage();
 
-		if(event.getDamager() instanceof Player){
-			player = (Player) event.getDamager();	
 
+		//Find the attacker
+		if( event.getDamager() instanceof Projectile){
+			if(((Projectile) event.getDamager()).getShooter() instanceof LivingEntity){
+				player =((Projectile) event.getDamager()).getShooter();
+			}	
+		}
+		else if ( event.getDamager() instanceof LivingEntity)
+		{
+			player = (LivingEntity) event.getDamager();	
+		}
+
+		//can i kill it? lets go kill it.
+		if (player != null){
 			if (this.Retaliate) {
 				setTarget(player);
 				sentryStatus = Status.isHOSTILE;
-			}
+			}					
+		}
 
+		if(Invincible) return;
+
+		if(LuckyHits){
+			//Calulate crits
 			double damagemodifer = event.getDamage();
 
-			if(LuckyHits && !Invincible){
+			Random r = new Random();
+			int luckeyhit = r.nextInt(100);
 
-				Random r = new Random();
-				int luckeyhit = r.nextInt(100);
+			//	if (damagemodifer == 1.0) luckeyhit += 30; //use a weapon, dummy
 
-				//	if (damagemodifer == 1.0) luckeyhit += 30; //use a weapon, dummy
+			if (luckeyhit < 5) {
+				damagemodifer =  damagemodifer * 2.00;
+				hit = hittype.disembowel;
+			}
+			else if (luckeyhit < 15) {
 
-				if (luckeyhit < 5) {
+				damagemodifer =  damagemodifer * 1.75;
+				hit = hittype.main;
+			}
+			else if (luckeyhit < 25) {
+				damagemodifer =  damagemodifer * 1.50;
+				hit = hittype.injure;
+			}
+			else if (luckeyhit > 95) {
 
-					damagemodifer =  damagemodifer * 2.00;
-					player.sendMessage(ChatColor.RED + "*** You maim " + myNPC.getName());
-					npc.getBukkitEntity().playEffect(EntityEffect.HURT);
-				}
-				else if (luckeyhit < 15) {
-
-					damagemodifer =  damagemodifer * 1.50;
-					player.sendMessage(ChatColor.GOLD + "*** You dismember " + myNPC.getName());
-					npc.getBukkitEntity().playEffect(EntityEffect.HURT);
-				}
-				else if (luckeyhit < 25) {
-
-					damagemodifer =  damagemodifer * 1.50;
-					player.sendMessage(ChatColor.YELLOW + "*** You injure " + myNPC.getName());
-					npc.getBukkitEntity().playEffect(EntityEffect.HURT);
-				}
-				else if (luckeyhit > 95) {
-
-					damagemodifer =  0;
-					player.sendMessage(ChatColor.GRAY + "*** You miss " + myNPC.getName());
-
-				}
+				damagemodifer =  0;
+				hit = hittype.miss;
 
 			}
 
 			finaldamage = (int) Math.round(damagemodifer);
-
-
 		}
 
-		else if( event.getDamager() instanceof org.bukkit.entity.Projectile){
-			org.bukkit.entity.Projectile theArroe = (org.bukkit.entity.Projectile)event.getDamager();
-			if (theArroe.getShooter() instanceof Player) {
-				player = (Player) theArroe.getShooter();	
 
-				if (this.Retaliate) {
-					setTarget(player);
-					sentryStatus = Status.isHOSTILE;
-				}
 
-				finaldamage = event.getDamage();
-
-			}
-
-		}
-
-		if (finaldamage>0){
-			//play hurt effect
-			npc.getBukkitEntity().playEffect(EntityEffect.HURT);
+		if (finaldamage > 0) {
 
 			if (player !=null){
 				//knockback
 				Vector newVec = player.getLocation().getDirection().multiply(1.75);
 				newVec.setY(newVec.getY()/sentryWeight);
 				npc.getBukkitEntity().setVelocity(newVec);
-				player.sendMessage("You deal " + finaldamage + " damage to " + myNPC.getName());
 			}
 
+			//Apply armor
+			finaldamage -= this.Armor;
+
+
+			//there was damamge before armor.
+			if (finaldamage<= 0 && LuckyHits)	hit = hittype.block; 
+
+		}
+
+
+		if (player instanceof Player) {
+			//Messages
+			switch(hit){
+			case normal:
+				((Player)player).sendMessage(ChatColor.WHITE  + "*** You hit " + myNPC.getName() + " for " + finaldamage +" damage");
+				break;
+			case miss:
+				((Player)player).sendMessage(ChatColor.GRAY + "*** You miss " + myNPC.getName());
+				break;
+			case block:
+				((Player)player).sendMessage(ChatColor.GRAY + "*** Your blow glances off " + myNPC.getName() + "'s armor");
+				break;
+			case main:
+				((Player)player).sendMessage(ChatColor.GOLD  + "*** You MAIM " + myNPC.getName() + " for " + finaldamage +" damage");
+				break;
+			case disembowel:
+				((Player)player).sendMessage(ChatColor.RED  + "*** You DISEMBOWEL " + myNPC.getName() + " for " + finaldamage +" damage");
+				break;
+			case injure:
+				((Player)player).sendMessage(ChatColor.YELLOW  + "*** You injure " + myNPC.getName() + " for " + finaldamage +" damage");
+				break;
+			}	
+		}
+
+
+		if (finaldamage>0){
+			npc.getBukkitEntity().playEffect(EntityEffect.HURT); 
+
 			//is he dead?
-			if 	(npc.getBukkitEntity().getHealth() - finaldamage <= 0)  {
-				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
-				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
-				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.POTION_BREAK, 3);
+			if 	(npc.getBukkitEntity().getHealth() - finaldamage < 0)  {
+				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), Effect.SMOKE, 3);
 				npc.getBukkitEntity().getLocation().getWorld().spawn(npc.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
 				//	finaldamage = npc.getBukkitEntity().getHealth();
 
 				if (myNPC.getBukkitEntity() instanceof HumanEntity && this.DestroyInventory) {
-					 ((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
-					 ((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
+					((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
+					((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
 				}
-				
+
 				sentryStatus = Status.isDEAD;
 				isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds*1000 ;
+				//	plugin.getServer().broadcastMessage("Dead!");
 			}
 
-			event.setDamage(0);
-			myNPC.getBukkitEntity().damage(finaldamage);
+			event.setDamage(finaldamage);
+			//	myNPC.getBukkitEntity().damage(finaldamage);
+			event.setCancelled(false);
 
 		}
 		else{
-			event.setDamage(0);
+			// do nothing
 		}
 
+	}
+
+	public String getStats(){
+		DecimalFormat df = new DecimalFormat("#.0");
+		return ChatColor.RED+ "[HP]:" +ChatColor.WHITE+ sentryHealth + ChatColor.RED+" [AP]:" +ChatColor.WHITE+  Armor +ChatColor.RED+" [STR]:" + ChatColor.WHITE+ Strength +ChatColor.RED+ " [SPD]:" +ChatColor.WHITE+  df.format(sentrySpeed) +ChatColor.RED+ " [RNG]:" +ChatColor.WHITE+  sentryRange + ChatColor.RED+ " [ATK]:" +ChatColor.WHITE+  AttackRateSeconds;
 	}
 
 	public LivingEntity findTarget ( Integer Range) {
 
 		List<Entity> EntitiesWithinRange = myNPC.getBukkitEntity().getNearbyEntities(Range, Range, Range);
 		LivingEntity theTarget = null;
-		Double distanceToBeat = new Double(Range);
+		Double distanceToBeat = 99999.0;
 
 		//	plugin.getServer().broadcastMessage("Targets scanned : " + EntitiesWithinRange.toString());
 
 		for (Entity aTarget : EntitiesWithinRange) {
 
+			boolean isATarget = false;
+
 			if (aTarget instanceof Player) {
 
 				if (this.containsTarget("ENTITY:PLAYER")) {
-					if (((Player) aTarget).getLocation().distance(myNPC.getBukkitEntity().getLocation()) < distanceToBeat) {
-						distanceToBeat = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
-						theTarget = (LivingEntity) aTarget;
-					}
+					isATarget = true;
 				}
+
 
 				else if (this.containsTarget("PLAYER:" + ((Player) aTarget).getName().toUpperCase())) {
-					if (((Player) aTarget).getLocation().distance(myNPC.getBukkitEntity().getLocation()) < distanceToBeat) {
-						distanceToBeat = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
-
-						theTarget = (LivingEntity) aTarget;
-					}
+					isATarget = true;
 				}
+
 
 				else if (this.containsTarget("GROUP:")) {
 					String[] groups = Sentry.perms.getPlayerGroups((Player) aTarget);
 					for (int i = 0; i < groups.length; i++ ) {
 						if (this.containsTarget("GROUP:" + groups[i].toLowerCase())) {
-							if (((Player) aTarget).getLocation().distance(myNPC.getBukkitEntity().getLocation()) < distanceToBeat) {
-								distanceToBeat = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
-
-								theTarget = (LivingEntity) aTarget;	
-							}						
-						}
+							isATarget = true;
+						}						
 					}
 				}
 			}
 
 			else if (aTarget instanceof Monster) {
 				if (this.containsTarget("ENTITY:MONSTER")) {
-					if (((Monster) aTarget).getLocation()
-							.distance(myNPC.getBukkitEntity().getLocation()) < distanceToBeat) {
-						distanceToBeat = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
-
-						theTarget = (LivingEntity) aTarget;
-					}
+					isATarget = true;
 				}
 			}
 
-			else if (aTarget instanceof Creature) {
-				if (this.containsTarget("ENTITY:" + ((Creature) aTarget).getType())) {
-					if (((Creature) aTarget).getLocation()
-							.distance(myNPC.getBukkitEntity().getLocation()) < distanceToBeat) {
-						distanceToBeat = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
-						theTarget = (LivingEntity) aTarget;
-					}
+			else if (aTarget instanceof LivingEntity) {
+				if (this.containsTarget("ENTITY:" + ((LivingEntity) aTarget).getType())) {
+					isATarget = true;
 				}
+			}
+
+
+			//find closest target
+			if (isATarget) {
+
+
+				//	double elev = victor.getY();
+
+				//don't target entities straight down.
+				/*	if( elev > (-2 * dist) ) {
+					//now find closes mob
+					if (dist< distanceToBeat) {
+						distanceToBeat = dist;
+						theTarget = (LivingEntity) aTarget;
+					}					
+				}*/
+
+
+				Vector victor =  ((LivingEntity) aTarget).getEyeLocation().subtract(myNPC.getBukkitEntity().getEyeLocation()).toVector();
+				double dist =  Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getZ(), 2));
+
+				if (dist< distanceToBeat) {
+
+					//LoS calc
+					boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity)aTarget).getHandle()); 
+					//		plugin.getServer().broadcastMessage("LOS for: " + aTarget.toString() + LOS);
+
+					if (LOS  ){
+						//now find closes mob
+						distanceToBeat = dist;
+						theTarget = (LivingEntity) aTarget;
+					}			
+				}	
 			}
 		}
 
 		if (theTarget != null) 
 		{
-		//	plugin.getServer().broadcastMessage("Targeting: " + theTarget.toString());
+			//	plugin.getServer().broadcastMessage("Targeting: " + theTarget.toString());
 			return theTarget;
 		}
-
-
 
 		return null;
 	}
