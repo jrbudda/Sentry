@@ -34,8 +34,8 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		plugin = (Sentry) Bukkit.getServer().getPluginManager().getPlugin("Sentry");
 
-	//	plugin.getServer().broadcastMessage("onLoad");
-		
+		//	plugin.getServer().broadcastMessage("onLoad");
+
 		if (thisInstance ==null) {
 			thisInstance = new SentryInstance(plugin);
 			thisInstance.myTrait = this;
@@ -44,27 +44,28 @@ public class SentryTrait extends Trait implements Toggleable {
 		isToggled=	key.getBoolean("toggled", true);
 		thisInstance.Retaliate=	key.getBoolean("Retaliate", true);
 		thisInstance.Invincible=	key.getBoolean("Invincinble", false);
-		thisInstance.DestroyInventory=	key.getBoolean("DestroyInventory", true);
+		thisInstance.DropInventory=	key.getBoolean("DropInventory", true);
+		thisInstance.FriendlyFire = key.getBoolean("FriendlyFire",false);
 		thisInstance.LuckyHits=	key.getBoolean("CriticalHits", true);
 		thisInstance.sentryHealth=	key.getInt("Health", 20);
 		thisInstance.sentryRange=	key.getInt("Range", 10);
 		thisInstance.RespawnDelaySeconds=	key.getInt("RespawnDelay", 10);
-		thisInstance.sentrySpeed=	key.getDouble("Speed",1.0);
-		thisInstance.sentryWeight=		key.getDouble("Weight",1.0);
+		thisInstance.sentrySpeed=	(float) (key.getDouble("Speed",1.0));
+		thisInstance.sentryWeight=		(float) (key.getDouble("Weight",1.0));
 		thisInstance.Armor=		key.getInt("Armor", 0);
 		thisInstance.Strength=		key.getInt("Strength", 0);
-		thisInstance.AttackRateSeconds = key.getDouble("AttackRate",2.0);
-		
+		thisInstance.setGuardTarget(key.getString("GuardTarget", null));
+		thisInstance.AttackRateSeconds = (float) (key.getDouble("AttackRate",2.0));
+		thisInstance.NightVision = key.getInt("NightVision",16);
 		Object derp =  key.getRaw("Targets");
 		if (derp !=null) thisInstance.validTargets= (List<String>) key.getRaw("Targets");
-		
+
 	}
 
 	public SentryInstance getInstance(){
 		return thisInstance;
 	}
-	
-	
+
 	@Override
 	public void onSpawn() {
 
@@ -77,10 +78,10 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		thisInstance.myNPC = this.getNPC();
 		thisInstance.initialize();	
-	
-	  this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
-		
-	//	plugin.getServer().broadcastMessage("onSpawn");
+
+		this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
+
+		//	plugin.getServer().broadcastMessage("onSpawn");
 	}
 
 	@Override
@@ -88,9 +89,13 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
 
-	//	plugin.getServer().broadcastMessage("onRemove");
+		if (thisInstance!=null){
+			thisInstance.cancelRunnable();
+		}
 
-	this.getNPC().getId();
+		//	plugin.getServer().broadcastMessage("onRemove");
+
+		this.getNPC().getId();
 	}
 
 	@Override
@@ -99,7 +104,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("toggled", isToggled);
 		key.setBoolean("Retaliate", thisInstance.Retaliate);
 		key.setBoolean("Invincinble", thisInstance.Invincible);
-		key.setBoolean("DestroyInventory", thisInstance.DestroyInventory);
+		key.setBoolean("DropInventory", thisInstance.DropInventory);
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
 		key.setRaw("Targets", thisInstance.validTargets);
 		key.setInt("Health", thisInstance.sentryHealth);
@@ -110,6 +115,9 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setInt("Armor", thisInstance.Armor);
 		key.setInt("Strength", thisInstance.Strength);
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
+		key.setBoolean("FriendlyFire", thisInstance.FriendlyFire);
+		key.setInt("NightVision", thisInstance.NightVision);
+		if (thisInstance.guardTarget !=null)	key.setString("GuardTarget", thisInstance.guardTarget);
 	}
 
 	@Override
@@ -122,68 +130,89 @@ public class SentryTrait extends Trait implements Toggleable {
 		return isToggled;
 	}
 
-	
+
 
 	@EventHandler
 	public void onDamaged(NPCDamageByEntityEvent  event) {
 
 
 		if (thisInstance!=null){
-			thisInstance.onDamage(event);	
+			if (thisInstance.FriendlyFire || event.getDamager() != thisInstance.guardEntity)thisInstance.onDamage(event);	
 		}
 
 	}
+
+
 
 	@EventHandler
 	public void pushable(NPCPushEvent event) {
 
 		if (thisInstance!=null){
-			if (thisInstance.sentryStatus == Status.isHOSTILE) {
+			if (thisInstance.sentryStatus == Status.isHOSTILE || thisInstance.guardEntity != null) {
 				event.setCancelled(false);
 			}
-			
+
 		}
 	}
-	
+
 	@EventHandler
 	public void C2Reload(CitizensReloadEvent event) {
 
 		//	onSpawn();
 		//plugin.getServer().broadcastMessage("onReload");
 	}
-	
-	
+
+
 	@EventHandler
 	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent  event) {
 
-		Entity ent = event.getDamager();
+		Entity entfrom = event.getDamager();
+		Entity entto = event.getEntity();
 
-	
-		if(	ent  instanceof org.bukkit.entity.Projectile){
-			ent = ((org.bukkit.entity.Projectile) ent).getShooter();
+		if(	entfrom  instanceof org.bukkit.entity.Projectile){
+			entfrom = ((org.bukkit.entity.Projectile) entfrom).getShooter();
 		}
 
-		if(ent instanceof LivingEntity) {
 
-			if (net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(ent)){
-			//	NPC npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(ent);	
-	
+
+		if(entfrom instanceof LivingEntity) {
+
+			//Adjust outgoing damamge from Sentry
+			if (net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(entfrom)){
+				// im the damager.
+
 				if (thisInstance!=null){
-									event.setDamage(event.getDamage() + thisInstance.Strength);
-				}			
+
+					if(entto == thisInstance.guardEntity && !thisInstance.FriendlyFire) event.setCancelled(true);
+
+					event.setDamage(event.getDamage() + thisInstance.Strength);
+				}	
+
 			}
+			else{ //never set mytarget = me
+				//Check damamge to guard Target
+
+				if(	entto == thisInstance.guardEntity){
+
+					if (thisInstance.Retaliate) thisInstance.setTarget((LivingEntity)entfrom);
+				}
+
+			}
+
 		}
+
 
 	}
 
 	@EventHandler
 	public void Despawn(NPCDespawnEvent event){
+
 		//plugin.initializedSentries.remove(event.getNPC().getId());
 		//plugin.getServer().broadcastMessage("onDespawn");
 	}
 
-	
-	
-	
-	
+
+
+
+
 }
