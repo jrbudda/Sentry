@@ -15,5 +15,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/Vault.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="C:/Minecraft/plugins/denizen-0.7-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
