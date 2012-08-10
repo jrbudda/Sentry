@@ -37,9 +37,10 @@ public class Sentry extends JavaPlugin {
 		try {
 			setupDenizenHook();
 		} catch (ActivationException e) {
-			//log?
+			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath trigger with Denizen" + e.getMessage());
 		}
 
+		if (_dplugin != null)	getLogger().log(Level.INFO,"NPCDeath Trigger registered sucessfully with Denizen");
 
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
 		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
@@ -47,20 +48,23 @@ public class Sentry extends JavaPlugin {
 
 
 	//***Denizen Hook
-	private NPC_DeathTrigger _denizenTrigger = null;
+	private NpcdeathTrigger _denizenTrigger = null;
 	private Denizen _dplugin = null;
 
 
-	public void SentryDeath(List<Player> players, NPC npc){
-		if (_denizenTrigger !=null && npc !=null)	_denizenTrigger.Die(players, npc);
+	public boolean SentryDeath(List<Player> players, NPC npc){
+		if (_denizenTrigger !=null && npc !=null) return	_denizenTrigger.Die(players, npc);
+		return false;
 	}
 
 	private void setupDenizenHook() throws ActivationException {
 		_dplugin = (Denizen) this.getServer().getPluginManager().getPlugin("Denizen");
 		if (_dplugin != null) {
-			_denizenTrigger = new NPC_DeathTrigger();
+			_denizenTrigger = new NpcdeathTrigger();
 			try {
-				_denizenTrigger.activateAs("NPCDeath");
+				_denizenTrigger.activateAs("Npcdeath");
+				DieCommand dc = new DieCommand();
+				dc.activateAs("DIE");
 			} catch (ActivationException e) {
 				_dplugin =null;
 				_denizenTrigger =null;
@@ -71,7 +75,7 @@ public class Sentry extends JavaPlugin {
 	///
 
 	public SentryInstance getSentry(Entity ent){
-
+		if( ent == null) return null;
 		NPC npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(ent);
 		if (npc !=null && npc.hasTrait(SentryTrait.class)){
 			return npc.getTrait(SentryTrait.class).getInstance();

@@ -16,6 +16,7 @@ import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
@@ -38,7 +39,7 @@ public class SentryInstance {
 			// plugin.getServer().broadcastMessage("tick " + (myNPC ==null) +
 			// " " + sentryStatus);
 
-			if (myNPC != null && myNPC.getBukkitEntity() != null && myNPC.getBukkitEntity().isDead()) sentryStatus = Status.isDEAD; // incase it dies in a way im not handling.....
+			if (!myNPC.isSpawned()) sentryStatus = Status.isDEAD; // incase it dies in a way im not handling.....
 
 			if (sentryStatus != Status.isDEAD && System.currentTimeMillis() > oktoheal && HealRate > 0) {
 				if (myNPC.getBukkitEntity().getHealth() < sentryHealth) {
@@ -530,6 +531,8 @@ public class SentryInstance {
 
 		event.setCancelled(true);
 
+		if(sentryStatus == Status.isDYING) return;
+
 		if (!myNPC.isSpawned()) {
 			// \\how did youg get here?
 			return;
@@ -609,7 +612,7 @@ public class SentryInstance {
 
 		}
 
-		if (player instanceof Player) {
+		if (player instanceof CraftPlayer) {
 
 			if(!_myDamamgers.contains(player)) _myDamamgers.add((Player) player);
 
@@ -650,18 +653,34 @@ public class SentryInstance {
 					((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
 				}
 
-				sentryStatus = Status.isDEAD;
-				
-				plugin.SentryDeath(_myDamamgers, myNPC);
 
-				npc.getBukkitEntity().playEffect(EntityEffect.DEATH);
-
-				if (RespawnDelaySeconds == -1) {
-
-					myNPC.destroy();
-				} else {
-					isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
+				if		(plugin.SentryDeath(_myDamamgers, myNPC)){
+					//Denizen is handling this death
+					sentryStatus = Status.isDYING;
+					
+					if (RespawnDelaySeconds == -1) {
+						myNPC.destroy();
+					} else {
+						isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
+					}
+					
+					return;
 				}
+				else
+				{
+					//Denizen is NOT handling this death
+					sentryStatus = Status.isDEAD;
+					if (RespawnDelaySeconds == -1) {
+						myNPC.destroy();
+					} else {
+						isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
+					}
+
+					myNPC.getBukkitEntity().damage(finaldamage);
+					return;
+
+				}
+
 
 				// plugin.getServer().broadcastMessage("Dead!");
 			}
@@ -679,6 +698,8 @@ public class SentryInstance {
 		}
 
 	}
+
+
 
 	@EventHandler
 	public void onRightClick(NPCRightClickEvent event) {

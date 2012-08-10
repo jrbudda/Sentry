@@ -59,9 +59,11 @@ public class SentryTrait extends Trait implements Toggleable {
 				thisInstance.Spawn = null;
 			}
 	
+			if(  thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
+			
 		}
 		
-		if( thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
+
 					
 		Object derp =  key.getRaw("Targets");
 		if (derp !=null) thisInstance.validTargets= (List<String>) key.getRaw("Targets");
