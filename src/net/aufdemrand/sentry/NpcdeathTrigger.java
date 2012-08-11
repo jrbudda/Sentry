@@ -23,15 +23,15 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrig
 		}
 
 		try {
-			  if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath")) {
-					if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Npcdeath Trigger not enabled");
-					return false; 
-			  }
+			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath")) {
+				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Npcdeath Trigger not enabled");
+				return false; 
+			}
 		} catch (Exception e) {
 			return false;
 		}
-		
-			
+
+
 		ScriptHelper sE = plugin.getScriptEngine().helper;
 		if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Parsing NPCDeath Trigger.");
 
@@ -39,7 +39,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrig
 
 		for (Player thePlayer:players){
 
-			
+
 			if(thePlayer !=null && thePlayer.getLocation().distance(npc.getBukkitEntity().getLocation()) > 300) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, thePlayer.getName()+ " is to far away.");
 				break;
@@ -48,7 +48,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrig
 			String theScriptName = theDenizen.getInteractScript(thePlayer, NpcdeathTrigger.class);
 			if (theScriptName == null) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "No script found.");
-				return false;
+				break;
 			}
 
 			Integer theStep = sE.getCurrentStep(thePlayer, theScriptName);
@@ -59,6 +59,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrig
 				List<String> theScript = sE.getScript(sE.getTriggerPath(theScriptName, theStep, triggerName ) +  sE.scriptString);
 				if(theScript ==null || theScript.isEmpty()){
 					if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Commands missing or empty");
+					break;
 				}
 				sE.queueScriptEntries(thePlayer, sE.buildScriptEntries(thePlayer, theDenizen, theScript, theScriptName, theStep), QueueType.TRIGGER);
 				founone = true;

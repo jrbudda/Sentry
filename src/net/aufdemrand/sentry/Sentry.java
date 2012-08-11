@@ -146,6 +146,12 @@ public class Sentry extends JavaPlugin {
 			args[j-i] = inargs[j];
 		}
 
+		
+		if (args.length < 1) {
+			sender.sendMessage(ChatColor.RED + "Use /sentry help for command reference.");
+			return true;
+		}
+		
 
 		if (args[0].equalsIgnoreCase("help")) {
 
@@ -238,12 +244,20 @@ public class Sentry extends JavaPlugin {
 		SentryInstance inst =	ThisNPC.getTrait(SentryTrait.class).getInstance();
 
 		if (args[0].equalsIgnoreCase("spawn")) {
+			if(!player.hasPermission("sentry.spawn")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			inst.Spawn = ThisNPC.getBukkitEntity().getLocation();
 			player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will respawn at its present location.");   // Talk to the player.
 			return true;
 
 		}
 		else if (args[0].equalsIgnoreCase("invincible")) {
+			if(!player.hasPermission("sentry.options.invincible")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (inst.Invincible) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " now takes damage..");   // Talk to the player.
 			}
@@ -256,6 +270,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("retaliate")) {
+			if(!player.hasPermission("sentry.options.retaliate")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (inst.Retaliate) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will not retaliate.");   // Talk to the player.
 			}
@@ -268,6 +286,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("criticals")) {
+			if(!player.hasPermission("sentry.options.criticals")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (inst.LuckyHits) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will take normal damamge.");   // Talk to the player.
 			}
@@ -280,6 +302,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("drops")) {
+			if(!player.hasPermission("sentry.options.retaliate")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (!inst.DropInventory) {
 				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " will drop items");   // Talk to the player.
 			}
@@ -292,6 +318,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("guard")) {
+			if(!player.hasPermission("sentry.guard")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 
 			if (args.length > 1) {
 				if (inst.setGuardTarget(args[1])) {
@@ -311,6 +341,10 @@ public class Sentry extends JavaPlugin {
 		}
 
 		else if (args[0].equalsIgnoreCase("health")) {
+			if(!player.hasPermission("sentry.stats.health")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Health is " + inst.sentryHealth);
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry health [1-20]   note: Typically players");
@@ -330,8 +364,10 @@ public class Sentry extends JavaPlugin {
 		}
 
 		else if (args[0].equalsIgnoreCase("armor")) {
-
-
+			if(!player.hasPermission("sentry.stats.armor")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Armor is " + inst.Armor);
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry armor [0-10] ");
@@ -350,6 +386,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("strength")) {
+			if(!player.hasPermission("sentry.stats.strength")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Strength is " + inst.Strength);
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry strength [0-10] ");
@@ -369,6 +409,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("nightvision")) {
+			if(!player.hasPermission("sentry.stats.nightvision")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Night Vision is " + inst.NightVision);
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry nightvision [0-16] ");
@@ -388,6 +432,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("respawn")) {
+			if(!player.hasPermission("sentry.stats.respawn")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				if(inst.RespawnDelaySeconds == -1  ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " will not automatically respawn.");
 				if(inst.RespawnDelaySeconds == 0 ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " will be deleted upon death");
@@ -411,6 +459,10 @@ public class Sentry extends JavaPlugin {
 		}
 
 		else if (args[0].equalsIgnoreCase("speed")) {
+			if(!player.hasPermission("sentry.stats.speed")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Speed is " + inst.sentrySpeed);
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry speed [0.0 - 1.5]");
@@ -429,6 +481,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("attackrate")) {
+			if(!player.hasPermission("sentry.stats.attackrate")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Projectile Attack Rate is " + inst.AttackRateSeconds + "s between shots." );
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry attackrate [0.0 - 30.0]");
@@ -447,6 +503,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("healrate")) {
+			if(!player.hasPermission("sentry.stats.healrate")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Heal Rate is " + inst.HealRate + "s" );
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry healrate [0.0 - 300.0]");
@@ -466,6 +526,10 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("range")) {
+			if(!player.hasPermission("sentry.stats.range")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Range is " + inst.sentryRange);
@@ -487,6 +551,10 @@ public class Sentry extends JavaPlugin {
 		}
 
 		else if (args[0].equalsIgnoreCase("info")) {
+			if(!player.hasPermission("sentry.info")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 			player.sendMessage(ChatColor.GOLD + "------- Sentry Info for " + ThisNPC.getName() + "------");
 			player.sendMessage(ChatColor.GREEN + inst.getStats());
 			player.sendMessage(ChatColor.GREEN + "Invincible: " + inst.Invincible + "  Retaliate: " + inst.Retaliate);
@@ -507,6 +575,10 @@ public class Sentry extends JavaPlugin {
 		}
 
 		else if (args[0].equalsIgnoreCase("target")) {
+			if(!player.hasPermission("sentry.target")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 
 			if (args.length<2 ){
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [entity:Name] or [player:Name] or [group:Name] or [entity:monster] or [entity:player]");
@@ -561,8 +633,7 @@ public class Sentry extends JavaPlugin {
 				}
 			}
 		}
-		player.sendMessage(ChatColor.RED + "unhandled command");
-		return true;
+		return false;
 	}
 
 
