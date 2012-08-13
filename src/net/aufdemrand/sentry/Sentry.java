@@ -26,11 +26,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class Sentry extends JavaPlugin {
 
 	public static Permission perms = null;
-	public boolean debug = false;;
+	public boolean debug = false;
+    	boolean isTownyActive = false;
 
 
 	@Override
 	public void onEnable() {
+		
+		if(getServer().getPluginManager().getPlugin("Towny") != null){
+			isTownyActive = true;
+		}
 
 		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault! Group-based aggression will not function.");
 		else{
