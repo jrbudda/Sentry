@@ -1,0 +1,75 @@
+name: Sentry
+author: aufdemrand, jrbudda
+version: 0.7.9.3
+main: net.aufdemrand.sentry.Sentry
+depend:
+  - Citizens
+  - Vault
+softdepend:
+  - Denizen
+commands:
+  sentry:
+    description: Lists sentry commands.
+    usage: /sentry help
+
+permissions:
+  sentry.*:
+    default: op
+    children:
+       sentry.target: true
+       sentry.stats.*: true
+       sentry.options.*: true
+       sentry.spawn: true
+       sentry.guard: true
+       sentry.info: true
+  sentry.stats.*:
+     default: op
+     children:
+       sentry.stats.strength: true
+       sentry.stats.armor: true
+       sentry.stats.speed: true
+       sentry.stats.nightvision: true
+       sentry.stats.respawn: true
+       sentry.stats.health: true
+       sentry.stats.attackrate: true     
+       sentry.stats.healrate: true     
+  sentry.options.*:
+     default: op
+     children:
+       sentry.options.invincible: true
+       sentry.options.retaliate: true
+       sentry.options.drops: true
+       sentry.options.criticals: true 
+       sentry.options.friendlyfire: true 
+  sentry.spawn:
+     deafult: op
+  sentry.guard:
+     deafult: op
+  sentry.info:
+     deafult: op
+  sentry.stats.strength:
+     default: op
+  sentry.stats.armor:
+     default: op
+  sentry.stats.speed:
+     default: op
+  sentry.stats.nightvision:
+     default: op
+  sentry.stats.respawn:
+     default: op
+  sentry.stats.health:
+     default: op
+  sentry.stats.attackrate:
+     default: op
+  sentry.stats.healrate:
+     default: op
+  sentry.options.invincible:
+     default: op
+  sentry.options.retaliate: 
+     default: op
+  sentry.options.drops: 
+     default: op
+  sentry.options.criticals: 
+     default: op
+  sentry.options.friendlyfire: 
+     default: op
