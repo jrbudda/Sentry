@@ -36,10 +36,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.util.Vector;
 
-import com.palmergames.bukkit.towny.exceptions.NotRegisteredException;
-import com.palmergames.bukkit.towny.object.Resident;
-import com.palmergames.bukkit.towny.object.TownyUniverse;
-
 public class SentryInstance {
 
 	private class SentryLogicRunnable implements Runnable {
@@ -290,20 +286,11 @@ public class SentryInstance {
 				}
 
 				if(plugin.isTownyActive == true) {
-					Player player = (Player) aTarget;
-					Resident resident;
-					try {
-						resident = TownyUniverse.getDataSource().getResident(player.getName());
-						String town;
-						if(resident.hasTown()) {
-							town = resident.getTown().getName();
-							if (this.containsTarget("TOWN:" + town)) {
-								isATarget = true;
-							}	
+					String getTown = TownySupport.getResidentTown((Player) aTarget);
+					if(getTown != null){
+						if (this.containsTarget("TOWN:" + getTown)) {
+							isATarget = true;
 						}
-					} catch (NotRegisteredException e) {
-						// TODO Auto-generated catch block
-						//e.printStackTrace();
 					}
 				}
 

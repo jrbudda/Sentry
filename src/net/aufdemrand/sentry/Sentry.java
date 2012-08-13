@@ -27,14 +27,17 @@ public class Sentry extends JavaPlugin {
 
 	public static Permission perms = null;
 	public boolean debug = false;
-    boolean isTownyActive = false;
+    public boolean isTownyActive = false;
 
 
 	@Override
 	public void onEnable() {
 		
 		if(getServer().getPluginManager().getPlugin("Towny") != null){
-			isTownyActive = true;
+			getLogger().log(Level.INFO,"Towny is active and will be used!" );
+			if(getServer().getPluginManager().getPlugin("Towny").isEnabled() == true) {
+				isTownyActive = true;
+			}			
 		}
 
 		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault! Group-based aggression will not function.");
