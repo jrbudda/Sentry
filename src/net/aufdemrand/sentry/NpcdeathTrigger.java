@@ -11,7 +11,7 @@ import net.aufdemrand.denizen.scripts.ScriptEngine.QueueType;
 import net.aufdemrand.denizen.scripts.ScriptHelper;
 import net.citizensnpcs.api.npc.NPC;
 
-public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrigger{
+public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTrigger{
 
 	public  boolean Die(List<Player> players, NPC npc) {
 
@@ -42,13 +42,13 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrig
 
 			if(thePlayer !=null && thePlayer.getLocation().distance(npc.getBukkitEntity().getLocation()) > 300) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, thePlayer.getName()+ " is to far away.");
-				break;
+				continue;
 			}
 
 			String theScriptName = theDenizen.getInteractScript(thePlayer, NpcdeathTrigger.class);
 			if (theScriptName == null) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "No script found.");
-				break;
+				continue;
 			}
 
 			Integer theStep = sE.getCurrentStep(thePlayer, theScriptName);
@@ -59,7 +59,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.scripts.AbstractTrig
 				List<String> theScript = sE.getScript(sE.getTriggerPath(theScriptName, theStep, triggerName ) +  sE.scriptString);
 				if(theScript ==null || theScript.isEmpty()){
 					if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Commands missing or empty");
-					break;
+					continue;
 				}
 				sE.queueScriptEntries(thePlayer, sE.buildScriptEntries(thePlayer, theDenizen, theScript, theScriptName, theStep), QueueType.TRIGGER);
 				founone = true;

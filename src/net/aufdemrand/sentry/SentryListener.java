@@ -1,12 +1,15 @@
 package net.aufdemrand.sentry;
 
+import java.util.logging.Level;
+
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
-import net.aufdemrand.sentry.SentryInstance.Status;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.CitizensReloadEvent;
 import net.citizensnpcs.api.event.NPCDespawnEvent;
@@ -28,9 +31,7 @@ public class SentryListener implements Listener {
 		SentryInstance thisInstance = plugin.getSentry(event.getNPC());
 
 		if (thisInstance!=null){
-			if (thisInstance.sentryStatus == Status.isHOSTILE || thisInstance.guardEntity != null) {
-				event.setCancelled(false);
-			}
+			event.setCancelled(false);
 
 		}
 	}
@@ -38,7 +39,7 @@ public class SentryListener implements Listener {
 	@EventHandler
 	public void C2Reload(CitizensReloadEvent event) {
 
-		
+
 	}
 
 
@@ -67,7 +68,7 @@ public class SentryListener implements Listener {
 		SentryInstance to = plugin.getSentry(entto);
 
 
-	//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage());
+		//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage());
 
 
 		if (from !=null) {
@@ -81,12 +82,13 @@ public class SentryListener implements Listener {
 
 
 		if (to  != null) {
-			
+
 			//to a sentry
 			event.setCancelled(false);	
 			if(entfrom == to.guardEntity && !to.FriendlyFire) event.setCancelled(true);
-						
-			NPC npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(entfrom);
+			NPC npc =null;
+			if (entfrom!=null)	 npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(entfrom);
+
 			if (npc !=null && npc.hasTrait(SentryTrait.class) && to.guardEntity !=null){
 				if ( npc.getTrait(SentryTrait.class).getInstance().guardEntity == to.guardEntity) { //dont take damage from co-guards.
 					event.setCancelled(true);
@@ -97,7 +99,7 @@ public class SentryListener implements Listener {
 
 		}
 
-//	plugin.getLogger().info("final: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage());
+		//	plugin.getLogger().info("final: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage());
 	}
 
 
@@ -110,6 +112,35 @@ public class SentryListener implements Listener {
 	}
 
 
+/*	@EventHandler
+	public void something(ChunkUnloadEvent event){
 
+		Entity[] ents = event.getChunk().getEntities();
+
+		for ( Entity ent:ents) {
+			if (!(ent instanceof LivingEntity)) continue;
+			SentryInstance inst = plugin.getSentry(ent);
+			plugin.getLogger().log(Level.INFO,"Chunk unload " + ent.toString());
+			if (inst !=null){
+				plugin.getLogger().log(Level.INFO,"Chunk unload " + inst.myNPC.getName());
+				inst.cancelRunnable();
+			}
+		}	
+	}
+
+	@EventHandler
+	public void something2(ChunkLoadEvent event){
+		Entity[] ents = event.getChunk().getEntities();
+		for ( Entity ent:ents) {
+			if (!(ent instanceof LivingEntity)) continue;
+			plugin.getLogger().log(Level.INFO,"Chunk load " + ent.toString());
+			SentryInstance inst = plugin.getSentry(ent);
+			if (inst !=null){
+				plugin.getLogger().log(Level.INFO,"Chunk load" + inst.myNPC.getName());
+				inst.initialize();
+			}
+		}	
+	}
+*/
 
 }

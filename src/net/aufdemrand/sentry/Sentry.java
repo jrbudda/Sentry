@@ -31,13 +31,22 @@ public class Sentry extends JavaPlugin {
 
 	@Override
 	public void onEnable() {
-		setupPermissions();
+
+		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault! Group-based aggression will not function.");
+		else{
+
+			String[] Gr = perms.getGroups();
+			getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found." );
+
+		}
 
 
 		try {
 			setupDenizenHook();
-		} catch (ActivationException e) {
+		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath trigger with Denizen" + e.getMessage());
+			_dplugin =null;
+			_denizenTrigger =null;
 		}
 
 		if (_dplugin != null)	getLogger().log(Level.INFO,"NPCDeath Trigger registered sucessfully with Denizen");
@@ -61,15 +70,9 @@ public class Sentry extends JavaPlugin {
 		_dplugin = (Denizen) this.getServer().getPluginManager().getPlugin("Denizen");
 		if (_dplugin != null) {
 			_denizenTrigger = new NpcdeathTrigger();
-			try {
-				_denizenTrigger.activateAs("Npcdeath");
-				DieCommand dc = new DieCommand();
-				dc.activateAs("DIE");
-			} catch (ActivationException e) {
-				_dplugin =null;
-				_denizenTrigger =null;
-				throw e;
-			}
+			_denizenTrigger.activateAs("Npcdeath");
+			DieCommand dc = new DieCommand();
+			dc.activateAs("DIE");
 		}
 	}
 	///
@@ -93,11 +96,13 @@ public class Sentry extends JavaPlugin {
 		return null;
 	}
 
-	private boolean setupPermissions() {
-
-		RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
-		perms = rsp.getProvider();
-		return perms != null;
+	private boolean setupPermissions()
+	{
+		RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
+		if (permissionProvider != null) {
+			perms = permissionProvider.getProvider();
+		}
+		return (perms != null);
 	}
 
 	@Override
@@ -146,12 +151,12 @@ public class Sentry extends JavaPlugin {
 			args[j-i] = inargs[j];
 		}
 
-		
+
 		if (args.length < 1) {
 			sender.sendMessage(ChatColor.RED + "Use /sentry help for command reference.");
 			return true;
 		}
-		
+
 
 		if (args[0].equalsIgnoreCase("help")) {
 
@@ -246,6 +251,10 @@ public class Sentry extends JavaPlugin {
 		if (args[0].equalsIgnoreCase("spawn")) {
 			if(!player.hasPermission("sentry.spawn")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+			if (ThisNPC.getBukkitEntity() == null) {
+				player.sendMessage(ChatColor.RED + "Cannot set spawn while " +  ThisNPC.getName()  + " is dead.");
 				return true;
 			}
 			inst.Spawn = ThisNPC.getBukkitEntity().getLocation();
@@ -356,7 +365,7 @@ public class Sentry extends JavaPlugin {
 				if (HPs > 20) HPs = 20;
 				if (HPs <1)  HPs =1;
 
-				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " health set to " + Integer.valueOf(args[1]) + ".");   // Talk to the player.
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " health set to " + HPs + ".");   // Talk to the player.
 				inst.sentryHealth = HPs;
 			}
 
