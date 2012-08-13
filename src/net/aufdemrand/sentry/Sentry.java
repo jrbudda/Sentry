@@ -27,15 +27,20 @@ public class Sentry extends JavaPlugin {
 
 	public static Permission perms = null;
 	public boolean debug = false;
-    	boolean isTownyActive = false;
+    	
+    	//*** Added by: TerraNetworkOrg
+    	boolean isTownyActive = false;    	
+    	//*** Added by: TerraNetworkOrg
 
 
 	@Override
 	public void onEnable() {
-		
+		    	
+    		//*** Added by: TerraNetworkOrg
 		if(getServer().getPluginManager().getPlugin("Towny") != null){
 			isTownyActive = true;
-		}
+		}    	
+    		//*** Added by: TerraNetworkOrg
 
 		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault! Group-based aggression will not function.");
 		else{
