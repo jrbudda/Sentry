@@ -289,9 +289,9 @@ public class SentryInstance {
 				//*** Added by: TerraNetworkOrg
 				if(plugin.isTownyActive == true) {
 					Player player = (Player) aTarget;
-					Resident resident;
+					com.palmergames.bukkit.towny.object.Resident resident;
 					try {
-						resident = TownyUniverse.getDataSource().getResident(player.getName());
+						resident = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getResident(player.getName());
 						String town;
 						if(resident.hasTown()) {
 							town = resident.getTown().getName();
@@ -299,7 +299,7 @@ public class SentryInstance {
 								isATarget = true;
 							}	
 						}
-					} catch (NotRegisteredException e) {
+					} catch (com.palmergames.bukkit.towny.exceptions.NotRegisteredException e) {
 						// TODO Auto-generated catch block
 						//e.printStackTrace();
 					}
