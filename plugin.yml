@@ -1,12 +1,13 @@
 name: Sentry
 author: aufdemrand, jrbudda
-version: 0.7.9.3
+version: 0.8.0
 main: net.aufdemrand.sentry.Sentry
 depend:
   - Citizens
-  - Vault
 softdepend:
   - Denizen
+  - Vault
+  - Towny
 commands:
   sentry:
     description: Lists sentry commands.

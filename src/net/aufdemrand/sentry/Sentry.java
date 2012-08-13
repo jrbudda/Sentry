@@ -2,6 +2,7 @@ package net.aufdemrand.sentry;
 
 //import java.util.HashMap;
 import java.rmi.activation.ActivationException;
+import java.util.Collection;
 import java.util.List;
 //import java.util.Map;
 import java.util.logging.Level;
@@ -16,8 +17,10 @@ import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -28,18 +31,15 @@ public class Sentry extends JavaPlugin {
 	public static Permission perms = null;
 	public boolean debug = false;;
 
-
 	@Override
 	public void onEnable() {
 
 		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault! Group-based aggression will not function.");
 		else{
-
 			String[] Gr = perms.getGroups();
 			getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found." );
 
 		}
-
 
 		try {
 			setupDenizenHook();
@@ -49,11 +49,39 @@ public class Sentry extends JavaPlugin {
 			_denizenTrigger =null;
 		}
 
-		if (_dplugin != null)	getLogger().log(Level.INFO,"NPCDeath Trigger registered sucessfully with Denizen");
+		if (_dplugin != null)	getLogger().log(Level.INFO,"NPCDeath Trigger and DIE command registered sucessfully with Denizen");
+		else getLogger().log(Level.INFO,"Could not register with Denizen");
+
+		if (setupTowny()) getLogger().log(Level.INFO,"Registered with Towny sucessfully" );
+		else getLogger().log(Level.INFO,"Could not register with Towny. the TOWN target will not function." );
 
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
 		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
+
+
+		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+			public void run() {
+				List<World> worlds = getServer().getWorlds();
+				//clean up dem arrows
+				int x = 0;
+				for (World world :worlds){
+					Collection<Arrow> arrows = world.getEntitiesByClass(Arrow.class);
+					for (Arrow arrow: arrows ){
+						if (arrow.getTicksLived() == 0){
+							arrow.remove();
+							x++;
+						}
+					}
+				}
+
+				if (x>0)	getLogger().log(Level.INFO,x + " arrows removed" );
+
+
+			}
+		}, 40,  20*300);
+
 	}
+
 
 
 	//***Denizen Hook
@@ -69,10 +97,13 @@ public class Sentry extends JavaPlugin {
 	private void setupDenizenHook() throws ActivationException {
 		_dplugin = (Denizen) this.getServer().getPluginManager().getPlugin("Denizen");
 		if (_dplugin != null) {
-			_denizenTrigger = new NpcdeathTrigger();
-			_denizenTrigger.activateAs("Npcdeath");
-			DieCommand dc = new DieCommand();
-			dc.activateAs("DIE");
+			if (_dplugin.isEnabled()) {
+				_denizenTrigger = new NpcdeathTrigger();
+				_denizenTrigger.activateAs("Npcdeath");
+				DieCommand dc = new DieCommand();
+				dc.activateAs("DIE");
+			}
+			else _dplugin =null;
 		}
 	}
 	///
@@ -110,6 +141,7 @@ public class Sentry extends JavaPlugin {
 
 		getLogger().log(Level.INFO, " v" + getDescription().getVersion() + " disabled.");
 		Bukkit.getServer().getScheduler().cancelTasks(this);
+
 	}
 
 
@@ -646,7 +678,30 @@ public class Sentry extends JavaPlugin {
 	}
 
 
+	boolean TownyActive = false;
+	public  String getResidentTown(Player player) {
+		if (TownyActive == false)return null;
+		com.palmergames.bukkit.towny.object.Resident resident;
+		try {
+			resident = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getResident(player.getName());
+			if(resident.hasTown()) {
+				return resident.getTown().getName();
+			}			
+		} catch (Exception e) {
+			return null;
+		}
 
+		return null;
+	}
+
+	private boolean setupTowny(){
+		if(getServer().getPluginManager().getPlugin("Towny") != null){
+			if(getServer().getPluginManager().getPlugin("Towny").isEnabled() == true) {
+				TownyActive = true;
+			}	
+		}
+		return TownyActive;
+	}
 
 	// End of CLASS
 

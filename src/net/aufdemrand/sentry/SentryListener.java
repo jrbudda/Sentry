@@ -1,14 +1,12 @@
 package net.aufdemrand.sentry;
 
-import java.util.logging.Level;
 
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.ChunkLoadEvent;
-import org.bukkit.event.world.ChunkUnloadEvent;
+
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.event.CitizensReloadEvent;
@@ -112,7 +110,7 @@ public class SentryListener implements Listener {
 	}
 
 
-/*	@EventHandler
+	/*	@EventHandler
 	public void something(ChunkUnloadEvent event){
 
 		Entity[] ents = event.getChunk().getEntities();
@@ -141,6 +139,6 @@ public class SentryListener implements Listener {
 			}
 		}	
 	}
-*/
+	 */
 
 }

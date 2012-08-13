@@ -262,51 +262,45 @@ public class SentryInstance {
 				if (this.containsTarget("ENTITY:PLAYER")) {
 					isATarget = true;
 				}
-
-				if (this.containsTarget("ENTITY:PLAYERS")) {
+				else if ( this.containsTarget("ENTITY:PLAYERS")) {
 					isATarget = true;
 				}
+				else{
+					String name = ((Player) aTarget).getName();
 
-				String name = ((Player) aTarget).getName();
+					if ( this.containsTarget("PLAYER:" + name)) isATarget = true;
 
+					else if( Sentry.perms!=null) {
+						String[] groups = Sentry.perms.getPlayerGroups((World)null,name);
+						if (groups.length == 0) {
+							groups = Sentry.perms.getPlayerGroups(aTarget.getWorld(),name);
+						}			
+						for (int i = 0; i < groups.length; i++) {
+							if (this.containsTarget("GROUP:" + groups[i]))	isATarget = true;
+						}
 
-				if (this.containsTarget("PLAYER:" + name)) {
-					isATarget = true;
-				}
-
-				if(Sentry.perms!=null) {
-					String[] groups = Sentry.perms.getPlayerGroups((World)null,name);
-					if (groups.length == 0) {
-					 groups = Sentry.perms.getPlayerGroups(aTarget.getWorld(),name);
-					}			
-					for (int i = 0; i < groups.length; i++) {
-						if (this.containsTarget("GROUP:" + groups[i]))	isATarget = true;
 					}
 
+					else if( plugin.TownyActive ) {
+						String town = plugin.getResidentTown((Player)aTarget);
+						if (town!=null) {
+							if (this.containsTarget("TOWN:" + town))isATarget = true;	
+						}
+					}
 				}
+
 
 			}
 
 
 			else if (aTarget instanceof Monster) {
-
-				if (this.containsTarget("ENTITY:MONSTER")) {
-					isATarget = true;
-				}
-
-				if (this.containsTarget("ENTITY:MONSTERS")) {
-					isATarget = true;
-				}
-
-				if (this.containsTarget("ENTITY:" + ((LivingEntity) aTarget).getType())) {
-					isATarget = true;
-				}
+				if (this.containsTarget("ENTITY:MONSTER")) 		isATarget = true;
+				else if (!isATarget && this.containsTarget("ENTITY:MONSTERS")) 		isATarget = true;
+				else if (!isATarget && this.containsTarget("ENTITY:" + ((LivingEntity) aTarget).getType()))	isATarget = true;
 			}
 
 			else if (aTarget instanceof LivingEntity) {
-				if (this.containsTarget("ENTITY:" + ((LivingEntity) aTarget).getType())) {
-					isATarget = true;
-				}
+				if (this.containsTarget("ENTITY:" + ((LivingEntity) aTarget).getType())) isATarget = true;
 			}
 
 			// find closest target
@@ -345,11 +339,12 @@ public class SentryInstance {
 
 		}
 
-		if (theTarget != null) {
-			// plugin.getServer().broadcastMessage("Targeting: " +
-			// theTarget.toString());
-			return theTarget;
-		}
+
+			if (theTarget != null) {
+				// plugin.getServer().broadcastMessage("Targeting: " +
+				// theTarget.toString());
+				return theTarget;
+			}
 
 		return null;
 	}
@@ -357,9 +352,9 @@ public class SentryInstance {
 
 	Packet shootanim = null;
 	Packet healanim = null;
-    Random r = new Random();
-	
-	
+	Random r = new Random();
+
+
 	public void Fire(LivingEntity theEntity) {
 
 		double v = 34;
@@ -482,7 +477,7 @@ public class SentryInstance {
 
 		v = v + (1.185 * Math.pow(hangtime, 2));
 
-    	 v = v+ (r.nextDouble() - 1.0)/2;
+		v = v+ (r.nextDouble() - 1.0)/2;
 
 		// apply power
 		victor = victor.multiply(v / 20.0);
@@ -657,8 +652,6 @@ public class SentryInstance {
 				npc.getBukkitEntity().getWorld().playEffect(npc.getBukkitEntity().getLocation(), org.bukkit.Effect.ZOMBIE_CHEW_IRON_DOOR,1);
 				hit = hittype.block;
 			}
-
-
 		}
 
 		if (player instanceof CraftPlayer) {
@@ -789,9 +782,9 @@ public class SentryInstance {
 
 	public void setTarget(LivingEntity theEntity) {
 		if (((CitizensNPC)myNPC).getHandle() == null ) return;
-		
+
 		if (theEntity == myNPC.getBukkitEntity()) return; //I don't care how you got here. No. just No.
-		
+
 		if (theEntity == null) {
 			// this gets called while npc is dead, reset things.
 			sentryStatus = Status.isLOOKING;
