@@ -281,7 +281,7 @@ public class SentryInstance {
 
 					}
 
-					else if( plugin.TownyActive ) {
+					if(!isATarget && plugin.TownyActive ) {
 						String town = plugin.getResidentTown((Player)aTarget);
 						if (town!=null) {
 							if (this.containsTarget("TOWN:" + town))isATarget = true;	
@@ -340,11 +340,11 @@ public class SentryInstance {
 		}
 
 
-			if (theTarget != null) {
-				// plugin.getServer().broadcastMessage("Targeting: " +
-				// theTarget.toString());
-				return theTarget;
-			}
+		if (theTarget != null) {
+			// plugin.getServer().broadcastMessage("Targeting: " +
+			// theTarget.toString());
+			return theTarget;
+		}
 
 		return null;
 	}
