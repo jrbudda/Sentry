@@ -285,6 +285,27 @@ public class SentryInstance {
 
 				}
 
+				
+				//*** Added by: TerraNetworkOrg
+				if(plugin.isTownyActive == true) {
+					Player player = (Player) aTarget;
+					Resident resident;
+					try {
+						resident = TownyUniverse.getDataSource().getResident(player.getName());
+						String town;
+						if(resident.hasTown()) {
+							town = resident.getTown().getName();
+							if (this.containsTarget("TOWN:" + town)) {
+								isATarget = true;
+							}	
+						}
+					} catch (NotRegisteredException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+					}
+				}				
+				//*** Added by: TerraNetworkOrg
+
 			}
 
 
