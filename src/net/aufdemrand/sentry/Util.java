@@ -11,6 +11,7 @@ public class Util {
 		Location loco =  from.getEyeLocation();
 		Vector norman = to.getEyeLocation().subtract(loco).toVector();
 		norman = normalizeVector(norman);
+		norman.multiply(.5);
 
 		Location loc =loco.add(norman);
 
@@ -19,18 +20,18 @@ public class Util {
 	}
 
 	public static Location leadLocation(Location loc, Vector victor, double t){
-	
+
 		return loc.clone().add(victor.clone().multiply(t));
 
 	}
 
 	public static double hangtime(double launchAngle, double v, double elev, double g){
 
-		
-		
+
+
 		double a = v * Math.sin(launchAngle);
 		double b = -2*g*elev;
-		
+
 		if(Math.pow(a, 2) + b < 0){
 			return 0;
 		}

@@ -1,11 +1,14 @@
 package net.aufdemrand.sentry;
 
 
+
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -37,6 +40,34 @@ public class SentryListener implements Listener {
 	@EventHandler
 	public void C2Reload(CitizensReloadEvent event) {
 
+
+	}
+	
+	
+	@EventHandler
+	public void EnvDamage(EntityDamageEvent event) {
+		SentryInstance inst = plugin.getSentry(event.getEntity());
+
+		if (inst == null) return;
+
+		DamageCause cause = event.getCause();
+
+	//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
+
+		switch (cause){
+
+
+		case CONTACT: case DROWNING: case LAVA: case FIRE: case FALL: case SUFFOCATION: case LIGHTNING: case CUSTOM: case FIRE_TICK: case POISON: case BLOCK_EXPLOSION: case VOID: case SUICIDE:
+
+			inst.onEnvironmentDamae(event);
+
+			break;
+		default:
+			break;
+
+
+
+		}
 
 	}
 
@@ -92,6 +123,8 @@ public class SentryListener implements Listener {
 					event.setCancelled(true);
 				}
 			}
+
+	//		plugin.getLogger().log(Level.INFO, "Entity Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
 
 			if (!event.isCancelled()) to.onDamage(event);		
 

@@ -73,6 +73,9 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		Object derp =  key.getRaw("Targets");
 		if (derp !=null) thisInstance.validTargets= (List<String>) key.getRaw("Targets");
+		
+		Object herp =  key.getRaw("Ignores");
+		if (herp !=null) thisInstance.ignoreTargets= (List<String>) key.getRaw("Ignores");
 	}
 
 	public SentryInstance getInstance(){
@@ -122,7 +125,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("DropInventory", thisInstance.DropInventory);
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
 		key.setRaw("Targets", thisInstance.validTargets);
-
+		key.setRaw("Ignores", thisInstance.ignoreTargets);
 		if (thisInstance!=null){
 			key.setDouble("Spawn.x", thisInstance.Spawn.getX());
 			key.setDouble("Spawn.y", thisInstance.Spawn.getY());

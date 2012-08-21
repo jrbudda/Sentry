@@ -9,5 +9,6 @@
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/Vault.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/citizens-2.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/Towny.jar"/>
+	<classpathentry kind="lib" path="C:/Minecraft/Factions.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

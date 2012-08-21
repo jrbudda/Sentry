@@ -2,8 +2,9 @@ package net.aufdemrand.sentry;
 
 //import java.util.HashMap;
 import java.rmi.activation.ActivationException;
-import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 //import java.util.Map;
 import java.util.logging.Level;
 
@@ -17,19 +18,22 @@ import net.milkbowl.vault.permission.Permission;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import com.massivecraft.factions.P;
+
 public class Sentry extends JavaPlugin {
 
-	public static Permission perms = null;
+	public  Permission perms = null;
 	public boolean debug = false;;
+
+	public Queue<Projectile> arrows = new LinkedList<Projectile>();
 
 	@Override
 	public void onEnable() {
@@ -55,30 +59,50 @@ public class Sentry extends JavaPlugin {
 		if (setupTowny()) getLogger().log(Level.INFO,"Registered with Towny sucessfully" );
 		else getLogger().log(Level.INFO,"Could not register with Towny. the TOWN target will not function." );
 
+		if (setupFactions()) getLogger().log(Level.INFO,"Registered with Factions sucessfully" );
+		else getLogger().log(Level.INFO,"Could not register with Factions. the FACTION target will not function." );
+
+
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
 		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
 
 
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
-				List<World> worlds = getServer().getWorlds();
-				//clean up dem arrows
-				int x = 0;
-				for (World world :worlds){
-					Collection<Arrow> arrows = world.getEntitiesByClass(Arrow.class);
-					for (Arrow arrow: arrows ){
-						if (arrow.getTicksLived() == 0){
-							arrow.remove();
-							x++;
-						}
+
+				//		int x = 0;
+				//	int y = arrows.size();
+				while (arrows.size() > 200) {
+					Projectile a = arrows.remove();
+					if (a!=null ){
+						a.remove();
+						//	x++;
 					}
+
 				}
 
-				if (x>0)	getLogger().log(Level.INFO,x + " arrows removed" );
+				//	getLogger().log(Level.INFO,y + " arrows in queue " + x + " arrows removed " );
 
+				//				List<World> worlds = getServer().getWorlds();
+				//				//clean up dem arrows
+				//				int x = 0;
+				//				for (World world :worlds){
+				//					Collection<Arrow> arrows = world.getEntitiesByClass(Arrow.class);
+				//					for (Arrow arrow: arrows ){
+				//		//				Integer derp = arrow.getTicksLived();
+				//	//					getLogger().log(Level.INFO,derp.toString() );
+				//						if (arrow.getTicksLived() == 0){
+				//							arrow.remove();
+				//							x++;
+				//						}
+				//					}
+				//				}
+				//
+				//				if (x>0)	getLogger().log(Level.INFO,x + " arrows removed" );
+				//
 
 			}
-		}, 40,  20*300);
+		}, 40,  20*120);
 
 	}
 
@@ -102,6 +126,7 @@ public class Sentry extends JavaPlugin {
 				_denizenTrigger.activateAs("Npcdeath");
 				DieCommand dc = new DieCommand();
 				dc.activateAs("DIE");
+				dc.activateAs("LIVE");
 			}
 			else _dplugin =null;
 		}
@@ -199,6 +224,10 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  Adds or removes a target to attack.");
 			player.sendMessage(ChatColor.GOLD + "/sentry target [list|clear]");
 			player.sendMessage(ChatColor.GOLD + "  View or clear the target list..");
+			player.sendMessage(ChatColor.GOLD + "/sentry ignore [add|remove] [target]");
+			player.sendMessage(ChatColor.GOLD + "  Adds or removes a target to ignore.");
+			player.sendMessage(ChatColor.GOLD + "/sentry ignore [list|clear]");
+			player.sendMessage(ChatColor.GOLD + "  View or clear the ignore list..");
 			player.sendMessage(ChatColor.GOLD + "/sentry info");
 			player.sendMessage(ChatColor.GOLD + "  View all Sentry attributes");
 			player.sendMessage(ChatColor.GOLD + "/sentry speed [0-1.5]");
@@ -261,20 +290,45 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 
-		if (sender instanceof Player){
-			if (!ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
-
-				player.sendMessage(ChatColor.RED + "You must be the owner of the sentry to execute commands.");
-
-				return true;
-			}			
-		}
-
 
 		if (!ThisNPC.hasTrait(SentryTrait.class)) {
-			player.sendMessage(ChatColor.RED + "That command must be performed on a sentry!");
+			player.sendMessage(ChatColor.RED + "That command must be performed on a Sentry!");
 			return true;
 		}
+
+
+		if (sender instanceof Player){
+
+			if (ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
+				//OK!
+
+			}
+
+			else {
+				//not player is owner
+				if (((Player)sender).hasPermission("citizens.admin") == false){
+					//no c2 admin.
+					player.sendMessage(ChatColor.RED + "You must be the owner of this Sentry to execute commands.");
+					return true;
+				}
+				else{
+					//has citizens.admin
+					if (!ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase("server")) {
+						//not server-owned NPC
+						player.sendMessage(ChatColor.RED + "You, or the server, must be the owner of this Sentry to execute commands.");
+						return true;
+					}
+				}
+
+
+			}
+
+
+
+
+		}
+
+
 
 		// Commands
 
@@ -600,8 +654,7 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GREEN + inst.getStats());
 			player.sendMessage(ChatColor.GREEN + "Invincible: " + inst.Invincible + "  Retaliate: " + inst.Retaliate);
 			player.sendMessage(ChatColor.GREEN + "Drops Items: " + inst.DropInventory+ "  Critical Hits: " + inst.LuckyHits);
-			player.sendMessage(ChatColor.GREEN + "Critical Hits: " + inst.LuckyHits + "Respawn Delay: " + inst.RespawnDelaySeconds + "s");
-			player.sendMessage(ChatColor.GREEN + "Friendly Fire: " + inst.FriendlyFire );
+			player.sendMessage(ChatColor.GREEN + "Respawn Delay: " + inst.RespawnDelaySeconds + "s" + " Friendly Fire: " + inst.FriendlyFire );
 			player.sendMessage(ChatColor.BLUE + "Status: " + inst.sentryStatus);
 			if (inst.meleeTarget == null){
 				if(inst.projectileTarget ==null) player.sendMessage(ChatColor.BLUE + "Target: Nothing");
@@ -636,6 +689,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.validTargets;
 					currentList.add(args[2].toUpperCase());
 					inst.setGuardTarget(null);
+					inst.setTarget(null);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + currentList.toString());
 					return true;
 				}
@@ -645,6 +699,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.validTargets;
 					currentList.remove(args[2].toUpperCase());
 					inst.setGuardTarget(null);
+					inst.setTarget(null);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets removed. Now targeting " + currentList.toString());
 					return true;
 				}
@@ -654,7 +709,8 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.validTargets;
 					currentList.clear();
 					inst.setGuardTarget(null);
-					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets cleared. Now targeting " + currentList.toString());
+					inst.setTarget(null);
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets cleared.");
 					return true;
 				}
 				else if (args[1].equals("list")) {
@@ -674,25 +730,98 @@ public class Sentry extends JavaPlugin {
 				}
 			}
 		}
+		
+		else if (args[0].equalsIgnoreCase("ignore")) {
+			if(!player.hasPermission("sentry.ignore")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			if (args.length<2 ){
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore add [entity:Name] or [player:Name] or [group:Name] or [entity:monster] or [entity:player]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore remove [target]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore clear");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore list");
+				return true;
+			}
+
+			else {
+
+				if (args[1].equals("add") && args.length > 2) {
+
+					List<String> currentList =	inst.ignoreTargets;
+					currentList.add(args[2].toUpperCase());
+					inst.setGuardTarget(null);
+					inst.setTarget(null);
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + currentList.toString());
+					return true;
+				}
+
+				else if (args[1].equals("remove") && args.length > 2) {
+
+					List<String> currentList =	inst.ignoreTargets;
+					currentList.remove(args[2].toUpperCase());
+					inst.setGuardTarget(null);
+					inst.setTarget(null);
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore removed. Now ignoring " + currentList.toString());
+					return true;
+				}
+
+				else if (args[1].equals("clear")) {
+
+					List<String> currentList =	inst.ignoreTargets;
+					currentList.clear();
+					inst.setGuardTarget(null);
+					inst.setTarget(null);
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore cleared.");
+					return true;
+				}
+				else if (args[1].equals("list")) {
+
+					List<String> currentList =	inst.ignoreTargets;
+					player.sendMessage(ChatColor.GREEN + "Ignores: " + currentList.toString());
+					return true;
+				}
+
+				else {
+
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore add [ENTITY:Name] or [PLAYER:Name] or [GROUP:Name] or [ENTITY:MONSTER]");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore remove [ENTITY:Name] or [PLAYER:Name] or [GROUP:Name] or [ENTITY:MONSTER]");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore clear");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore list");
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 
-
+	//TownySupport
 	boolean TownyActive = false;
-	public  String getResidentTown(Player player) {
-		if (TownyActive == false)return null;
+	public String[] getResidentTownyInfo(Player player) {
+		String[] info = {null,null};
+
+		if (TownyActive == false)return info;
+
 		com.palmergames.bukkit.towny.object.Resident resident;
 		try {
 			resident = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getResident(player.getName());
+
 			if(resident.hasTown()) {
-				return resident.getTown().getName();
+				info[1] = resident.getTown().getName();
+				if( resident.getTown().hasNation()){
+					info[0] =resident.getTown().getNation().getName();
+				}
+
 			}			
 		} catch (Exception e) {
-			return null;
+			return info;
 		}
 
-		return null;
+		return info;
 	}
+
+
 
 	private boolean setupTowny(){
 		if(getServer().getPluginManager().getPlugin("Towny") != null){
@@ -701,6 +830,27 @@ public class Sentry extends JavaPlugin {
 			}	
 		}
 		return TownyActive;
+	}
+
+	//FactionsSuport
+	boolean FactionsActive = false;
+	public  String getFactionsTag(Player player) {
+		if (FactionsActive == false)return null;
+		com.massivecraft.factions.P Fplugin= (P) getServer().getPluginManager().getPlugin("Factions");
+		try {
+			return Fplugin.getPlayerFactionTag(player);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	private boolean setupFactions(){
+		if(getServer().getPluginManager().getPlugin("Factions") != null){
+			if(getServer().getPluginManager().getPlugin("Factions").isEnabled() == true) {
+				FactionsActive = true;
+			}	
+		}
+		return FactionsActive;
 	}
 
 	// End of CLASS

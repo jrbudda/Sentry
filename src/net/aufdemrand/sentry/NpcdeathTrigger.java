@@ -23,7 +23,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTri
 		}
 
 		try {
-			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath")) {
+			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath") == false) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Npcdeath Trigger not enabled");
 				return false; 
 			}
