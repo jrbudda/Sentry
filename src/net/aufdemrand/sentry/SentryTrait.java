@@ -54,6 +54,9 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.Armor=		key.getInt("Armor", 0);
 		thisInstance.Strength=		key.getInt("Strength", 1);
 		thisInstance.guardTarget = (key.getString("GuardTarget", null));
+		thisInstance.GreetingMessage = (key.getString("Greeting", "'§b<NPC> says Welcome, <PLAYER>'"));
+		thisInstance.WarningMessage = (key.getString("Warning", "'§c<NPC> says Halt! Come no closer!'"));
+		thisInstance.WarningRange = key.getInt("WarningRange", 0);
 		thisInstance.AttackRateSeconds =  (key.getDouble("AttackRate",2.0));
 		thisInstance.HealRate =  (key.getDouble("HealRate",0.0));
 		thisInstance.NightVision = key.getInt("NightVision",16);
@@ -145,10 +148,13 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setDouble("HealRate", thisInstance.HealRate);
 		key.setInt("Armor", thisInstance.Armor);
 		key.setInt("Strength", thisInstance.Strength);
+		key.setInt("WarningRange", thisInstance.WarningRange);
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
 		key.setBoolean("FriendlyFire", thisInstance.FriendlyFire);
 		key.setInt("NightVision", thisInstance.NightVision);
 		if (thisInstance.guardTarget !=null)	key.setString("GuardTarget", thisInstance.guardTarget);
+		key.setString("Warning",thisInstance.WarningMessage);
+		key.setString("Greeting",thisInstance.GreetingMessage);
 	}
 
 	@Override

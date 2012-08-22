@@ -87,7 +87,7 @@ public class SentryListener implements Listener {
 			for (NPC npc : CitizensAPI.getNPCRegistry()) {
 				SentryInstance inst =plugin.getSentry(npc);
 				if (inst!=null &&  inst.guardEntity == entto ){
-					if (inst.Retaliate) inst.setTarget((LivingEntity)entfrom);
+					if (inst.Retaliate) inst.setTarget((LivingEntity)entfrom, true);
 				}
 			}
 		}

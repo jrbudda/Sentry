@@ -38,10 +38,14 @@ public class Sentry extends JavaPlugin {
 	@Override
 	public void onEnable() {
 
-		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault! Group-based aggression will not function.");
+		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault!  the GROUP target will not function.");
 		else{
 			String[] Gr = perms.getGroups();
-			getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found." );
+			if (Gr.length == 0){
+				getLogger().log(Level.WARNING,"No permission groups found.  the GROUP target will not function.");
+				perms = null;
+			}
+			else getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found." );
 
 		}
 
@@ -158,6 +162,7 @@ public class Sentry extends JavaPlugin {
 		if (permissionProvider != null) {
 			perms = permissionProvider.getProvider();
 		}
+
 		return (perms != null);
 	}
 
@@ -244,6 +249,8 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  Sets the frequency the sentry will heal 1 point. 0 to disable.");
 			player.sendMessage(ChatColor.GOLD + "/sentry range [1-100]");
 			player.sendMessage(ChatColor.GOLD + "  Sets the Sentry's detection range.");
+			player.sendMessage(ChatColor.GOLD + "/sentry warningrange [0-50]");
+			player.sendMessage(ChatColor.GOLD + "  Sets the range, beyond the detection range, that the Sentry will warn targets.");
 			player.sendMessage(ChatColor.GOLD + "/sentry invincible");
 			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to take no damage or knockback.");
 			player.sendMessage(ChatColor.GOLD + "/sentry retaliate");
@@ -254,6 +261,10 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to drop equipped items on death");
 			player.sendMessage(ChatColor.GOLD + "/sentry spawn");
 			player.sendMessage(ChatColor.GOLD + "  Set the sentry to respawn at its current location");
+			player.sendMessage(ChatColor.GOLD + "/sentry warning 'The Test to use'");
+			player.sendMessage(ChatColor.GOLD + "  Change the warning text. <NPC> and <PLAYER> can be used as placeholders");
+			player.sendMessage(ChatColor.GOLD + "/sentry greet 'The text to use'");
+			player.sendMessage(ChatColor.GOLD + "  Change the greeting text. <NPC> and <PLAYER> can be used as placeholders");
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("debug")) {
@@ -526,14 +537,15 @@ public class Sentry extends JavaPlugin {
 
 			return true;
 		}
+		
 		else if (args[0].equalsIgnoreCase("respawn")) {
 			if(!player.hasPermission("sentry.stats.respawn")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
 			if (args.length <= 1) {
-				if(inst.RespawnDelaySeconds == -1  ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " will not automatically respawn.");
-				if(inst.RespawnDelaySeconds == 0 ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " will be deleted upon death");
+				if(inst.RespawnDelaySeconds == 0  ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " will not automatically respawn.");
+				if(inst.RespawnDelaySeconds == -1 ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " will be deleted upon death");
 				if(inst.RespawnDelaySeconds > 0 ) player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + " respawns after " + inst.RespawnDelaySeconds + "s");
 
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry respawn [-1 - 999999] ");
@@ -544,7 +556,7 @@ public class Sentry extends JavaPlugin {
 
 				int HPs = Integer.valueOf(args[1]);
 				if (HPs > 300) HPs = 300;
-				if (HPs <0)  HPs =0;
+				if (HPs <-1)  HPs =-1;
 
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " now respawns after " + HPs+ "s.");   // Talk to the player.
 				inst.RespawnDelaySeconds = HPs;
@@ -644,6 +656,64 @@ public class Sentry extends JavaPlugin {
 
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("warningrange")) {
+			if(!player.hasPermission("sentry.stats.warningrange")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			if (args.length <= 1) {
+				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Warning Range is " + inst.WarningRange);
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry warningrangee [0 - 50]");
+			}
+
+			else {
+
+				Integer HPs = Integer.valueOf(args[1]);
+				if (HPs > 50) HPs = 50;
+				if (HPs <0)  HPs =0;
+
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " warning range set to " + HPs + ".");   // Talk to the player.
+				inst.WarningRange = HPs;
+
+			}
+
+			return true;
+		}
+		else if (args[0].equalsIgnoreCase("warning")) {
+			if(!player.hasPermission("sentry.warning")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			if (args.length ==2) {
+				String str = args[1].replaceAll("\"$", "").replaceAll("^\"", "").replaceAll("'$", "").replaceAll("^'", "");
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " warning message set to " + str + ".");   // Talk to the player.
+				inst.WarningMessage = str;
+			}
+			else{
+				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Warning Message is " + inst.WarningMessage);
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry warning 'The Text to use'");
+			}
+			return true;
+		}
+		else if (args[0].equalsIgnoreCase("greeting")) {
+			if(!player.hasPermission("sentry.greeting")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			if (args.length ==2) {
+				String str = args[1].replaceAll("\"$", "").replaceAll("^\"", "").replaceAll("'$", "").replaceAll("^'", "");
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Greeting message set to " + str + ".");   // Talk to the player.
+				inst.GreetingMessage = str;
+			}
+			else{
+				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Greeting Message is " + inst.WarningMessage);
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry greeting 'The Text to use'");
+			}
+			return true;
+		}
 
 		else if (args[0].equalsIgnoreCase("info")) {
 			if(!player.hasPermission("sentry.info")) {
@@ -689,7 +759,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.validTargets;
 					currentList.add(args[2].toUpperCase());
 					inst.setGuardTarget(null);
-					inst.setTarget(null);
+					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + currentList.toString());
 					return true;
 				}
@@ -699,7 +769,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.validTargets;
 					currentList.remove(args[2].toUpperCase());
 					inst.setGuardTarget(null);
-					inst.setTarget(null);
+					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets removed. Now targeting " + currentList.toString());
 					return true;
 				}
@@ -709,7 +779,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.validTargets;
 					currentList.clear();
 					inst.setGuardTarget(null);
-					inst.setTarget(null);
+					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets cleared.");
 					return true;
 				}
@@ -730,7 +800,7 @@ public class Sentry extends JavaPlugin {
 				}
 			}
 		}
-		
+
 		else if (args[0].equalsIgnoreCase("ignore")) {
 			if(!player.hasPermission("sentry.ignore")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
@@ -752,7 +822,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.add(args[2].toUpperCase());
 					inst.setGuardTarget(null);
-					inst.setTarget(null);
+					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + currentList.toString());
 					return true;
 				}
@@ -762,7 +832,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.remove(args[2].toUpperCase());
 					inst.setGuardTarget(null);
-					inst.setTarget(null);
+					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore removed. Now ignoring " + currentList.toString());
 					return true;
 				}
@@ -772,7 +842,7 @@ public class Sentry extends JavaPlugin {
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.clear();
 					inst.setGuardTarget(null);
-					inst.setTarget(null);
+					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore cleared.");
 					return true;
 				}

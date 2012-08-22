@@ -2,7 +2,9 @@ package net.aufdemrand.sentry;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import net.citizensnpcs.api.event.NPCRightClickEvent;
@@ -66,7 +68,7 @@ public class SentryInstance {
 
 			}
 
-			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds != 0) {
+			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0) {
 				// Respawn
 
 				// Location loc =
@@ -86,11 +88,12 @@ public class SentryInstance {
 
 			}
 
-			else if (sentryStatus == Status.isHOSTILE && myNPC.isSpawned()) {
+			else if ((sentryStatus == Status.isHOSTILE || sentryStatus == Status.isRETALIATING) && myNPC.isSpawned()) {
 
-				if (System.currentTimeMillis() > oktoreasses) {
+				
+				if (sentryStatus == Status.isHOSTILE && System.currentTimeMillis() > oktoreasses) {
 					LivingEntity target = findTarget(sentryRange);
-					setTarget(target);
+					setTarget(target, false);
 					oktoreasses = (long) (System.currentTimeMillis() + 3000);
 				}
 
@@ -100,8 +103,6 @@ public class SentryInstance {
 						_projTargetLostLoc = projectileTarget.getLocation();
 
 					faceEntity(myNPC.getBukkitEntity(), projectileTarget);
-
-
 
 					if (System.currentTimeMillis() > oktoFire) {
 						// Fire!
@@ -120,7 +121,7 @@ public class SentryInstance {
 					// Did it get away?
 					if (meleeTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation()) > sentryRange) {
 						// it got away...
-						setTarget(null);
+						setTarget(null, false);
 					}
 
 
@@ -128,7 +129,7 @@ public class SentryInstance {
 
 				else {
 					// target died or null
-					setTarget(null);
+					setTarget(null, false);
 				}
 
 
@@ -143,7 +144,7 @@ public class SentryInstance {
 				}
 
 				LivingEntity target = findTarget(sentryRange);
-				setTarget(target);
+				setTarget(target, false);
 
 			}
 
@@ -152,7 +153,7 @@ public class SentryInstance {
 	}
 
 	public enum Status {
-		isDEAD, isHOSTILE, isLOOKING, isDYING, isSTUCK
+		isDEAD, isHOSTILE,isRETALIATING, isLOOKING, isDYING, isSTUCK
 	}
 
 	public enum hittype {
@@ -199,12 +200,24 @@ public class SentryInstance {
 	public Integer NightVision = 16;
 	public Double AttackRateSeconds = 2.0;
 	public Double HealRate = 0.0;
+	public Integer WarningRange = 0;
+	public String WarningMessage = "§c<NPC> says: Halt! Come no further!";
+	public String GreetingMessage = "§a<NPC> says: Welcome, <PLAYER>!";
+	
+	private Map<Player, Long> Warnings = new  HashMap<Player, Long>();
 
 	public Location Spawn = null;
 
 	private Location _projTargetLostLoc;
 
 	private Class<? extends Projectile> myProjectile;
+
+	private String getWarningMessage(Player player){
+		return WarningMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+	}
+	private String getGreetingMEssage(Player player){
+		return GreetingMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+	}
 
 	public SentryInstance(Sentry plugin) {
 		this.plugin = plugin;
@@ -268,8 +281,7 @@ public class SentryInstance {
 	}
 
 	public LivingEntity findTarget(Integer Range) {
-
-		if (this.validTargets.size() == 0) return null;
+		Range+=WarningRange; 
 		List<Entity> EntitiesWithinRange = myNPC.getBukkitEntity().getNearbyEntities(Range, Range, Range);
 		LivingEntity theTarget = null;
 		Double distanceToBeat = 99999.0;
@@ -282,7 +294,7 @@ public class SentryInstance {
 
 			// find closest target
 			if (_checkTarget((LivingEntity) aTarget)) {
-
+				
 				// can i see it?
 				// too dark?
 				double ll = (double) aTarget.getLocation().getBlock().getLightLevel();
@@ -297,21 +309,50 @@ public class SentryInstance {
 					Vector victor = ((LivingEntity) aTarget).getEyeLocation().subtract(myNPC.getBukkitEntity().getEyeLocation()).toVector();
 					double dist = Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getZ(), 2));
 
-					if (dist < distanceToBeat) {
+					boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) aTarget).getHandle());
+					if (LOS) {					
 
-						// LoS calc
-						boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) aTarget).getHandle());
-						// plugin.getServer().broadcastMessage("LOS for: " +
-						// aTarget.toString() + LOS);
 
-						if (LOS) {
+						if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  dist > (Range - WarningRange) && !aTarget.hasMetadata("NPC") & !(WarningMessage.isEmpty())){
+
+							if (Warnings.containsKey(aTarget) && System.currentTimeMillis() < Warnings.get(aTarget) + 60*1000){
+								//already warned u in last 30 seconds.
+							}
+							else{
+								((Player)aTarget).sendMessage(getWarningMessage((Player) aTarget)); 
+								faceEntity(myNPC.getBukkitEntity(), aTarget);
+								Warnings.put((Player) aTarget,System.currentTimeMillis());
+							}
+
+						}
+						else if	(dist < distanceToBeat) {				
 							// now find closes mob
 							distanceToBeat = dist;
 							theTarget = (LivingEntity) aTarget;
 						}
 					}
+
+
 				}
 
+			}
+			else {
+				//not a target
+				
+				if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  !aTarget.hasMetadata("NPC") && !(GreetingMessage.isEmpty())){
+					boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) aTarget).getHandle());
+					if (LOS) {			
+						if (Warnings.containsKey(aTarget) && System.currentTimeMillis() < Warnings.get(aTarget) + 60*1000){
+							//already greeted u in last 30 seconds.
+						}
+						else{
+							((Player)aTarget).sendMessage(getGreetingMEssage((Player) aTarget)); 
+							faceEntity(myNPC.getBukkitEntity(), aTarget);
+							Warnings.put((Player) aTarget,System.currentTimeMillis());
+						}
+					}
+				}
+				
 			}
 
 		}
@@ -326,12 +367,11 @@ public class SentryInstance {
 		return null;
 	}
 
-
 	private boolean _checkTarget (LivingEntity aTarget){
 		//cheak ignores
-		
+
 		if (this.containsIgnore("ENTITY:ALL")) 	return false;
-		
+
 		if (aTarget instanceof Player) {
 
 			if (this.containsIgnore("ENTITY:PLAYER")) {
@@ -359,14 +399,14 @@ public class SentryInstance {
 
 					if (groups1 !=null){
 						for (int i = 0; i < groups1.length; i++) {
-						//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
 							if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
 						}	
 					}
 
 					if ( groups2 !=null){
 						for (int i = 0; i < groups2.length; i++) {
-						//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
 							if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
 						}	
 					}
@@ -409,7 +449,7 @@ public class SentryInstance {
 
 		//Check if target
 		if (aTarget instanceof Player) {
-			
+
 			if (this.containsIgnore("ENTITY:ALL")) 	return true;
 
 			if (this.containsTarget("ENTITY:PLAYER")) {
@@ -553,7 +593,7 @@ public class SentryInstance {
 			// testAngle = Math.atan( ( 2*g*elev + Math.pow(v, 2)) / (2*g*elev +
 			// 2*Math.pow(v,2))); //cant hit it where it is, try aiming as far
 			// as you can.
-			setTarget(null);
+			setTarget(null, false);
 			// plugin.getServer().broadcastMessage("Can't hit test angle");
 			return;
 		}
@@ -581,7 +621,7 @@ public class SentryInstance {
 		boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) theEntity).getHandle());
 		if (!LOS) {
 			// target cant be seen..
-			setTarget(null);
+			setTarget(null, false);
 			// plugin.getServer().broadcastMessage("No LoS");
 			return;
 		}
@@ -595,7 +635,7 @@ public class SentryInstance {
 
 		if (launchAngle == null) {
 			// target cant be hit
-			setTarget(null);
+			setTarget(null, false);
 			// plugin.getServer().broadcastMessage("Can't hit lead");
 			return;
 
@@ -667,7 +707,7 @@ public class SentryInstance {
 
 		if(myNPC !=null &&  myNPC.getBukkitEntity()!=null) h = myNPC.getBukkitEntity().getHealth(); 
 
-		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + Armor + ChatColor.RED + " [STR]:" + ChatColor.WHITE + Strength + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(sentrySpeed) + ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision + ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate;
+		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + Armor + ChatColor.RED + " [STR]:" + ChatColor.WHITE + Strength + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(sentrySpeed) + ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision + ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange;
 
 	}
 
@@ -799,7 +839,7 @@ public class SentryInstance {
 		// can i kill it? lets go kill it.
 		if (player != null) {
 			if (this.Retaliate) {
-				setTarget(player);
+				setTarget(player, true);
 			}
 		}
 
@@ -857,7 +897,7 @@ public class SentryInstance {
 			}
 		}
 
-		if (player instanceof CraftPlayer) {
+		if (player instanceof CraftPlayer && !player.hasMetadata("NPC")) {
 
 			if(!_myDamamgers.contains(player)) _myDamamgers.add((Player) player);
 
@@ -903,10 +943,7 @@ public class SentryInstance {
 
 		}
 
-
-
 	}
-
 
 	private void die(int finaldamage){
 		if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
@@ -917,10 +954,13 @@ public class SentryInstance {
 			myNPC.getBukkitEntity().getLocation().getWorld().spawn(myNPC.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
 		}
 
-		setTarget(null);
+		setTarget(null, false);
 		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 
 		if (RespawnDelaySeconds == -1) {
+			sentryStatus = Status.isDEAD;
+			myNPC.getBukkitEntity().damage(finaldamage);
+			cancelRunnable();
 			myNPC.destroy();
 		} else {
 			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
@@ -955,7 +995,7 @@ public class SentryInstance {
 		if (name == null) {
 			guardEntity = null;
 			guardTarget = null;
-			setTarget(null);// clear active hostile target
+			setTarget(null, false);// clear active hostile target
 			return true;
 		}
 
@@ -967,7 +1007,7 @@ public class SentryInstance {
 				if (((Player) aTarget).getName().equals(name)) {
 					guardEntity = (LivingEntity) aTarget;
 					guardTarget = ((Player) aTarget).getName();
-					setTarget(null); // clear active hostile target
+					setTarget(null, false); // clear active hostile target
 					return true;
 				}
 
@@ -977,7 +1017,7 @@ public class SentryInstance {
 		return false;
 	}
 
-	public void setTarget(LivingEntity theEntity) {
+	public void setTarget(LivingEntity theEntity, boolean isretaliation) {
 		if (((CitizensNPC)myNPC).getHandle() == null ) return;
 
 		if (theEntity == myNPC.getBukkitEntity()) return; //I don't care how you got here. No. just No.
@@ -1024,7 +1064,8 @@ public class SentryInstance {
 		if (theEntity == guardEntity)
 			return; // dont attack my dude.
 
-		sentryStatus = Status.isHOSTILE;
+	if (isretaliation) sentryStatus = Status.isRETALIATING;
+	else sentryStatus = Status.isHOSTILE;
 
 		Material weapon = Material.AIR;
 

@@ -25,6 +25,8 @@ permissions:
        sentry.spawn: true
        sentry.guard: true
        sentry.info: true
+       sentry.warning: true
+       sentry.greeting: true
   sentry.stats.*:
      default: op
      children:
@@ -37,6 +39,7 @@ permissions:
        sentry.stats.health: true
        sentry.stats.attackrate: true     
        sentry.stats.healrate: true     
+       sentry.stats.warningrange: true     
   sentry.options.*:
      default: op
      children:
@@ -55,6 +58,10 @@ permissions:
      deafult: op
   sentry.info:
      deafult: op
+  sentry.warning:
+     deafult: op
+  sentry.greeting:
+     deafult: op
   sentry.stats.strength:
      default: op
   sentry.stats.armor:
@@ -68,6 +75,8 @@ permissions:
   sentry.stats.respawn:
      default: op
   sentry.stats.health:
+     default: op  
+  sentry.stats.warningrange:
      default: op
   sentry.stats.attackrate:
      default: op
