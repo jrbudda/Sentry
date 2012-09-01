@@ -27,8 +27,7 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		plugin = (Sentry) Bukkit.getServer().getPluginManager().getPlugin("Sentry");
 
-		//	plugin.getServer().broadcastMessage("onLoad");
-
+	
 		if (thisInstance !=null ){
 			thisInstance.cancelRunnable();
 			if (thisInstance.myNPC != null) thisInstance.myNPC.despawn();
@@ -39,7 +38,8 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance = new SentryInstance(plugin);
 		thisInstance.myTrait = this;
 
-
+		if(key.keyExists("traits")) key = key.getRelative("traits");
+		
 		isToggled=	key.getBoolean("toggled", true);
 		thisInstance.Retaliate=	key.getBoolean("Retaliate", true);
 		thisInstance.Invincible=	key.getBoolean("Invincinble", false);
@@ -73,7 +73,6 @@ public class SentryTrait extends Trait implements Toggleable {
 		}
 
 
-
 		Object derp =  key.getRaw("Targets");
 		if (derp !=null) thisInstance.validTargets= (List<String>) key.getRaw("Targets");
 		
@@ -90,6 +89,9 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
 
+		if (!plugin.GroupsChecked) plugin.doGroups(); // lazy checking for lazy vault.
+		
+		
 		if (thisInstance ==null) {
 			thisInstance = new SentryInstance(plugin);
 			thisInstance.myTrait = this;
@@ -99,10 +101,13 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.myNPC = this.getNPC();
 		thisInstance.initialize();	
 
+		
+		
 
 		//		this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
 
-		//	plugin.getServer().broadcastMessage("onSpawn");
+//	plugin.getServer().broadcastMessage("onSpawn");
+	//	plugin.getServer().broadcastMessage("range" + thisInstance.sentryRange);
 	}
 
 	@Override

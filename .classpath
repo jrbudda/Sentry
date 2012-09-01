@@ -5,10 +5,10 @@
 	<classpathentry kind="lib" path="C:/Minecraft/BukkitAPI.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/citizensapi-2.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/craftbukkit.jar"/>
-	<classpathentry kind="lib" path="C:/Minecraft/plugins/denizen-0.7-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/Vault.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/citizens-2.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/Towny.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/Factions.jar"/>
+	<classpathentry kind="lib" path="C:/Minecraft/plugins/denizen-0.75-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

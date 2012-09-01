@@ -13,6 +13,7 @@ import net.citizensnpcs.api.trait.trait.Owner;
 import net.citizensnpcs.npc.CitizensNPC;
 import net.citizensnpcs.trait.waypoint.Waypoints;
 import net.minecraft.server.EntityLiving;
+import net.minecraft.server.EntityPotion;
 import net.minecraft.server.Packet;
 import net.minecraft.server.Packet18ArmAnimation;
 
@@ -22,12 +23,14 @@ import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftEntity;
 import org.bukkit.craftbukkit.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -38,6 +41,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.material.MaterialData;
+import org.bukkit.potion.Potion;
+import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
 public class SentryInstance {
@@ -57,7 +63,9 @@ public class SentryInstance {
 
 				if(System.currentTimeMillis() > oktoheal ){
 					if (myNPC.getBukkitEntity().getHealth() < sentryHealth && sentryStatus !=  Status.isDEAD && sentryStatus != Status.isDYING) {
-						myNPC.getBukkitEntity().setHealth(myNPC.getBukkitEntity().getHealth() + 1);
+						int heal = 1;
+						if (HealRate <0.5) heal = (int) (0.5 / HealRate);
+						myNPC.getBukkitEntity().setHealth(myNPC.getBukkitEntity().getHealth() + heal);
 						if (healanim!=null)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),healanim , 64);
 
 						if (myNPC.getBukkitEntity().getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
@@ -90,7 +98,7 @@ public class SentryInstance {
 
 			else if ((sentryStatus == Status.isHOSTILE || sentryStatus == Status.isRETALIATING) && myNPC.isSpawned()) {
 
-				
+
 				if (sentryStatus == Status.isHOSTILE && System.currentTimeMillis() > oktoreasses) {
 					LivingEntity target = findTarget(sentryRange);
 					setTarget(target, false);
@@ -185,7 +193,6 @@ public class SentryInstance {
 	public Integer sentryRange = 10;
 	public Integer sentryHealth = 20;
 	public float sentrySpeed =  (float) 1.0;
-	public float defaultSpeed = (float) 1.0;
 	public Double sentryWeight = 1.0;
 	public String guardTarget = null;
 	public LivingEntity guardEntity = null;
@@ -203,7 +210,7 @@ public class SentryInstance {
 	public Integer WarningRange = 0;
 	public String WarningMessage = "§c<NPC> says: Halt! Come no further!";
 	public String GreetingMessage = "§a<NPC> says: Welcome, <PLAYER>!";
-	
+
 	private Map<Player, Long> Warnings = new  HashMap<Player, Long>();
 
 	public Location Spawn = null;
@@ -294,7 +301,7 @@ public class SentryInstance {
 
 			// find closest target
 			if (_checkTarget((LivingEntity) aTarget)) {
-				
+
 				// can i see it?
 				// too dark?
 				double ll = (double) aTarget.getLocation().getBlock().getLightLevel();
@@ -338,7 +345,7 @@ public class SentryInstance {
 			}
 			else {
 				//not a target
-				
+
 				if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  !aTarget.hasMetadata("NPC") && !(GreetingMessage.isEmpty())){
 					boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) aTarget).getHandle());
 					if (LOS) {			
@@ -352,7 +359,7 @@ public class SentryInstance {
 						}
 					}
 				}
-				
+
 			}
 
 		}
@@ -450,7 +457,7 @@ public class SentryInstance {
 		//Check if target
 		if (aTarget instanceof Player) {
 
-			if (this.containsIgnore("ENTITY:ALL")) 	return true;
+			if (this.containsTarget("ENTITY:ALL")) 	return true;
 
 			if (this.containsTarget("ENTITY:PLAYER")) {
 				return true;
@@ -523,10 +530,7 @@ public class SentryInstance {
 						if (this.containsTarget("FACTION:" + faction))return true;
 					}
 				}
-
 			}
-
-
 		}
 
 
@@ -552,7 +556,9 @@ public class SentryInstance {
 	Packet shootanim = null;
 	Packet healanim = null;
 	Random r = new Random();
-
+	boolean lightning = false;
+	boolean mclightning = false;
+	short potiontype = 0;
 
 	public void Fire(LivingEntity theEntity) {
 
@@ -561,19 +567,22 @@ public class SentryInstance {
 
 		Effect effect = null;
 
-
+		boolean ballistics = true;
 
 		if (myProjectile == Arrow.class) {
 			effect = Effect.BOW_FIRE;
-		} else if (myProjectile == SmallFireball.class) {
+		} else if (myProjectile == SmallFireball.class || myProjectile == Fireball.class) {
 			effect = Effect.BLAZE_SHOOT;
-
-			v = 5000.0;
-			g = .01;
+			ballistics =false;
 		} else {
 			v = 17.75;
 			g = 13.5;
 
+		}
+
+		if(lightning) {
+			ballistics = false;
+			effect =null;
 		}
 
 		// calc shooting spot.
@@ -582,7 +591,6 @@ public class SentryInstance {
 		Location targetsHeart = theEntity.getLocation();
 		targetsHeart = targetsHeart.add(0, .33, 0);
 
-		// lead the target
 		Vector test = targetsHeart.clone().subtract(loc).toVector();
 
 		Double elev = test.getY();
@@ -631,69 +639,95 @@ public class SentryInstance {
 		// plugin.getServer().broadcastMessage("ld " +
 		// to.clone().subtract(theEntity.getEyeLocation()));
 
-		Double launchAngle = Util.launchAngle(loc, to, v, elev, g);
+		if(ballistics){
+			Double launchAngle = Util.launchAngle(loc, to, v, elev, g);
+			if (launchAngle == null) {
+				// target cant be hit
+				setTarget(null, false);
+				// plugin.getServer().broadcastMessage("Can't hit lead");
+				return;
 
-		if (launchAngle == null) {
-			// target cant be hit
-			setTarget(null, false);
-			// plugin.getServer().broadcastMessage("Can't hit lead");
-			return;
+			}
+
+			//	plugin.getServer().broadcastMessage(anim.a + " " + anim.b + " " + anim.a() + " " +anim.);
+			// Apply angle
+			victor.setY(Math.tan(launchAngle) * dist);
+			Vector noise = Vector.getRandom();
+			// normalize vector
+			victor = Util.normalizeVector(victor);
+
+			noise = noise.multiply(1 / 10.0);
+
+			// victor = victor.add(noise);
+
+			v = v + (1.188 * Math.pow(hangtime, 2));
+
+			v = v+ (r.nextDouble() - .8)/2;
+
+			// apply power
+			victor = victor.multiply(v / 20.0);
+
+			// Shoot!
+			// Projectile theArrow
+			// =myNPC.getBukkitEntity().launchProjectile(myProjectile);
 
 		}
+		else{
+			if (dist > sentryRange) {
+				// target cant be hit
+				setTarget(null, false);
+				// plugin.getServer().broadcastMessage("Can't hit lead");
+				return;
 
-		//	plugin.getServer().broadcastMessage(anim.a + " " + anim.b + " " + anim.a() + " " +anim.);
+			}
+		}
 
-		//	anim.a = sentryHealth;
-		//	anim.b = sentryRange;
+
+		if(lightning){
+			if (mclightning){
+				to.getWorld().strikeLightning(to);
+			}
+			else{
+				to.getWorld().strikeLightningEffect(to);
+				theEntity.damage(Strength, myNPC.getBukkitEntity());
+			}	
+		}
+		else
+		{
+
+			Projectile theArrow = null;
+			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
+				net.minecraft.server.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), potiontype);
+				nmsWorld.addEntity(ent);
+				theArrow = (Projectile) ent.getBukkitEntity();
+			}
+			else{
+				theArrow = myNPC.getBukkitEntity().getWorld().spawn(loc, myProjectile);	
+			}
+
+
+			if (myProjectile == Fireball.class) {
+				victor = victor.multiply(1/1000000000);
+			}
+
+			if (myProjectile == SmallFireball.class) {
+				victor = victor.multiply(1/1000000000);
+				((SmallFireball)theArrow).setIsIncendiary(inciendary);
+			}
+
+			plugin.arrows.add(theArrow);
+			theArrow.setShooter(myNPC.getBukkitEntity());
+			theArrow.setVelocity(victor);
+		}
+
 
 		// OK we're shooting
 		// go twang
 		if (effect != null)
 			myNPC.getBukkitEntity().getWorld().playEffect(myNPC.getBukkitEntity().getLocation(), effect, null);
-
 		if (shootanim!=null)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),shootanim , 64);
 
-		// if (myNPC.getBukkitEntity() instanceof HumanEntity){
-		// net.minecraft.server.EntityPlayer p = (EntityPlayer)
-		// ((CraftLivingEntity)myNPC.getBukkitEntity()).getHandle();
-		// plugin.getServer().broadcastMessage("play anim");
-
-		// p.netServerHandler.sendPacket(new
-		// net.minecraft.server.Packet18ArmAnimation(p, -42));
-		// }
-
-		// Apply angle
-		victor.setY(Math.tan(launchAngle) * dist);
-
-		Vector noise = Vector.getRandom();
-
-		// normalize vector
-		victor = Util.normalizeVector(victor);
-
-		noise = noise.multiply(1 / 10.0);
-
-		// victor = victor.add(noise);
-
-		v = v + (1.188 * Math.pow(hangtime, 2));
-
-		v = v+ (r.nextDouble() - .8)/2;
-
-		// apply power
-		victor = victor.multiply(v / 20.0);
-
-		if (myProjectile == SmallFireball.class) {
-			// this dont do nuffin
-			victor.multiply(1 / 20.0);
-		}
-
-		// Shoot!
-		// Projectile theArrow
-		// =myNPC.getBukkitEntity().launchProjectile(myProjectile);
-
-		Projectile theArrow = myNPC.getBukkitEntity().getWorld().spawn(loc, myProjectile);
-		plugin.arrows.add(theArrow);
-		theArrow.setShooter(myNPC.getBukkitEntity());
-		theArrow.setVelocity(victor);
 
 	}
 
@@ -757,7 +791,7 @@ public class SentryInstance {
 
 
 		myNPC.getBukkitEntity().teleport(Spawn); //it should be there... but maybe not if the position was saved elsewhere.
-		myNPC.getNavigator().setPathfindingRange((100));
+		myNPC.getNavigator().getDefaultParameters().range(100);
 
 		// plugin.getServer().broadcastMessage("NPC GUARDING!");
 
@@ -773,10 +807,16 @@ public class SentryInstance {
 
 		if(sentryStatus == Status.isDYING) return;
 
+
 		if (!myNPC.isSpawned()) {
 			// \\how did youg get here?
 			return;
 		}
+
+
+		if (System.currentTimeMillis() <  okToTakedamage + 500) return;
+		okToTakedamage = System.currentTimeMillis(); 
+
 
 		if (Invincible)
 			return;
@@ -808,6 +848,8 @@ public class SentryInstance {
 	}
 
 
+	private long okToTakedamage = 0;
+
 	public void onDamage(EntityDamageByEntityEvent event) {
 
 		event.setCancelled(true);
@@ -818,6 +860,9 @@ public class SentryInstance {
 			// \\how did youg get here?
 			return;
 		}
+
+		if (System.currentTimeMillis() <  okToTakedamage + 500) return;
+		okToTakedamage = System.currentTimeMillis(); 
 
 		NPC npc = myNPC;
 
@@ -882,9 +927,7 @@ public class SentryInstance {
 
 			if (player != null) {
 				// knockback
-				Vector newVec = player.getLocation().getDirection().multiply(1.25);
-				newVec.setY(newVec.getY() / (double) sentryWeight);
-				npc.getBukkitEntity().setVelocity(newVec);
+				npc.getBukkitEntity().setVelocity( player.getLocation().getDirection().multiply(1.0 / (sentryWeight + (Armor/5))));
 			}
 
 			// Apply armor
@@ -946,6 +989,7 @@ public class SentryInstance {
 	}
 
 	private void die(int finaldamage){
+		sentryStatus = Status.isDYING;
 		if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
@@ -959,7 +1003,7 @@ public class SentryInstance {
 
 		if (RespawnDelaySeconds == -1) {
 			sentryStatus = Status.isDEAD;
-			myNPC.getBukkitEntity().damage(finaldamage);
+			myNPC.getBukkitEntity().damage(finaldamage+1);
 			cancelRunnable();
 			myNPC.destroy();
 		} else {
@@ -968,13 +1012,13 @@ public class SentryInstance {
 
 		if		(plugin.SentryDeath(_myDamamgers, myNPC)){
 			//Denizen is handling this death
-			sentryStatus = Status.isDYING;
+
 		}
 		else
 		{
 			//Denizen is NOT handling this death
 			sentryStatus = Status.isDEAD;
-			myNPC.getBukkitEntity().damage(finaldamage);
+			myNPC.getBukkitEntity().damage(finaldamage+1);
 
 		}
 
@@ -1017,6 +1061,8 @@ public class SentryInstance {
 		return false;
 	}
 
+	private boolean inciendary = false;
+
 	public void setTarget(LivingEntity theEntity, boolean isretaliation) {
 		if (((CitizensNPC)myNPC).getHandle() == null ) return;
 
@@ -1053,7 +1099,6 @@ public class SentryInstance {
 				if (myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
 					// plugin.getServer().broadcastMessage("setting speed to default: " + defaultSpeed);
 					myNPC.getNavigator().cancelNavigation();
-					myNPC.getNavigator().setSpeed((Float) defaultSpeed);
 					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);
 				}
 			}
@@ -1064,26 +1109,42 @@ public class SentryInstance {
 		if (theEntity == guardEntity)
 			return; // dont attack my dude.
 
-	if (isretaliation) sentryStatus = Status.isRETALIATING;
-	else sentryStatus = Status.isHOSTILE;
+		if (isretaliation) sentryStatus = Status.isRETALIATING;
+		else sentryStatus = Status.isHOSTILE;
 
 		Material weapon = Material.AIR;
-
 		faceEntity(myNPC.getBukkitEntity(), theEntity);
+		org.bukkit.inventory.ItemStack is = null;
 
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
-			weapon = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand().getType();
+			is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
+			weapon = is.getType();
 		}
 
+		lightning = false;
+		mclightning = false;
 		switch (weapon) {
+
 		case BOW:
 			myProjectile = org.bukkit.entity.Arrow.class;
 			projectileTarget = theEntity;
 			meleeTarget = null;
 			break;
 		case BLAZE_ROD:
+			myProjectile = org.bukkit.entity.Fireball.class;
+			projectileTarget = theEntity;
+			meleeTarget = null;
+			break;
+		case TORCH:
 			myProjectile = org.bukkit.entity.SmallFireball.class;
 			projectileTarget = theEntity;
+			inciendary = true;
+			meleeTarget = null;
+			break;		
+		case REDSTONE_TORCH_ON:
+			myProjectile = org.bukkit.entity.SmallFireball.class;
+			projectileTarget = theEntity;
+			inciendary =false;
 			meleeTarget = null;
 			break;
 		case SNOW_BALL:
@@ -1100,8 +1161,21 @@ public class SentryInstance {
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			projectileTarget = theEntity;
 			meleeTarget = null;
+			potiontype = is.getDurability();
 			break;
-
+		case PAPER:
+			myProjectile = org.bukkit.entity.ThrownPotion.class;
+			projectileTarget = theEntity;
+			meleeTarget = null;
+			lightning = true;
+			break;
+		case BOOK:
+			myProjectile = org.bukkit.entity.ThrownPotion.class;
+			projectileTarget = theEntity;
+			meleeTarget = null;
+			lightning = true;
+			mclightning = true;
+			break;
 		default:
 			// Manual Attack
 			projectileTarget = null;
@@ -1109,14 +1183,13 @@ public class SentryInstance {
 
 			if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
 				//get off the path
-				defaultSpeed = myNPC.getNavigator().getSpeed();
 				myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 				myNPC.getNavigator().cancelNavigation();
-				myNPC.getNavigator().setSpeed(sentrySpeed);
 			}
 
+			myNPC.getNavigator().getLocalParameters().speed(sentrySpeed);
 			myNPC.getNavigator().setTarget(theEntity, true);
-
+		
 			// plugin.getServer().broadcastMessage("setting speed to: " +
 
 			break;
