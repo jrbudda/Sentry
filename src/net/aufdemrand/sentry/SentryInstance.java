@@ -208,8 +208,8 @@ public class SentryInstance {
 	public Double AttackRateSeconds = 2.0;
 	public Double HealRate = 0.0;
 	public Integer WarningRange = 0;
-	public String WarningMessage = "�c<NPC> says: Halt! Come no further!";
-	public String GreetingMessage = "�a<NPC> says: Welcome, <PLAYER>!";
+    public String WarningMessage = ChatColor.COLOR_CHAR + "c<NPC> says: Halt! Come no further!";
+    public String GreetingMessage = ChatColor.COLOR_CHAR + "a<NPC> says: Welcome, <PLAYER>!";
 
 	private Map<Player, Long> Warnings = new  HashMap<Player, Long>();
 
