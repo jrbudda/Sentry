@@ -208,8 +208,8 @@ public class SentryInstance {
 	public Double AttackRateSeconds = 2.0;
 	public Double HealRate = 0.0;
 	public Integer WarningRange = 0;
-	public String WarningMessage = "§c<NPC> says: Halt! Come no further!";
-	public String GreetingMessage = "§a<NPC> says: Welcome, <PLAYER>!";
+	public String WarningMessage = "ï¿½c<NPC> says: Halt! Come no further!";
+	public String GreetingMessage = "ï¿½a<NPC> says: Welcome, <PLAYER>!";
 
 	private Map<Player, Long> Warnings = new  HashMap<Player, Long>();
 
@@ -1187,8 +1187,8 @@ public class SentryInstance {
 				myNPC.getNavigator().cancelNavigation();
 			}
 
-			myNPC.getNavigator().getLocalParameters().speed(sentrySpeed);
 			myNPC.getNavigator().setTarget(theEntity, true);
+            myNPC.getNavigator().getLocalParameters().speed(sentrySpeed);
 		
 			// plugin.getServer().broadcastMessage("setting speed to: " +
 
