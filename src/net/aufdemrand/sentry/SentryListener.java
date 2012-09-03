@@ -1,12 +1,13 @@
 package net.aufdemrand.sentry;
 
-
+import java.util.logging.Level;
 
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.potion.PotionEffect;
@@ -14,6 +15,7 @@ import org.bukkit.potion.PotionEffectType;
 
 
 import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.ai.event.NavigationCancelEvent;
 import net.citizensnpcs.api.event.CitizensReloadEvent;
 import net.citizensnpcs.api.event.NPCDespawnEvent;
 import net.citizensnpcs.api.event.NPCPushEvent;
@@ -39,34 +41,40 @@ public class SentryListener implements Listener {
 		}
 	}
 
-	@EventHandler
-	public void C2Reload(CitizensReloadEvent event) {
-	}
+//	@EventHandler
+//	public void C2Reload(CitizensReloadEvent event) {
+//	}
+//	
+//	@EventHandler
+//	public void ncan(NavigationCancelEvent event) {
+//		plugin.getLogger().info("nav cancel " + event.getCancelReason());
+//	}
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void EnvDamage(EntityDamageEvent event) {
+		if (event instanceof EntityDamageByEntityEvent) return;
 		SentryInstance inst = plugin.getSentry(event.getEntity());
 
 		if (inst == null) return;
 
 		DamageCause cause = event.getCause();
-
 		//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
 
+
+
 		switch (cause){
-
-
-		case CONTACT: case DROWNING: case LAVA: case FIRE: case FALL: case SUFFOCATION: case LIGHTNING: case CUSTOM: case FIRE_TICK: case POISON: case BLOCK_EXPLOSION: case VOID: case SUICIDE:
+		case CONTACT: case DROWNING: case LAVA: case FIRE: case FALL: case SUFFOCATION: case LIGHTNING: case CUSTOM: case FIRE_TICK: case POISON: case BLOCK_EXPLOSION: case VOID: case SUICIDE: case MAGIC:
 
 			inst.onEnvironmentDamae(event);
 
 			break;
 		default:
 			break;
-		}
+		}	
+
 	}
 
-	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)  //stupid worldguard uses HIGH priority.
+	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent  event) {
 
 		Entity entfrom = event.getDamager();
@@ -98,21 +106,20 @@ public class SentryListener implements Listener {
 
 
 		if (from !=null) {
-
+			if (from == to && !from.FriendlyFire) return;
 			//from a sentry
 			event.setCancelled(false);	
 			event.setDamage(from.Strength);
 			if(entto == from.guardEntity && !from.FriendlyFire) event.setCancelled(true);
 			if(entfrom == entto) event.setCancelled(true);
 			if (snowball && event.isCancelled() == false){
-				((LivingEntity)entto).addPotionEffect(slowEffect);
-				
+				((LivingEntity)entto).addPotionEffect(slowEffect);			
 			}
 		}
 
 
 		if (to  != null) {
-
+			if (from == to && !from.FriendlyFire) return;
 			//to a sentry
 			event.setCancelled(false);	
 			if(entfrom == to.guardEntity && !to.FriendlyFire) event.setCancelled(true);
@@ -132,9 +139,10 @@ public class SentryListener implements Listener {
 		}
 
 		//	plugin.getLogger().info("final: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage());
+		return;
 	}
 
-	
+
 	PotionEffect slowEffect = new PotionEffect(PotionEffectType.getByName("SLOW"), 3*20 ,1);
 
 	@EventHandler

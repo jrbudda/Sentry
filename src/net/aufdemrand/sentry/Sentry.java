@@ -22,6 +22,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -108,8 +109,7 @@ public class Sentry extends JavaPlugin {
 
 	//***Denizen Hook
 	private NpcdeathTrigger _denizenTrigger = null;
-	private Denizen _dplugin = null;
-
+	private Plugin _dplugin = null;
 
 	public boolean SentryDeath(List<Player> players, NPC npc){
 		if (_denizenTrigger !=null && npc !=null) return	_denizenTrigger.Die(players, npc);
@@ -117,7 +117,7 @@ public class Sentry extends JavaPlugin {
 	}
 
 	private void setupDenizenHook() throws ActivationException {
-		_dplugin = (Denizen) this.getServer().getPluginManager().getPlugin("Denizen");
+		_dplugin = this.getServer().getPluginManager().getPlugin("Denizen");
 		if (_dplugin != null) {
 			if (_dplugin.isEnabled()) {
 				_denizenTrigger = new NpcdeathTrigger();
@@ -644,12 +644,12 @@ public class Sentry extends JavaPlugin {
 			}
 			if (args.length <= 1) {
 				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Speed is " + inst.sentrySpeed);
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry speed [0.0 - 1.5]");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry speed [0.0 - 2.0]");
 			}
 			else {
 
 				Float HPs = Float.valueOf(args[1]);
-				if (HPs > 1.5) HPs = 1.5f;
+				if (HPs > 2.0) HPs = 2.0f;
 				if (HPs <0.0)  HPs =0f;
 
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " speed set to " + HPs + ".");   // Talk to the player.
