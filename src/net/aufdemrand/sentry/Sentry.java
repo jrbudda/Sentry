@@ -8,7 +8,6 @@ import java.util.Queue;
 //import java.util.Map;
 import java.util.logging.Level;
 
-import net.aufdemrand.denizen.Denizen;
 import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -69,13 +68,13 @@ public class Sentry extends JavaPlugin {
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 
-				int x = 0;
-				int y = arrows.size();
+		//		int x = 0;
+		//		int y = arrows.size();
 				while (arrows.size() > 200) {
 					Projectile a = arrows.remove();
 					if (a!=null ){
 						a.remove();
-						x++;
+					//	x++;
 					}
 
 				}
@@ -536,6 +535,7 @@ public class Sentry extends JavaPlugin {
 
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " health set to " + HPs + ".");   // Talk to the player.
 				inst.sentryHealth = HPs;
+				inst.setHealth(HPs);
 			}
 
 			return true;

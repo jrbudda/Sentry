@@ -45,6 +45,18 @@ import org.bukkit.util.Vector;
 
 public class SentryInstance {
 
+	public int getHealth(){
+		if (myNPC == null) return 0;
+		if (myNPC.getBukkitEntity() == null) return 0;
+		return ((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().getHealth(); 
+	}
+	
+	public void setHealth(int health){
+		if (myNPC == null) return;
+		if (myNPC.getBukkitEntity() == null) return;
+		((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().setHealth(health); 	
+	}
+	
 	private class SentryLogicRunnable implements Runnable {
 
 		@Override
@@ -59,20 +71,21 @@ public class SentryInstance {
 			if (sentryStatus != Status.isDEAD &&  HealRate > 0) {
 
 				if(System.currentTimeMillis() > oktoheal ){
-					if (myNPC.getBukkitEntity().getHealth() < sentryHealth && sentryStatus !=  Status.isDEAD && sentryStatus != Status.isDYING) {
+					if (getHealth() < sentryHealth && sentryStatus !=  Status.isDEAD && sentryStatus != Status.isDYING) {
 						int heal = 1;
 						if (HealRate <0.5) heal = (int) (0.5 / HealRate);
-						
-						if (myNPC.getBukkitEntity().getHealth() + heal <= myNPC.getBukkitEntity().getMaxHealth()){
-							myNPC.getBukkitEntity().setHealth(myNPC.getBukkitEntity().getHealth() + heal);
+
+						if (getHealth() + heal <= sentryHealth){
+
+						setHealth(	getHealth() + heal);
 						}
 						else{
-							myNPC.getBukkitEntity().setHealth(myNPC.getBukkitEntity().getMaxHealth());
+							myNPC.getBukkitEntity().setHealth(sentryHealth);
 						}
 
 						if (healanim!=null)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),healanim , 64);
 
-						if (myNPC.getBukkitEntity().getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
+						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
 
 					}
 					oktoheal = (long) (System.currentTimeMillis() + HealRate * 1000);
@@ -114,7 +127,7 @@ public class SentryInstance {
 					if (_projTargetLostLoc == null)
 						_projTargetLostLoc = projectileTarget.getLocation();
 
-					faceEntity(myNPC.getBukkitEntity(), projectileTarget);
+					if (!myNPC.getNavigator().isNavigating())	faceEntity(myNPC.getBukkitEntity(), projectileTarget);
 
 					if (System.currentTimeMillis() > oktoFire) {
 						// Fire!
@@ -184,6 +197,7 @@ public class SentryInstance {
 	private int _logicTick = 10;
 	private List<Player> _myDamamgers = new ArrayList<Player>();
 
+
 	public LivingEntity projectileTarget;
 	public LivingEntity meleeTarget;
 	/* Internals */
@@ -228,6 +242,18 @@ public class SentryInstance {
 	}
 	private String getGreetingMEssage(Player player){
 		return GreetingMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+	}
+
+	public boolean isPyromancer(){
+		return (myProjectile == Fireball.class || myProjectile == SmallFireball.class) ;
+	}
+
+	public boolean isStormcaller(){
+		return (lightning) ;
+	}
+
+	public boolean isWitchDoctor(){
+		return (myProjectile == org.bukkit.entity.ThrownPotion.class) ;
 	}
 
 	public SentryInstance(Sentry plugin) {
@@ -331,7 +357,7 @@ public class SentryInstance {
 							}
 							else{
 								((Player)aTarget).sendMessage(getWarningMessage((Player) aTarget)); 
-								faceEntity(myNPC.getBukkitEntity(), aTarget);
+								if(!myNPC.getNavigator().isNavigating())	faceEntity(myNPC.getBukkitEntity(), aTarget);
 								Warnings.put((Player) aTarget,System.currentTimeMillis());
 							}
 
@@ -753,9 +779,7 @@ public class SentryInstance {
 
 	public String getStats() {
 		DecimalFormat df = new DecimalFormat("#.0");
-		int h = 0;
-
-		if(myNPC !=null &&  myNPC.getBukkitEntity()!=null) h = myNPC.getBukkitEntity().getHealth(); 
+		int h = getHealth();
 
 		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + Armor + ChatColor.RED + " [STR]:" + ChatColor.WHITE + Strength + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(sentrySpeed) + ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision + ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange;
 
@@ -793,7 +817,15 @@ public class SentryInstance {
 
 		// defaultSpeed = myNPC.getNavigator().getSpeed();
 
-		((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().setHealth(sentryHealth);
+
+	setHealth(sentryHealth);
+		//		}
+		//		else {
+		//			myNPC.getBukkitEntity().setHealth(myNPC.getBukkitEntity().getMaxHealth());
+		//			_myhps = sentryHealth;
+		//		}
+
+
 
 		_myDamamgers.clear();
 
@@ -848,7 +880,7 @@ public class SentryInstance {
 			myNPC.getBukkitEntity().playEffect(EntityEffect.HURT);
 
 
-			if (myNPC.getBukkitEntity().getHealth() - finaldamage <= 0) {
+			if (getHealth() - finaldamage <= 0) {
 
 				die(finaldamage);
 
@@ -991,7 +1023,7 @@ public class SentryInstance {
 			npc.getBukkitEntity().playEffect(EntityEffect.HURT);
 
 			// is he dead?
-			if (npc.getBukkitEntity().getHealth() - finaldamage <= 0) {
+			if (getHealth() - finaldamage <= 0) {
 
 				die(finaldamage);
 
@@ -1108,24 +1140,14 @@ public class SentryInstance {
 				if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused())  myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 				if (myNPC.getNavigator().getEntityTarget() != guardEntity){
 					myNPC.getNavigator().setTarget(guardEntity, false);
-					myNPC.getNavigator().getLocalParameters().speedModifier(myNPC.getNavigator().getDefaultParameters().speed());
-					myNPC.getNavigator().getLocalParameters().avoidWater(true);
-					myNPC.getNavigator().getLocalParameters().stuckAction(net.citizensnpcs.api.ai.TeleportStuckAction.INSTANCE);
-					//		myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
+					myNPC.getNavigator().getLocalParameters().stuckAction(TPStuckAction.INSTANCE);
 				}
 			} else {
-				faceForward();
+				if(!myNPC.getNavigator().isNavigating())faceForward();
 				if (myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
 					// plugin.getServer().broadcastMessage("setting speed to default: " + defaultSpeed);
 					myNPC.getNavigator().cancelNavigation();
 					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);
-					if (myNPC.getNavigator().isNavigating()){
-						myNPC.getNavigator().getLocalParameters().speedModifier(myNPC.getNavigator().getDefaultParameters().speed());
-						myNPC.getNavigator().getLocalParameters().avoidWater(true);
-						myNPC.getNavigator().getLocalParameters().stuckAction(net.citizensnpcs.api.ai.TeleportStuckAction.INSTANCE);
-						//	myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
-					}
-
 				}
 			}
 
@@ -1139,7 +1161,7 @@ public class SentryInstance {
 		else sentryStatus = Status.isHOSTILE;
 
 		Material weapon = Material.AIR;
-		faceEntity(myNPC.getBukkitEntity(), theEntity);
+		if(!myNPC.getNavigator().isNavigating()) faceEntity(myNPC.getBukkitEntity(), theEntity);
 		org.bukkit.inventory.ItemStack is = null;
 
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
@@ -1218,7 +1240,7 @@ public class SentryInstance {
 			myNPC.getNavigator().getLocalParameters().speedModifier(sentrySpeed*myNPC.getNavigator().getDefaultParameters().speed());
 			myNPC.getNavigator().getLocalParameters().avoidWater(true);
 			myNPC.getNavigator().getLocalParameters().stuckAction(new GiveUpStuckAction(this));
-			//	myNPC.getNavigator().getLocalParameters().stationaryTicks(5*20);
+			myNPC.getNavigator().getLocalParameters().stationaryTicks(5*20);
 			//		plugin.getServer().broadcastMessage("Set Target");
 
 			break;

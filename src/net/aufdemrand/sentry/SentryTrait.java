@@ -27,7 +27,7 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		plugin = (Sentry) Bukkit.getServer().getPluginManager().getPlugin("Sentry");
 
-	
+
 		if (thisInstance !=null ){
 			thisInstance.cancelRunnable();
 			if (thisInstance.myNPC != null) thisInstance.myNPC.despawn();
@@ -39,7 +39,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.myTrait = this;
 
 		if(key.keyExists("traits")) key = key.getRelative("traits");
-		
+
 		isToggled=	key.getBoolean("toggled", true);
 		thisInstance.Retaliate=	key.getBoolean("Retaliate", true);
 		thisInstance.Invincible=	key.getBoolean("Invincinble", false);
@@ -69,13 +69,11 @@ public class SentryTrait extends Trait implements Toggleable {
 			}
 
 			if(  thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
-
 		}
-
 
 		Object derp =  key.getRaw("Targets");
 		if (derp !=null) thisInstance.validTargets= (List<String>) key.getRaw("Targets");
-		
+
 		Object herp =  key.getRaw("Ignores");
 		if (herp !=null) thisInstance.ignoreTargets= (List<String>) key.getRaw("Ignores");
 	}
@@ -90,8 +88,8 @@ public class SentryTrait extends Trait implements Toggleable {
 		plugin = (Sentry) Bukkit.getPluginManager().getPlugin("Sentry");
 
 		if (!plugin.GroupsChecked) plugin.doGroups(); // lazy checking for lazy vault.
-		
-		
+
+
 		if (thisInstance ==null) {
 			thisInstance = new SentryInstance(plugin);
 			thisInstance.myTrait = this;
@@ -101,13 +99,10 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.myNPC = this.getNPC();
 		thisInstance.initialize();	
 
-		
-		
-
 		//		this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
 
-//	plugin.getServer().broadcastMessage("onSpawn");
-	//	plugin.getServer().broadcastMessage("range" + thisInstance.sentryRange);
+		//	plugin.getServer().broadcastMessage("onSpawn");
+		//	plugin.getServer().broadcastMessage("range" + thisInstance.sentryRange);
 	}
 
 	@Override
@@ -120,13 +115,12 @@ public class SentryTrait extends Trait implements Toggleable {
 			thisInstance.cancelRunnable();
 		}
 
-
 		thisInstance = null;
 	}
 
 	@Override
 	public void save(DataKey key) {
-
+		if (thisInstance==null) return;
 		key.setBoolean("toggled", isToggled);
 		key.setBoolean("Retaliate", thisInstance.Retaliate);
 		key.setBoolean("Invincinble", thisInstance.Invincible);
@@ -134,7 +128,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
 		key.setRaw("Targets", thisInstance.validTargets);
 		key.setRaw("Ignores", thisInstance.ignoreTargets);
-		if (thisInstance!=null){
+		if (thisInstance.Spawn!=null){
 			key.setDouble("Spawn.x", thisInstance.Spawn.getX());
 			key.setDouble("Spawn.y", thisInstance.Spawn.getY());
 			key.setDouble("Spawn.z", thisInstance.Spawn.getZ());
