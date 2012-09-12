@@ -50,13 +50,13 @@ public class SentryInstance {
 		if (myNPC.getBukkitEntity() == null) return 0;
 		return ((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().getHealth(); 
 	}
-	
+
 	public void setHealth(int health){
 		if (myNPC == null) return;
 		if (myNPC.getBukkitEntity() == null) return;
 		((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().setHealth(health); 	
 	}
-	
+
 	private class SentryLogicRunnable implements Runnable {
 
 		@Override
@@ -77,7 +77,7 @@ public class SentryInstance {
 
 						if (getHealth() + heal <= sentryHealth){
 
-						setHealth(	getHealth() + heal);
+							setHealth(	getHealth() + heal);
 						}
 						else{
 							myNPC.getBukkitEntity().setHealth(sentryHealth);
@@ -96,12 +96,6 @@ public class SentryInstance {
 			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0) {
 				// Respawn
 
-				// Location loc =
-				// myNPC.getTrait(CurrentLocation.class).getLocation();
-				// if (myNPC.hasTrait(Waypoints.class)){
-				// Waypoints wp = myNPC.getTrait(Waypoints.class);
-				// wp.getCurrentProvider()
-				// }
 
 				// plugin.getServer().broadcastMessage("Spawning...");
 				if (guardEntity == null) {
@@ -160,10 +154,36 @@ public class SentryInstance {
 
 			else if (sentryStatus == Status.isLOOKING && myNPC.isSpawned()) {
 
+				if (guardEntity instanceof Player){
+					if (((CraftPlayer)guardEntity).isOnline() == false){
+						guardEntity = null;
+					}
+				}
+
 				if (guardTarget != null && guardEntity == null) {
 					// daddy? where are u?
 					setGuardTarget(guardTarget);
+				}	
+
+				if (guardEntity !=null){
+
+					if (guardEntity.getLocation().getWorld() != myNPC.getBukkitEntity().getLocation().getWorld()){
+						myNPC.getBukkitEntity().teleport(guardEntity);
+					}
+
+					double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
+					if(dist > 16) {
+						if (myNPC.getNavigator().getEntityTarget() == null) {
+							myNPC.getNavigator().setTarget(guardEntity, false);
+							myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
+							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
+						}
+					}
+					else if (dist < 16) {
+						if (myNPC.getNavigator().isNavigating()) myNPC.getNavigator().cancelNavigation();
+					}
 				}
+
 
 				LivingEntity target = findTarget(sentryRange);
 				if (target !=null)	{
@@ -197,6 +217,8 @@ public class SentryInstance {
 	private int _logicTick = 10;
 	private List<Player> _myDamamgers = new ArrayList<Player>();
 
+	private GiveUpStuckAction giveup = new GiveUpStuckAction(this);
+	private BodyguardTeleportStuckAction bgteleport = new BodyguardTeleportStuckAction(this);
 
 	public LivingEntity projectileTarget;
 	public LivingEntity meleeTarget;
@@ -350,7 +372,7 @@ public class SentryInstance {
 					if (LOS) {					
 
 
-						if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  dist > (Range - WarningRange) && !aTarget.hasMetadata("NPC") & !(WarningMessage.isEmpty())){
+						if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  dist > (Range - WarningRange) && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget) & !(WarningMessage.isEmpty())){
 
 							if (Warnings.containsKey(aTarget) && System.currentTimeMillis() < Warnings.get(aTarget) + 60*1000){
 								//already warned u in last 30 seconds.
@@ -376,7 +398,7 @@ public class SentryInstance {
 			else {
 				//not a target
 
-				if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  !aTarget.hasMetadata("NPC") && !(GreetingMessage.isEmpty())){
+				if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget) && !(GreetingMessage.isEmpty())){
 					boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) aTarget).getHandle());
 					if (LOS) {			
 						if (Warnings.containsKey(aTarget) && System.currentTimeMillis() < Warnings.get(aTarget) + 60*1000){
@@ -409,7 +431,7 @@ public class SentryInstance {
 
 		if (this.containsIgnore("ENTITY:ALL")) 	return false;
 
-		if (aTarget instanceof Player) {
+		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
 
 			if (this.containsIgnore("ENTITY:PLAYER")) {
 				return false;
@@ -447,7 +469,6 @@ public class SentryInstance {
 							if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
 						}	
 					}
-
 				}
 
 				if( plugin.TownyActive ) {
@@ -464,6 +485,7 @@ public class SentryInstance {
 
 				if( plugin.FactionsActive ) {
 					String faction = plugin.getFactionsTag((Player)aTarget);
+					//	plugin.getLogger().info(faction);
 					if (faction !=null) {
 						if (this.containsIgnore("FACTION:" + faction))	return false;
 					}
@@ -471,6 +493,47 @@ public class SentryInstance {
 
 			}
 		}
+
+		else if(net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
+
+			if (this.containsIgnore("ENTITY:NPC")) {
+				return false;
+			}
+
+			else if ( this.containsIgnore("ENTITY:NPCS")) {
+				return false;
+			}
+
+			NPC npc =  net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(aTarget);
+
+			if (npc !=null) {
+
+				String name =npc.getName();
+
+				if ( this.containsIgnore("NPC:" + name)) 	return false;
+
+				else if( plugin.perms!=null && plugin.perms.isEnabled()) {
+
+					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
+					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
+
+					if (groups1 !=null){
+						for (int i = 0; i < groups1.length; i++) {
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+							if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
+						}	
+					}
+
+					if ( groups2 !=null){
+						for (int i = 0; i < groups2.length; i++) {
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+							if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
+						}	
+					}
+				}
+			}
+		}
+
 
 		else if (aTarget instanceof Monster) {
 			if (this.containsIgnore("ENTITY:MONSTER")) 			return false;
@@ -485,7 +548,7 @@ public class SentryInstance {
 		//not ignored, ok!
 
 		//Check if target
-		if (aTarget instanceof Player) {
+		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
 
 			if (this.containsTarget("ENTITY:ALL")) 	return true;
 
@@ -504,12 +567,8 @@ public class SentryInstance {
 
 				else if( plugin.perms!=null && plugin.perms.isEnabled()) {
 
-
 					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
 					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
-					//		String[] groups3 = plugin.perms.getPlayerGroups(aTarget.getWorld().getName(),name); // world perms
-					//	String[] groups4 = plugin.perms.getPlayerGroups((Player)aTarget); // world perms
-
 
 					if (groups1 !=null){
 						for (int i = 0; i < groups1.length; i++) {
@@ -524,22 +583,6 @@ public class SentryInstance {
 							if (this.containsTarget("GROUP:" + groups2[i]))	return true;
 						}	
 					}
-
-
-					/*				if (!isATarget && groups3 !=null){
-						for (int i = 0; i < groups3.length; i++) {
-				//			plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world2 group " + groups3[i] + " on " + name);
-							if (this.containsTarget("GROUP:" + groups3[i]))	isATarget = true;
-						}	
-					}
-
-					if (!isATarget && groups4 !=null){
-						for (int i = 0; i < groups4.length; i++) {
-				//			plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world3 group " + groups4[i] + " on " + name);
-							if (this.containsTarget("GROUP:" + groups4[i]))	isATarget = true;
-						}	
-					}
-					 */
 				}
 
 				if(plugin.TownyActive ) {
@@ -563,7 +606,39 @@ public class SentryInstance {
 			}
 		}
 
+		else if( net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
 
+			if (this.containsTarget("ENTITY:NPC") || this.containsTarget("ENTITY:NPCS")) {
+				return true;
+			}
+
+			NPC npc =  net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(aTarget);
+
+			String name =npc.getName();
+
+			if ( this.containsTarget("NPC:" + name)) return true;
+			else if( plugin.perms!=null && plugin.perms.isEnabled()) {
+
+				String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
+				String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
+				//		String[] groups3 = plugin.perms.getPlayerGroups(aTarget.getWorld().getName(),name); // world perms
+				//	String[] groups4 = plugin.perms.getPlayerGroups((Player)aTarget); // world perms
+
+				if (groups1 !=null){
+					for (int i = 0; i < groups1.length; i++) {
+						//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+						if (this.containsTarget("GROUP:" + groups1[i]))	return true;
+					}	
+				}
+
+				if ( groups2 !=null){
+					for (int i = 0; i < groups2.length; i++) {
+						//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+						if (this.containsTarget("GROUP:" + groups2[i]))		return true;
+					}	
+				}
+			}	
+		}
 		else if (aTarget instanceof Monster) {
 			if (this.containsTarget("ENTITY:MONSTER")) 		return true;
 			else if (this.containsTarget("ENTITY:MONSTERS")) 		return true;
@@ -578,9 +653,6 @@ public class SentryInstance {
 		return false;
 
 	}
-
-
-
 
 
 	Packet shootanim = null;
@@ -612,7 +684,6 @@ public class SentryInstance {
 		else {
 			v = 17.75;
 			g = 13.5;
-
 		}
 
 		if(lightning) {
@@ -818,7 +889,7 @@ public class SentryInstance {
 		// defaultSpeed = myNPC.getNavigator().getSpeed();
 
 
-	setHealth(sentryHealth);
+		setHealth(sentryHealth);
 		//		}
 		//		else {
 		//			myNPC.getBukkitEntity().setHealth(myNPC.getBukkitEntity().getMaxHealth());
@@ -839,14 +910,16 @@ public class SentryInstance {
 
 
 		myNPC.getBukkitEntity().teleport(Spawn); //it should be there... but maybe not if the position was saved elsewhere.
-		myNPC.getNavigator().getDefaultParameters().range(100);
+
+		myNPC.getNavigator().getDefaultParameters().range(Math.min(25, sentryRange));
+		myNPC.getNavigator().getDefaultParameters().stationaryTicks(5*20);
+		myNPC.getNavigator().getDefaultParameters().stuckAction(new BodyguardTeleportStuckAction(this));
 
 		// plugin.getServer().broadcastMessage("NPC GUARDING!");
 
 		if (taskID == null) {
 			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(), 40,  _logicTick);
 		}
-
 
 	}
 
@@ -878,6 +951,14 @@ public class SentryInstance {
 
 		if (finaldamage > 0 ){
 			myNPC.getBukkitEntity().playEffect(EntityEffect.HURT);
+
+			if (event.getCause() == DamageCause.FIRE){
+				if (!myNPC.getNavigator().isNavigating()){
+					Random R = new Random();
+					myNPC.getNavigator().setTarget(myNPC.getBukkitEntity().getLocation().add(R.nextInt(2)-1, 0, R.nextInt(2)-1));
+				}
+			}
+
 
 
 			if (getHealth() - finaldamage <= 0) {
@@ -988,7 +1069,7 @@ public class SentryInstance {
 			}
 		}
 
-		if (player instanceof CraftPlayer && !player.hasMetadata("NPC")) {
+		if (player instanceof CraftPlayer && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(player)) {
 
 			if(!_myDamamgers.contains(player)) _myDamamgers.add((Player) player);
 
@@ -1047,13 +1128,14 @@ public class SentryInstance {
 		}
 
 		setTarget(null, false);
-		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
+		//		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 
 		if (RespawnDelaySeconds == -1) {
 			sentryStatus = Status.isDEAD;
 			myNPC.getBukkitEntity().damage(finaldamage+1);
 			cancelRunnable();
 			myNPC.destroy();
+			return;
 		} else {
 			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
 		}
@@ -1066,7 +1148,7 @@ public class SentryInstance {
 		{
 			//Denizen is NOT handling this death
 			sentryStatus = Status.isDEAD;
-			myNPC.getBukkitEntity().damage(finaldamage+1);
+			myNPC.despawn();
 
 		}
 
@@ -1138,19 +1220,23 @@ public class SentryInstance {
 			if (guardEntity != null) {
 				// yarr... im a guarrrd.
 				if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused())  myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
-				if (myNPC.getNavigator().getEntityTarget() != guardEntity){
+				if (myNPC.getNavigator().getEntityTarget() == null || (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() != guardEntity)){
+					if (guardEntity.getLocation().getWorld() != myNPC.getBukkitEntity().getLocation().getWorld()){
+						myNPC.getBukkitEntity().teleport(guardEntity);
+						return;
+					}
 					myNPC.getNavigator().setTarget(guardEntity, false);
-					myNPC.getNavigator().getLocalParameters().stuckAction(TPStuckAction.INSTANCE);
+					myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
+					myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
 				}
 			} else {
-				if(!myNPC.getNavigator().isNavigating())faceForward();
+
+				myNPC.getNavigator().cancelNavigation();
 				if (myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
-					// plugin.getServer().broadcastMessage("setting speed to default: " + defaultSpeed);
-					myNPC.getNavigator().cancelNavigation();
 					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);
 				}
+				else faceForward();
 			}
-
 			return;
 		}
 
@@ -1231,17 +1317,18 @@ public class SentryInstance {
 			projectileTarget = null;
 			meleeTarget = theEntity;
 
+			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
+
 			if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
 				//get off the path
 				myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 			}
 			myNPC.getNavigator().cancelNavigation();
 			myNPC.getNavigator().setTarget(theEntity, true);
-			myNPC.getNavigator().getLocalParameters().speedModifier(sentrySpeed*myNPC.getNavigator().getDefaultParameters().speed());
-			myNPC.getNavigator().getLocalParameters().avoidWater(true);
-			myNPC.getNavigator().getLocalParameters().stuckAction(new GiveUpStuckAction(this));
+			myNPC.getNavigator().getLocalParameters().speedModifier(sentrySpeed);
+			myNPC.getNavigator().getLocalParameters().stuckAction(giveup);
 			myNPC.getNavigator().getLocalParameters().stationaryTicks(5*20);
-			//		plugin.getServer().broadcastMessage("Set Target");
+
 
 			break;
 		}

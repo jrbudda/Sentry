@@ -34,7 +34,6 @@ public class SentryTrait extends Trait implements Toggleable {
 			thisInstance = null;
 		}
 
-
 		thisInstance = new SentryInstance(plugin);
 		thisInstance.myTrait = this;
 

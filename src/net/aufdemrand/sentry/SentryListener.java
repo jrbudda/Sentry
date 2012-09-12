@@ -13,9 +13,7 @@ import org.bukkit.potion.PotionEffectType;
 
 
 import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.ai.event.NavigationCancelEvent;
 import net.citizensnpcs.api.event.NPCDespawnEvent;
-import net.citizensnpcs.api.event.NPCPushEvent;
 
 import net.citizensnpcs.api.npc.NPC;
 
@@ -27,31 +25,33 @@ public class SentryListener implements Listener {
 	public SentryListener(Sentry sentry) {
 		plugin = sentry;
 	}
-
-	@EventHandler
-	public void pushable(NPCPushEvent event) {
-		SentryInstance thisInstance = plugin.getSentry(event.getNPC());
-
-		if (thisInstance!=null){
-			event.setCancelled(false);
-
-		}
-	}
+	//
+	//	@EventHandler
+	//	public void pushable(NPCPushEvent event) {
+	//		SentryInstance thisInstance = plugin.getSentry(event.getNPC());
+	//		if (thisInstance!=null){
+	//			event.setCancelled(false);
+	//		}
+	//	}
 
 	//	@EventHandler
 	//	public void C2Reload(CitizensReloadEvent event) {
 	//	}
 	//	
 
-
 	//	@EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
 	//	public void C2Reload(org.bukkit.event.entity.CreatureSpawnEvent event) {
 	//		plugin.getLogger().log(Level.INFO, "SPAWN " + event.isCancelled() + " " + event.getEntityType().toString());
 	//	}
 
-
+//
 //	@EventHandler
-//	public void ncan(NavigationCancelEvent event) {
+//	public void ncom(net.citizensnpcs.api.ai.event.NavigationCompleteEvent event) {
+//		plugin.getLogger().info("nav complete" );
+//	}
+//
+//	@EventHandler
+//	public void ncan(net.citizensnpcs.api.ai.event.NavigationCancelEvent event) {
 //		plugin.getLogger().info("nav cancel " + event.getCancelReason());
 //	}
 
@@ -63,15 +63,11 @@ public class SentryListener implements Listener {
 		if (inst == null) return;
 
 		DamageCause cause = event.getCause();
-	//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
-
-
+		//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
 
 		switch (cause){
 		case CONTACT: case DROWNING: case LAVA: case FALL: case SUFFOCATION: case CUSTOM:  case BLOCK_EXPLOSION: case VOID: case SUICIDE: case MAGIC:
-
 			inst.onEnvironmentDamae(event);
-
 			break;
 		case LIGHTNING: 
 			if (!inst.isStormcaller()) inst.onEnvironmentDamae(event);
@@ -85,7 +81,6 @@ public class SentryListener implements Listener {
 		default:
 			break;
 		}	
-
 	}
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
@@ -113,6 +108,23 @@ public class SentryListener implements Listener {
 				if (inst!=null &&  inst.guardEntity == entto ){
 					if (inst.Retaliate) inst.setTarget((LivingEntity)entfrom, true);
 				}
+
+				if (inst != null && event.isCancelled() == false && event.getDamage() > 0 && npc.isSpawned()  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false && CitizensAPI.getNPCRegistry().isNPC(entto) ==false&& npc.getBukkitEntity().getWorld() == entto.getWorld()){
+					//pvp event.
+					if (inst.containsTarget("event:pvp") && !inst.containsIgnore("event:pvp")){
+						//looking for pvp event
+						if (npc.getBukkitEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getBukkitEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
+							// in range
+							if(inst.NightVision  >= entfrom.getLocation().getBlock().getLightLevel() || inst.NightVision  >= entto.getLocation().getBlock().getLightLevel() ){
+								//can see
+								if (npc.getBukkitEntity().hasLineOfSight(entfrom) || npc.getBukkitEntity().hasLineOfSight(entto)){
+									//have los
+									inst.setTarget((LivingEntity) entfrom, true); //attack the aggressor
+								}
+							}
+						}	
+					}
+				}
 			}
 		}
 
@@ -120,8 +132,7 @@ public class SentryListener implements Listener {
 		SentryInstance from = plugin.getSentry(entfrom);
 		SentryInstance to = plugin.getSentry(entto);
 
-
-	//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
+		//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
 
 
 		if (from !=null) {

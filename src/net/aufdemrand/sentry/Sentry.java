@@ -68,18 +68,18 @@ public class Sentry extends JavaPlugin {
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 
-		//		int x = 0;
-		//		int y = arrows.size();
+				//		int x = 0;
+				//		int y = arrows.size();
 				while (arrows.size() > 200) {
 					Projectile a = arrows.remove();
 					if (a!=null ){
 						a.remove();
-					//	x++;
+						//	x++;
 					}
 
 				}
 
-		//		getLogger().log(Level.INFO,y + " arrows in queue " + x + " arrows removed " );
+				//		getLogger().log(Level.INFO,y + " arrows in queue " + x + " arrows removed " );
 
 				//				List<World> worlds = getServer().getWorlds();
 				//				//clean up dem arrows
@@ -96,7 +96,7 @@ public class Sentry extends JavaPlugin {
 				//					}
 				//				}
 				//
-		//		if (x>0)	getLogger().log(Level.INFO,x + " arrows removed" );
+				//		if (x>0)	getLogger().log(Level.INFO,x + " arrows removed" );
 				//
 
 			}
@@ -490,7 +490,7 @@ public class Sentry extends JavaPlugin {
 			if(!player.hasPermission("sentry.guard")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
-			}
+			}		
 
 			if (args.length > 1) {
 
@@ -499,6 +499,7 @@ public class Sentry extends JavaPlugin {
 					arg += " " + args[i];
 				}
 				arg = arg.trim();
+
 
 
 				if (inst.setGuardTarget(arg)) {
@@ -511,9 +512,14 @@ public class Sentry extends JavaPlugin {
 
 			else
 			{
-				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now guarding a location. " );   // Talk to the player.
+				if (inst.guardTarget == null){
+					player.sendMessage(ChatColor.RED +  ThisNPC.getName() + " is already set to guard its location" );   // Talk to the player.	
+				}
+				else{
+					player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now guarding its location. " );   // Talk to the player.
+				}
+				inst.setGuardTarget(null);
 			}
-
 			return true;
 		}
 
@@ -844,7 +850,8 @@ public class Sentry extends JavaPlugin {
 				}
 				arg = arg.trim();
 
-				if (args[1].equals("add") && arg.length() > 0) {
+
+				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.add(arg.toUpperCase());
@@ -854,7 +861,7 @@ public class Sentry extends JavaPlugin {
 					return true;
 				}
 
-				else if (args[1].equals("remove") && arg.length() > 0) {
+				else if (args[1].equals("remove") && arg.length() > 0 && arg.split(":").length>1) {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.remove(arg.toUpperCase());
@@ -881,11 +888,13 @@ public class Sentry extends JavaPlugin {
 				}
 
 				else {
-
-					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add [ENTITY:Name] or [PLAYER:Name] or [GROUP:Name] or [ENTITY:MONSTER]");
-					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove [ENTITY:Name] or [PLAYER:Name] or [GROUP:Name] or [ENTITY:MONSTER]");
-					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
 					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target list");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target clear");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target add type:name");
+					player.sendMessage(ChatColor.GOLD + "Usage: /sentry target remove type:name");
+					player.sendMessage(ChatColor.GOLD + "type:name can be any of the following: entity:MobName entity:monster entity:player entity:all player:PlayerName group:GroupName town:TownName nation:NationName faction:FactionName");
+
+
 					return true;
 				}
 			}
@@ -898,10 +907,12 @@ public class Sentry extends JavaPlugin {
 			}
 
 			if (args.length<2 ){
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore add [entity:Name] or [player:Name] or [group:Name] or [entity:monster] or [entity:player]");
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore remove [target]");
-				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore clear");
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore list");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore clear");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore add type:name");
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry ignore remove type:name");
+				player.sendMessage(ChatColor.GOLD + "type:name can be any of the following: entity:MobName entity:monster entity:player entity:all player:PlayerName group:GroupName town:TownName nation:NationName faction:FactionName");
+
 				return true;
 			}
 
@@ -913,7 +924,7 @@ public class Sentry extends JavaPlugin {
 				}
 				arg = arg.trim();
 
-				if (args[1].equals("add") && arg.length() > 0) {
+				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.add(arg.toUpperCase());
@@ -923,7 +934,7 @@ public class Sentry extends JavaPlugin {
 					return true;
 				}
 
-				else if (args[1].equals("remove") && arg.length() > 0) {
+				else if (args[1].equals("remove") && arg.length() > 0 && arg.split(":").length>1) {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.remove(arg.toUpperCase());
@@ -1002,10 +1013,10 @@ public class Sentry extends JavaPlugin {
 	boolean FactionsActive = false;
 	public  String getFactionsTag(Player player) {
 		if (FactionsActive == false)return null;
-		com.massivecraft.factions.P Fplugin= (P) getServer().getPluginManager().getPlugin("Factions");
 		try {
-			return Fplugin.getPlayerFactionTag(player);
+			return	com.massivecraft.factions.FPlayers.i.get(player).getTag();
 		} catch (Exception e) {
+			getLogger().info("Error getting Faction " + e.getMessage());
 			return null;
 		}
 	}
