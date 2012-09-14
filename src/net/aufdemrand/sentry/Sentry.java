@@ -2,8 +2,11 @@ package net.aufdemrand.sentry;
 
 //import java.util.HashMap;
 import java.rmi.activation.ActivationException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 //import java.util.Map;
 import java.util.logging.Level;
@@ -12,20 +15,24 @@ import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.TraitInfo;
+import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
-import com.massivecraft.factions.P;
 
 public class Sentry extends JavaPlugin {
 
@@ -33,6 +40,12 @@ public class Sentry extends JavaPlugin {
 	public boolean debug = false;;
 	public boolean GroupsChecked = false; 
 	public Queue<Projectile> arrows = new LinkedList<Projectile>();
+
+
+	public Map<Integer, Double> ArmorBuffs = new HashMap<Integer, Double>();
+	public Map<Integer, Double> StrengthBuffs = new HashMap<Integer, Double>();
+	public Map<Integer, Double> SpeedBuffs = new HashMap<Integer, Double>();
+	public Map<Integer, List<PotionEffect>> WeaponEffects = new HashMap<Integer, List<PotionEffect>>();
 
 	@Override
 	public void onEnable() {
@@ -67,41 +80,20 @@ public class Sentry extends JavaPlugin {
 
 		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
-
-				//		int x = 0;
-				//		int y = arrows.size();
+				//Unloaded chunk arrow cleanup
 				while (arrows.size() > 200) {
 					Projectile a = arrows.remove();
 					if (a!=null ){
 						a.remove();
 						//	x++;
 					}
-
 				}
-
-				//		getLogger().log(Level.INFO,y + " arrows in queue " + x + " arrows removed " );
-
-				//				List<World> worlds = getServer().getWorlds();
-				//				//clean up dem arrows
-				//				int x = 0;
-				//				for (World world :worlds){
-				//					Collection<Arrow> arrows = world.getEntitiesByClass(Arrow.class);
-				//					for (Arrow arrow: arrows ){
-				//		//				Integer derp = arrow.getTicksLived();
-				//	//					getLogger().log(Level.INFO,derp.toString() );
-				//						if (arrow.getTicksLived() == 0){
-				//							arrow.remove();
-				//							x++;
-				//						}
-				//					}
-				//				}
-				//
-				//		if (x>0)	getLogger().log(Level.INFO,x + " arrows removed" );
-				//
-
 			}
 		}, 40,  20*120);
 
+
+		this.saveDefaultConfig();
+		reloadMyConfig();
 	}
 
 
@@ -149,6 +141,140 @@ public class Sentry extends JavaPlugin {
 		return null;
 	}
 
+
+	private void reloadMyConfig(){
+		this.reloadConfig();
+		loadmap("ArmorBuffs", ArmorBuffs);
+		loadmap("StrengthBuffs", StrengthBuffs);
+		loadmap("SpeedBuffs", SpeedBuffs);
+		loadpots("WeaponEffects",WeaponEffects);
+		archer = GetMat(getConfig().getString("AttackTypes.Archer",null));
+		pyro1 = GetMat(getConfig().getString("AttackTypes.Pyro1",null));
+		pyro2 = GetMat(getConfig().getString("AttackTypes.Pyro2",null));
+		pyro3 = GetMat(getConfig().getString("AttackTypes.Pyro3",null));
+		pyro3 = GetMat(getConfig().getString("AttackTypes.Bombardier",null));
+		sc1 = GetMat(getConfig().getString("AttackTypes.StormCaller1",null));
+		sc2 = GetMat(getConfig().getString("AttackTypes.StormCaller2",null));
+		witchdoctor = GetMat(getConfig().getString("AttackTypes.WitchDoctor",null));
+		magi = GetMat(getConfig().getString("AttackTypes.IceMagi",null));
+	}
+
+
+	public  int archer = -1;
+	public  int pyro1 = -1;
+	public  int pyro2 = -1;
+	public  int pyro3 = -1;
+	public  int sc1 = -1;
+	public  int sc2 = -1;
+	public  int bombardier = -1;
+	public  int witchdoctor = -1;
+	public  int magi = -1;
+
+
+
+	private int GetMat(String S){
+		int item = -1;
+
+		if (S == null) return item;
+
+		org.bukkit.Material M = org.bukkit.Material.getMaterial(S.toUpperCase().split(":")[0]);
+
+		if (item == -1) {	
+			try {
+				item = Integer.parseInt(S.split(":")[0]);
+			} catch (Exception e) {
+			}
+		}
+
+		if (M!=null) item=M.getId();
+
+
+		return item;
+	}
+
+	private PotionEffect getpot(String S){
+		if (S == null) return null;
+		String[] args = S.trim().split(":");
+
+		PotionEffectType type = null;
+
+		int dur = 10;
+		int amp = 1;
+
+		type = PotionEffectType.getByName((args[0].toUpperCase()));
+
+		if (type == null) {
+			try {
+				type = PotionEffectType.getById(Integer.parseInt(args[0]));
+			} catch (Exception e) {
+			}
+		}
+
+		if (type==null) return null;
+
+		if (args.length > 1){
+			try {
+				dur =	Integer.parseInt(args[1]);
+			} catch (Exception e) {
+			}
+		}
+
+		if (args.length > 2){
+			try {
+				amp =	Integer.parseInt(args[2]);
+			} catch (Exception e) {
+			}
+		}
+
+		return new PotionEffect(type,dur,amp);
+	}
+
+	private void loadmap(String node, Map<Integer, Double> map){
+		map.clear();
+		for(String s: getConfig().getStringList(node)){
+			String[] args = s.trim().split(" ");
+			if(args.length != 2) continue;
+
+			double val = 0;
+
+			try {
+				val = Double.parseDouble(args[1]);
+			} catch (Exception e) {
+			}
+
+			int	item = GetMat(args[0]);
+
+			if(item > 0 && val !=0 && !map.containsKey(item)){
+				map.put(item, val);
+			}
+		}
+	}
+
+	private void loadpots(String node, Map<Integer, List<PotionEffect>> map){
+		map.clear();
+		for(String s: getConfig().getStringList(node)){
+			String[] args = s.trim().split(" ");
+
+			if (args.length < 2) continue;
+
+			int item  = GetMat(args[0]);
+
+			List<PotionEffect> list = new ArrayList<PotionEffect>();
+
+			for(int i = 1;i< args.length;i++){
+				PotionEffect val = getpot(args[1]);
+				if(val !=null) list.add(val);
+
+			}
+
+			if(item >0 && list.isEmpty() == false)	map.put(item, list);
+
+
+		}
+	}
+
+
+
 	private boolean setupPermissions()
 	{
 		try {
@@ -168,7 +294,6 @@ public class Sentry extends JavaPlugin {
 			return false;
 		}
 	}
-
 
 
 	@Override
@@ -251,6 +376,8 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "------- Sentry Commands -------");
 			player.sendMessage(ChatColor.GOLD + "You can use /sentry (id) [command] [args] to perform any of these commands on a sentry without having it selected.");			
 			player.sendMessage(ChatColor.GOLD + "");
+			player.sendMessage(ChatColor.GOLD + "/sentry reload");
+			player.sendMessage(ChatColor.GOLD + "  reload the config.yml");
 			player.sendMessage(ChatColor.GOLD + "/sentry target [add|remove] [target]");
 			player.sendMessage(ChatColor.GOLD + "  Adds or removes a target to attack.");
 			player.sendMessage(ChatColor.GOLD + "/sentry target [list|clear]");
@@ -261,6 +388,8 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  View or clear the ignore list..");
 			player.sendMessage(ChatColor.GOLD + "/sentry info");
 			player.sendMessage(ChatColor.GOLD + "  View all Sentry attributes");
+			player.sendMessage(ChatColor.GOLD + "/sentry equip [item|none]");
+			player.sendMessage(ChatColor.GOLD + "  Equip an item on the Sentry, or remove all equipment.");
 			player.sendMessage(ChatColor.GOLD + "/sentry speed [0-1.5]");
 			player.sendMessage(ChatColor.GOLD + "  Sets speed of the Sentry when attacking.");
 			player.sendMessage(ChatColor.GOLD + "/sentry health [1-2000000]");
@@ -303,7 +432,16 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GREEN + "Debug now: " + debug);
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("reload")) {
+			if(!player.hasPermission("sentry.reload")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
 
+			this.reloadMyConfig();
+			player.sendMessage(ChatColor.GREEN + "reloaded Sentry/config.yml");
+			return true;
+		}
 		NPC ThisNPC;
 
 		if (npcid == -1){
@@ -362,12 +500,7 @@ public class Sentry extends JavaPlugin {
 
 			}
 
-
-
-
 		}
-
-
 
 		// Commands
 
@@ -420,7 +553,6 @@ public class Sentry extends JavaPlugin {
 		//			return true;
 		//
 		//		}
-
 
 		else if (args[0].equalsIgnoreCase("invincible")) {
 			if(!player.hasPermission("sentry.options.invincible")) {
@@ -758,6 +890,42 @@ public class Sentry extends JavaPlugin {
 
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("equip")) {
+			if(!player.hasPermission("sentry.equip")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			if (args.length <= 1) {
+				player.sendMessage(ChatColor.RED + "You must specify a Item ID or Name. or specify 'none' to remove all equipment.");
+			}
+
+			else {
+
+				if(ThisNPC instanceof net.citizensnpcs.npc.entity.CitizensHumanNPC || ThisNPC instanceof net.citizensnpcs.npc.entity.CitizensEndermanNPC){
+					if(args[1].equalsIgnoreCase("none")){
+						//remove equipment
+						equip(ThisNPC, null);
+						player.sendMessage(ChatColor.YELLOW +ThisNPC.getName() + "'s equipment cleared."); 
+
+					}
+					else{
+						int mat = GetMat(args[1]);
+						if (mat>0){
+							ItemStack is = new ItemStack(mat);
+							if (equip(ThisNPC, is)){
+								player.sendMessage(ChatColor.GREEN +" equipped " + is.getType().toString() + " on "+ ThisNPC.getName()); 
+							}
+							else player.sendMessage(ChatColor.RED +" Could not equip: invalid mob type?"); 
+						}
+						else player.sendMessage(ChatColor.RED +" Could not equip: unknown item name"); 
+					}
+				}
+				else player.sendMessage(ChatColor.RED +" Could not equip: must be Player or Enderman type");
+			}
+
+			return true;
+		}
 		else if (args[0].equalsIgnoreCase("warning")) {
 			if(!player.hasPermission("sentry.warning")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
@@ -1030,6 +1198,75 @@ public class Sentry extends JavaPlugin {
 		return FactionsActive;
 	}
 
-	// End of CLASS
+	public boolean equip(NPC npc, ItemStack hand) {
+		Equipment trait = npc.getTrait(Equipment.class);
+		if (trait == null) return false;
+		int slot = 0;
+		Material type = hand == null ? Material.AIR : hand.getType();
+		// First, determine the slot to edit
+		switch (type) {
+		case PUMPKIN:
+		case JACK_O_LANTERN:
+		case LEATHER_HELMET:
+		case CHAINMAIL_HELMET:
+		case GOLD_HELMET:
+		case IRON_HELMET:
+		case DIAMOND_HELMET:
+			slot = 1;
+			break;
+		case LEATHER_CHESTPLATE:
+		case CHAINMAIL_CHESTPLATE:
+		case GOLD_CHESTPLATE:
+		case IRON_CHESTPLATE:
+		case DIAMOND_CHESTPLATE:
+			slot = 2;
+			break;
+		case LEATHER_LEGGINGS:
+		case CHAINMAIL_LEGGINGS:
+		case GOLD_LEGGINGS:
+		case IRON_LEGGINGS:
+		case DIAMOND_LEGGINGS:
+			slot = 3;
+			break;
+		case LEATHER_BOOTS:
+		case CHAINMAIL_BOOTS:
+		case GOLD_BOOTS:
+		case IRON_BOOTS:
+		case DIAMOND_BOOTS:
+			slot = 4;
+			break;
+		default:
+			break;
+		}
+
+		// Now edit the equipment based on the slot
+		// Set the proper slot with one of the item
+
+		if(type == Material.AIR){
+			for (int i = 0; i < 5; i++) {
+				if (trait.get(i) != null && trait.get(i).getType() != Material.AIR) {
+					try {
+						trait.set(i, null);
+					} catch (Exception e) {
+					}   
+				}
+			}
+			return true;
+		}
+		else{
+			ItemStack clone = hand.clone();
+			clone.setAmount(1);
+
+			try {
+				trait.set(slot, clone);
+			} catch (Exception e) {
+				return false;
+			}
+			return true;	
+		}
+
+
+
+	}
 
 }

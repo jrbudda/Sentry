@@ -1,6 +1,6 @@
 name: Sentry
 author: aufdemrand, jrbudda
-version: 0.9.7
+version: 0.9.9
 main: net.aufdemrand.sentry.Sentry
 depend:
   - Citizens
@@ -27,6 +27,8 @@ permissions:
        sentry.info: true
        sentry.warning: true
        sentry.greeting: true
+       sentry.reload: true   
+       sentry.equip: true
   sentry.stats.*:
      default: op
      children:
@@ -59,6 +61,8 @@ permissions:
   sentry.info:
      deafult: op
   sentry.warning:
+     deafult: op
+  sentry.reload:
      deafult: op
   sentry.greeting:
      deafult: op

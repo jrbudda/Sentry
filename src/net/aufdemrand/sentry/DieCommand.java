@@ -30,7 +30,7 @@ public class DieCommand extends AbstractCommand {
 			}
 			else{
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Goodbye, cruel world.");
-				ent.setHealth(0);	
+				theEntry.getDenizen().getCitizensEntity().despawn();
 			}		
 			return true;
 		}

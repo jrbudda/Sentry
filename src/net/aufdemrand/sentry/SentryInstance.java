@@ -21,7 +21,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftEntity;
@@ -41,6 +40,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 
 public class SentryInstance {
@@ -132,7 +133,6 @@ public class SentryInstance {
 						_projTargetLostLoc = projectileTarget.getLocation();
 
 					return; // keep at it
-
 				}
 
 				else if (meleeTarget != null && !meleeTarget.isDead()) {
@@ -547,10 +547,12 @@ public class SentryInstance {
 
 		//not ignored, ok!
 
+
+		if (this.containsTarget("ENTITY:ALL")) 	return true;
+
 		//Check if target
 		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
 
-			if (this.containsTarget("ENTITY:ALL")) 	return true;
 
 			if (this.containsTarget("ENTITY:PLAYER")) {
 				return true;
@@ -802,7 +804,7 @@ public class SentryInstance {
 			}
 			else{
 				to.getWorld().strikeLightningEffect(to);
-				theEntity.damage(Strength, myNPC.getBukkitEntity());
+				theEntity.damage(getStrength(), myNPC.getBukkitEntity());
 			}	
 		}
 		else
@@ -852,7 +854,7 @@ public class SentryInstance {
 		DecimalFormat df = new DecimalFormat("#.0");
 		int h = getHealth();
 
-		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + Armor + ChatColor.RED + " [STR]:" + ChatColor.WHITE + Strength + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(sentrySpeed) + ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision + ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange;
+		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + getArmor() + ChatColor.RED + " [STR]:" + ChatColor.WHITE + getStrength() + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(getSpeed()) + ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision + ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange;
 
 	}
 
@@ -945,7 +947,7 @@ public class SentryInstance {
 		int finaldamage = event.getDamage();
 
 		if (event.getCause() == DamageCause.CONTACT || event.getCause() == DamageCause.BLOCK_EXPLOSION){
-			finaldamage -= Armor;
+			finaldamage -= getArmor();
 		}
 
 
@@ -1052,15 +1054,17 @@ public class SentryInstance {
 			finaldamage = (int) Math.round(damagemodifer);
 		}
 
+		int arm = getArmor();
+
 		if (finaldamage > 0) {
 
 			if (player != null) {
 				// knockback
-				npc.getBukkitEntity().setVelocity( player.getLocation().getDirection().multiply(1.0 / (sentryWeight + (Armor/5))));
+				npc.getBukkitEntity().setVelocity( player.getLocation().getDirection().multiply(1.0 / (sentryWeight + (arm/5))));
 			}
 
 			// Apply armor
-			finaldamage -= this.Armor;
+			finaldamage -= arm;
 
 			// there was damamge before armor.
 			if (finaldamage <= 0){
@@ -1118,6 +1122,7 @@ public class SentryInstance {
 	}
 
 	private void die(int finaldamage){
+		if (sentryStatus == Status.isDYING || sentryStatus == Status.isDEAD) return;
 		sentryStatus = Status.isDYING;
 		if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
@@ -1132,7 +1137,6 @@ public class SentryInstance {
 
 		if (RespawnDelaySeconds == -1) {
 			sentryStatus = Status.isDEAD;
-			myNPC.getBukkitEntity().damage(finaldamage+1);
 			cancelRunnable();
 			myNPC.destroy();
 			return;
@@ -1140,16 +1144,10 @@ public class SentryInstance {
 			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
 		}
 
-		if		(plugin.SentryDeath(_myDamamgers, myNPC)){
-			//Denizen is handling this death
-
-		}
-		else
-		{
+		if		(!plugin.SentryDeath(_myDamamgers, myNPC))	{
 			//Denizen is NOT handling this death
 			sentryStatus = Status.isDEAD;
 			myNPC.despawn();
-
 		}
 
 	}
@@ -1192,6 +1190,11 @@ public class SentryInstance {
 	}
 
 	private boolean inciendary = false;
+
+
+	public boolean loaded = false; 
+
+	public List<PotionEffect> potionEffects = null;
 
 	public void setTarget(LivingEntity theEntity, boolean isretaliation) {
 		if (((CitizensNPC)myNPC).getHandle() == null ) return;
@@ -1246,75 +1249,67 @@ public class SentryInstance {
 		if (isretaliation) sentryStatus = Status.isRETALIATING;
 		else sentryStatus = Status.isHOSTILE;
 
-		Material weapon = Material.AIR;
+		int weapon = 0;
 		if(!myNPC.getNavigator().isNavigating()) faceEntity(myNPC.getBukkitEntity(), theEntity);
 		org.bukkit.inventory.ItemStack is = null;
 
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
 			is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
-			weapon = is.getType();
+			weapon = is.getTypeId();
 		}
 
 		lightning = false;
 		mclightning = false;
-		switch (weapon) {
+		meleeTarget = null;
+		projectileTarget = null;
+		potionEffects = plugin.WeaponEffects.get(weapon);
 
-		case BOW:
+		if(weapon == plugin.archer){
 			myProjectile = org.bukkit.entity.Arrow.class;
 			projectileTarget = theEntity;
-			meleeTarget = null;
-			break;
-		case BLAZE_ROD:
+		}
+		else if(weapon ==  plugin.pyro3){
 			myProjectile = org.bukkit.entity.Fireball.class;
 			projectileTarget = theEntity;
-			meleeTarget = null;
-			break;
-		case TORCH:
+		}
+		else if(weapon ==  plugin.pyro2){
 			myProjectile = org.bukkit.entity.SmallFireball.class;
 			projectileTarget = theEntity;
 			inciendary = true;
-			meleeTarget = null;
-			break;		
-		case REDSTONE_TORCH_ON:
+		}
+		else if(weapon ==  plugin.pyro1){
 			myProjectile = org.bukkit.entity.SmallFireball.class;
 			projectileTarget = theEntity;
 			inciendary =false;
-			meleeTarget = null;
-			break;
-		case SNOW_BALL:
+		}
+		else if(weapon == plugin.magi){
 			myProjectile = org.bukkit.entity.Snowball.class;
 			projectileTarget = theEntity;
-			meleeTarget = null;
-			break;
-		case EGG:
+		}
+		else if(weapon == plugin.bombardier){
 			myProjectile = org.bukkit.entity.Egg.class;
 			projectileTarget = theEntity;
-			meleeTarget = null;
-			break;
-		case POTION:
+		}
+		else if(weapon == plugin.witchdoctor){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			projectileTarget = theEntity;
-			meleeTarget = null;
 			potiontype = is.getDurability();
-			break;
-		case PAPER:
+		}
+		else if(weapon == plugin.sc1){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			projectileTarget = theEntity;
 			meleeTarget = null;
 			lightning = true;
-			break;
-		case BOOK:
+		}
+		else if (weapon == plugin.sc2){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			projectileTarget = theEntity;
 			meleeTarget = null;
 			lightning = true;
-			mclightning = true;
-			break;
-
-
-		default:
+			mclightning = true;	
+		}
+		else{
 			// Manual Attack
-			projectileTarget = null;
 			meleeTarget = theEntity;
 
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
@@ -1325,13 +1320,43 @@ public class SentryInstance {
 			}
 			myNPC.getNavigator().cancelNavigation();
 			myNPC.getNavigator().setTarget(theEntity, true);
-			myNPC.getNavigator().getLocalParameters().speedModifier(sentrySpeed);
+			myNPC.getNavigator().getLocalParameters().speedModifier(getSpeed());
 			myNPC.getNavigator().getLocalParameters().stuckAction(giveup);
 			myNPC.getNavigator().getLocalParameters().stationaryTicks(5*20);
-
-
-			break;
 		}
+	}
+
+	public int getArmor(){
+
+		double mod = 0;
+		if ( myNPC.getBukkitEntity() instanceof Player){
+			for (ItemStack is:((Player)myNPC.getBukkitEntity()).getInventory().getArmorContents()){
+				if (plugin.ArmorBuffs.containsKey(is.getTypeId())) mod += plugin.ArmorBuffs.get(is.getTypeId());		
+			}
+		}
+
+		return (int) (Armor + mod);
+	}
+
+	public int getStrength(){
+		double mod = 0;
+
+		if ( myNPC.getBukkitEntity() instanceof Player){
+			if (plugin.StrengthBuffs.containsKey(((Player)myNPC.getBukkitEntity()).getInventory().getItemInHand().getTypeId())) mod += plugin.StrengthBuffs.get(((Player)myNPC.getBukkitEntity()).getInventory().getItemInHand().getTypeId());		
+		}
+
+		return (int) (Strength + mod);
+	}
+
+
+	public float getSpeed(){
+		double mod = 0;
+		if ( myNPC.getBukkitEntity() instanceof Player){
+			for (ItemStack is:((Player)myNPC.getBukkitEntity()).getInventory().getArmorContents()){
+				if (plugin.SpeedBuffs.containsKey(is.getTypeId())) mod += plugin.SpeedBuffs.get(is.getTypeId());		
+			}
+		}	
+		return (float) (sentrySpeed + mod);
 	}
 
 }
