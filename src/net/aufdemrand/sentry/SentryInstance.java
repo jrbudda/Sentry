@@ -910,8 +910,10 @@ public class SentryInstance {
 
 		//	Packet derp = new net.minecraft.server.Packet15Place();
 
+		if (guardTarget == null){
+			myNPC.getBukkitEntity().teleport(Spawn); //it should be there... but maybe not if the position was saved elsewhere.
+		}
 
-		myNPC.getBukkitEntity().teleport(Spawn); //it should be there... but maybe not if the position was saved elsewhere.
 
 		myNPC.getNavigator().getDefaultParameters().range(Math.min(25, sentryRange));
 		myNPC.getNavigator().getDefaultParameters().stationaryTicks(5*20);
@@ -1012,15 +1014,16 @@ public class SentryInstance {
 			player = (LivingEntity) event.getDamager();
 		}
 
+		
+		if (Invincible)
+			return;
+		
 		// can i kill it? lets go kill it.
 		if (player != null) {
 			if (this.Retaliate) {
 				setTarget(player, true);
 			}
 		}
-
-		if (Invincible)
-			return;
 
 		if (LuckyHits) {
 			// Calulate crits

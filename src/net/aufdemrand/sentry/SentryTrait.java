@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import net.citizensnpcs.api.exception.NPCLoadException;
 
+import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.trait.Toggleable;
@@ -49,7 +50,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.sentrySpeed=	(float) (key.getDouble("Speed", plugin.getConfig().getDouble("DefaultStats.Speed",1.0)));
 		thisInstance.sentryWeight=	 key.getDouble("Weight", plugin.getConfig().getDouble("DefaultStats.Weight",1.0));
 		thisInstance.Armor=		key.getInt("Armor", plugin.getConfig().getInt("DefaultStats.Armor",0));
-		thisInstance.Strength=		key.getInt("Strength", plugin.getConfig().getInt("DefaultStats.Armor",1));
+		thisInstance.Strength=		key.getInt("Strength", plugin.getConfig().getInt("DefaultStats.Strength",1));
 		thisInstance.guardTarget = (key.getString("GuardTarget", null));
 		thisInstance.GreetingMessage = (key.getString("Greeting",plugin.getConfig().getString("DefaultTexts.Greeting", "'§b<NPC> says Welcome, <PLAYER>'")));
 		thisInstance.WarningMessage = (key.getString("Warning",plugin.getConfig().getString("DefaultTexts.Warning", "'§c<NPC> says Halt! Come no closer!'")));
@@ -94,19 +95,20 @@ public class SentryTrait extends Trait implements Toggleable {
 			}
 
 		}
-
+		
+		
 		if (!plugin.GroupsChecked) plugin.doGroups(); // lazy checking for lazy vault.
 
-	//	npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
-		
+		npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
+
 		thisInstance.myNPC = this.getNPC();
-		
+
 		thisInstance.initialize();	
 
-		//		this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
+		// this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
 
-		//	plugin.getServer().broadcastMessage("onSpawn");
-		//	plugin.getServer().broadcastMessage("range" + thisInstance.sentryRange);
+		//plugin.getServer().broadcastMessage("onSpawn");
+
 	}
 
 	@Override
@@ -168,10 +170,5 @@ public class SentryTrait extends Trait implements Toggleable {
 	public boolean isToggled() {
 		return isToggled;
 	}
-
-
-
-
-
 
 }

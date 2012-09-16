@@ -58,7 +58,13 @@ public class SentryListener implements Listener {
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
 	public void target(EntityTargetEvent event) {
-		if (plugin.getSentry(event.getTarget()) !=null) event.setCancelled(false);
+		SentryInstance inst = plugin.getSentry(event.getTarget());
+
+		if(inst!=null){
+			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
+		}
+
+
 	}
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
@@ -99,15 +105,16 @@ public class SentryListener implements Listener {
 		if(	entfrom  instanceof org.bukkit.entity.Projectile){
 			entfrom = ((org.bukkit.entity.Projectile) entfrom).getShooter();
 		}
-		
-		
+
+
 		SentryInstance from = plugin.getSentry(entfrom);
 		SentryInstance to = plugin.getSentry(entto);
 
-
+		//process this event on each sentry to check for respondable events.
 		for (NPC npc : CitizensAPI.getNPCRegistry()) {
 			SentryInstance inst =plugin.getSentry(npc);
-			if (inst!=null &&  inst.guardEntity == entto ){
+
+			if (inst!=null && event.isCancelled() == false && inst.guardEntity == entto ){
 				if (inst.Retaliate) inst.setTarget((LivingEntity)entfrom, true);
 			}
 
@@ -115,8 +122,7 @@ public class SentryListener implements Listener {
 				//pvp event.
 				if ( ( event.isCancelled() == false && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp") && !inst.containsIgnore("event:pvp")) || 
 						(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc") && !inst.containsIgnore("event:pvnpc")) ||
-						(to !=null && inst.containsTarget("event:pvsentry") && !inst.containsIgnore("event:pvsentry"))
-						){
+						(to !=null && inst.containsTarget("event:pvsentry") && !inst.containsIgnore("event:pvsentry")))	{
 					//looking for pvp or pvnpc event
 					if (npc.getBukkitEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getBukkitEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
 						// in range
@@ -133,29 +139,43 @@ public class SentryListener implements Listener {
 		}
 
 
-
-	
-		//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
+	//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
 
 		if (from !=null) {
-			if (from == to && !from.FriendlyFire) return;
 			//from a sentry
-			event.setCancelled(false);	
 			event.setDamage(from.getStrength());
+			
+			//uncancel if not bodyguard.
+			if (from.guardTarget ==null) event.setCancelled(false);	
+				
+			//dont hurt guard target.
 			if(entto == from.guardEntity && !from.FriendlyFire) event.setCancelled(true);
-			if(entfrom == entto) event.setCancelled(true);
+			
+			//stop hittin yourself.
+			if(entfrom == entto && !from.FriendlyFire) event.setCancelled(true);
+			
+			//apply potion effects
 			if (from.potionEffects!=null && event.isCancelled() == false){		
 				((LivingEntity)entto).addPotionEffects(from.potionEffects);		
 			}
 		}
 
 		if (to  != null) {
-			if (from == to && !from.FriendlyFire) return;
+			//to a sentry
+			
+			//stop hittin yourself.
+			if (entfrom == entto && !from.FriendlyFire) return;
+			
+			//innate protections
 			if (event.getCause() == DamageCause.LIGHTNING && to.isStormcaller()) return;
 			if ((event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK) && (to.isPyromancer()||to.isStormcaller())) return;
-			//to a sentry
-			event.setCancelled(false);	
+
+			//guards obey pvp-protection
+			if (to.guardTarget ==null) event.setCancelled(false);	
+
+			//dont take damamge from guard entity.
 			if(entfrom == to.guardEntity && !to.FriendlyFire) event.setCancelled(true);
+
 			NPC npc =null;
 			if (entfrom!=null)	 npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(entfrom);
 
@@ -165,20 +185,18 @@ public class SentryListener implements Listener {
 				}
 			}
 
-			//plugin.getLogger().log(Level.INFO, "Entity Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
+	//		plugin.getLogger().info("end:  Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
+			
+			//process event
 			if (!event.isCancelled()) to.onDamage(event);		
 		}
 
-		//	plugin.getLogger().info("final: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage());
 		return;
 	}
-
-	PotionEffect slowEffect = new PotionEffect(PotionEffectType.getByName("SLOW"), 3*20 ,1);
 
 	@EventHandler
 	public void Despawn(NPCDespawnEvent event){
 
-		//plugin.initializedSentries.remove(event.getNPC().getId());
 		//	plugin.getServer().broadcastMessage("onDespawn");
 
 	}

@@ -34,6 +34,34 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
+/**
+ * @author Administrator
+ *
+ */
 public class Sentry extends JavaPlugin {
 
 	public net.milkbowl.vault.permission.Permission perms = null;
@@ -107,6 +135,8 @@ public class Sentry extends JavaPlugin {
 		return false;
 	}
 
+
+	
 	private void setupDenizenHook() throws ActivationException {
 		_dplugin = this.getServer().getPluginManager().getPlugin("Denizen");
 		if (_dplugin != null) {
@@ -152,7 +182,7 @@ public class Sentry extends JavaPlugin {
 		pyro1 = GetMat(getConfig().getString("AttackTypes.Pyro1",null));
 		pyro2 = GetMat(getConfig().getString("AttackTypes.Pyro2",null));
 		pyro3 = GetMat(getConfig().getString("AttackTypes.Pyro3",null));
-		pyro3 = GetMat(getConfig().getString("AttackTypes.Bombardier",null));
+		bombardier = GetMat(getConfig().getString("AttackTypes.Bombardier",null));
 		sc1 = GetMat(getConfig().getString("AttackTypes.StormCaller1",null));
 		sc2 = GetMat(getConfig().getString("AttackTypes.StormCaller2",null));
 		witchdoctor = GetMat(getConfig().getString("AttackTypes.WitchDoctor",null));
