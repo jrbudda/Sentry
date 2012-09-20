@@ -1,5 +1,8 @@
 package net.aufdemrand.sentry;
 
+import java.util.List;
+
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -9,12 +12,11 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 
 import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.event.NPCDespawnEvent;
+
 
 import net.citizensnpcs.api.npc.NPC;
 
@@ -56,15 +58,95 @@ public class SentryListener implements Listener {
 	//		plugin.getLogger().info("nav cancel " + event.getCancelReason());
 	//	}
 
-	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
-	public void target(EntityTargetEvent event) {
-		SentryInstance inst = plugin.getSentry(event.getTarget());
 
-		if(inst!=null){
-			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
+	//	@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
+	//	public void tar123get(org.bukkit.event.entity.EntityExplodeEvent event) {
+	//		plugin.debug("Explode: " + event.getEntity().toString());
+	//	}
+	//	
+	//	@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
+	//	public void tad12rget(org.bukkit.event.block.BlockIgniteEvent event) {
+	//		plugin.debug("BlockIgnite: " + event.getCause() + " " + event.getPlayer() );
+	//	}
+	//	
+	//	@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
+	//	public void tasd12rget(org.bukkit.event.entity.ExplosionPrimeEvent event) {
+	//		plugin.debug("prime!: " + event.getFire() + event.getEntity() );
+	//	}
+	//	
+
+
+	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
+	public void entteleportevent(org.bukkit.event.entity.EntityTeleportEvent event) {
+		SentryInstance sentry = plugin.getSentry(event.getEntity());
+		if(sentry !=null && sentry.epcount != 0 && sentry.isWarlock1()){
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
+	public void entteleportevent(org.bukkit.event.player.PlayerTeleportEvent event) {
+		SentryInstance sentry = plugin.getSentry(event.getPlayer());
+		if(sentry !=null){
+			plugin.debug("teleport!!: " + event.getPlayer()  + event.isCancelled() + " "+ sentry.epcount);
+			if(	sentry.epcount != 0 && sentry.isWarlock1() ){
+				event.setCancelled(true);
+			}
+		}
+	}
+
+	@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
+	public void projectilehit(org.bukkit.event.entity.ProjectileHitEvent event) {
+		if (event.getEntity() instanceof org.bukkit.entity.EnderPearl){	
+			SentryInstance sentry = plugin.getSentry(event.getEntity().getShooter());
+			if(sentry !=null){
+				sentry.epcount--;
+				if (sentry.epcount<0) sentry.epcount=0;
+				//ender pearl from a sentry
+
+			}
+
+		}
+		else 	if (event.getEntity() instanceof org.bukkit.entity.SmallFireball){	
+			final org.bukkit.block.Block block = event.getEntity().getLocation().getBlock();
+			SentryInstance sentry = plugin.getSentry(event.getEntity().getShooter());
+
+			if(sentry !=null && sentry.isPyromancer1()){
+
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+					public void run(){
+
+						for (BlockFace face :org.bukkit.block.BlockFace.values()){
+							if (block.getRelative(face).getType() == org.bukkit.Material.FIRE) block.getRelative(face).setType(org.bukkit.Material.AIR);
+						}
+
+						if (block.getType() == org.bukkit.Material.FIRE) block.setType(org.bukkit.Material.AIR);
+
+					}
+				}
+						);
+
+			}
 		}
 
 
+	}
+
+
+	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
+	public void tarsdfget(EntityTargetEvent event) {
+		SentryInstance inst = plugin.getSentry(event.getTarget());
+		if(inst!=null){
+			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
+		}
+	}
+
+	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
+	public void target(EntityTargetEvent event) {
+		SentryInstance inst = plugin.getSentry(event.getTarget());
+		if(inst!=null){
+			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
+		}
 	}
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
@@ -78,7 +160,7 @@ public class SentryListener implements Listener {
 		//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
 
 		switch (cause){
-		case CONTACT: case DROWNING: case LAVA: case FALL: case SUFFOCATION: case CUSTOM:  case BLOCK_EXPLOSION: case VOID: case SUICIDE: case MAGIC:
+		case CONTACT: case DROWNING: case LAVA: case FALL: case SUFFOCATION: case CUSTOM:  case BLOCK_EXPLOSION: case VOID: case SUICIDE: case MAGIC: 
 			inst.onEnvironmentDamae(event);
 			break;
 		case LIGHTNING: 
@@ -106,7 +188,6 @@ public class SentryListener implements Listener {
 			entfrom = ((org.bukkit.entity.Projectile) entfrom).getShooter();
 		}
 
-
 		SentryInstance from = plugin.getSentry(entfrom);
 		SentryInstance to = plugin.getSentry(entto);
 
@@ -119,7 +200,7 @@ public class SentryListener implements Listener {
 			}
 
 			if (inst != null  && event.getDamage() > 0 && npc.isSpawned()  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false && npc.getBukkitEntity().getWorld() == entto.getWorld()){
-				//pvp event.
+				//pv-something event.
 				if ( ( event.isCancelled() == false && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp") && !inst.containsIgnore("event:pvp")) || 
 						(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc") && !inst.containsIgnore("event:pvnpc")) ||
 						(to !=null && inst.containsTarget("event:pvsentry") && !inst.containsIgnore("event:pvsentry")))	{
@@ -138,34 +219,50 @@ public class SentryListener implements Listener {
 			}
 		}
 
-
-	//	plugin.getLogger().info("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
+		plugin.debug("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
 
 		if (from !=null) {
 			//from a sentry
 			event.setDamage(from.getStrength());
-			
+
 			//uncancel if not bodyguard.
 			if (from.guardTarget ==null) event.setCancelled(false);	
-				
+
 			//dont hurt guard target.
 			if(entto == from.guardEntity && !from.FriendlyFire) event.setCancelled(true);
-			
+
 			//stop hittin yourself.
 			if(entfrom == entto && !from.FriendlyFire) event.setCancelled(true);
-			
+
 			//apply potion effects
 			if (from.potionEffects!=null && event.isCancelled() == false){		
 				((LivingEntity)entto).addPotionEffects(from.potionEffects);		
 			}
+
+			if (from.isWarlock1()) {
+				if (event.isCancelled()==false){
+					if(to == null)	event.setCancelled(true); //warlock 1 should not do direct damamge, except to other sentries which take no fall damage.
+
+					double h =from.getStrength()+3;
+					double v =7.7*Math.sqrt(h) + .2;
+					if (h<=3) v-=2;
+					if(v>150) v = 150;
+
+					entto.setVelocity(new Vector(0,v/20 ,0));
+					entto.getWorld().playEffect(entto.getLocation(), org.bukkit.Effect.ENDER_SIGNAL, 1, 100);
+
+				}
+
+			}
+
 		}
 
 		if (to  != null) {
 			//to a sentry
-			
+
 			//stop hittin yourself.
 			if (entfrom == entto && !from.FriendlyFire) return;
-			
+
 			//innate protections
 			if (event.getCause() == DamageCause.LIGHTNING && to.isStormcaller()) return;
 			if ((event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK) && (to.isPyromancer()||to.isStormcaller())) return;
@@ -185,8 +282,8 @@ public class SentryListener implements Listener {
 				}
 			}
 
-	//		plugin.getLogger().info("end:  Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
-			
+			//		plugin.getLogger().info("end:  Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
+
 			//process event
 			if (!event.isCancelled()) to.onDamage(event);		
 		}
@@ -194,12 +291,6 @@ public class SentryListener implements Listener {
 		return;
 	}
 
-	@EventHandler
-	public void Despawn(NPCDespawnEvent event){
-
-		//	plugin.getServer().broadcastMessage("onDespawn");
-
-	}
 
 	/*	@EventHandler
 	public void something(ChunkUnloadEvent event){
@@ -232,4 +323,6 @@ public class SentryListener implements Listener {
 	}
 	 */
 
+
 }
+

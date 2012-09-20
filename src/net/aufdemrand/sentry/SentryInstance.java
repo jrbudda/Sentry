@@ -175,7 +175,7 @@ public class SentryInstance {
 					if(dist > 16) {
 						if (myNPC.getNavigator().getEntityTarget() == null) {
 							myNPC.getNavigator().setTarget(guardEntity, false);
-							myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
+							//	myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
 							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
 						}
 					}
@@ -210,7 +210,7 @@ public class SentryInstance {
 
 	/* Technicals */
 	private Integer taskID = null;
-	private Long isRespawnable = System.currentTimeMillis();
+	Long isRespawnable = System.currentTimeMillis();
 	private long oktoFire = System.currentTimeMillis();
 	private long oktoheal = System.currentTimeMillis();
 	private long oktoreasses= System.currentTimeMillis();;
@@ -218,7 +218,7 @@ public class SentryInstance {
 	private List<Player> _myDamamgers = new ArrayList<Player>();
 
 	private GiveUpStuckAction giveup = new GiveUpStuckAction(this);
-	private BodyguardTeleportStuckAction bgteleport = new BodyguardTeleportStuckAction(this);
+	//private BodyguardTeleportStuckAction bgteleport = new BodyguardTeleportStuckAction(this);
 
 	public LivingEntity projectileTarget;
 	public LivingEntity meleeTarget;
@@ -270,12 +270,29 @@ public class SentryInstance {
 		return (myProjectile == Fireball.class || myProjectile == SmallFireball.class) ;
 	}
 
+	public boolean isPyromancer1(){
+		return (!inciendary && myProjectile == SmallFireball.class) ;
+	}
+
+	public boolean isPyromancer2(){
+		return (inciendary && myProjectile == SmallFireball.class) ;
+	}
+
+	public boolean isPyromancer3(){
+		return (myProjectile == Fireball.class) ;
+	}
+
 	public boolean isStormcaller(){
 		return (lightning) ;
 	}
 
 	public boolean isWitchDoctor(){
 		return (myProjectile == org.bukkit.entity.ThrownPotion.class) ;
+	}
+
+	public int epcount = 0;
+	public boolean isWarlock1(){
+		return (myProjectile == org.bukkit.entity.EnderPearl.class) ;
 	}
 
 	public SentryInstance(Sentry plugin) {
@@ -490,7 +507,13 @@ public class SentryInstance {
 						if (this.containsIgnore("FACTION:" + faction))	return false;
 					}
 				}
-
+				if( plugin.WarActive ) {
+					String team = plugin.getWarTeam((Player)aTarget);
+					//	plugin.getLogger().info(faction);
+					if (team !=null) {
+						if (this.containsIgnore("TEAM:" + team))	return false;
+					}
+				}
 			}
 		}
 
@@ -603,6 +626,13 @@ public class SentryInstance {
 					String faction = plugin.getFactionsTag((Player)aTarget);
 					if (faction !=null) {
 						if (this.containsTarget("FACTION:" + faction))return true;
+					}
+				}
+				if( plugin.WarActive ) {
+					String team = plugin.getWarTeam((Player)aTarget);
+					//	plugin.getLogger().info(faction);
+					if (team !=null) {
+						if (this.containsTarget("TEAM:" + team))	return true;
 					}
 				}
 			}
@@ -817,6 +847,11 @@ public class SentryInstance {
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
 			}
+
+			else if(myProjectile == org.bukkit.entity.EnderPearl.class){
+				theArrow = myNPC.getBukkitEntity().launchProjectile(myProjectile);	
+			}
+
 			else{
 				theArrow = myNPC.getBukkitEntity().getWorld().spawn(loc, myProjectile);	
 			}
@@ -825,10 +860,18 @@ public class SentryInstance {
 			if (myProjectile == Fireball.class) {
 				victor = victor.multiply(1/1000000000);
 			}
-
-			if (myProjectile == SmallFireball.class) {
+			else if (myProjectile == SmallFireball.class) {
 				victor = victor.multiply(1/1000000000);
 				((SmallFireball)theArrow).setIsIncendiary(inciendary);
+				if(!inciendary)	{
+					((SmallFireball)theArrow).setFireTicks(0);
+					((SmallFireball)theArrow).setYield(0);
+				}
+			}
+			else if (myProjectile == org.bukkit.entity.EnderPearl.class){
+				epcount++;
+				if (epcount > Integer.MAX_VALUE-1) epcount=0;
+				plugin.debug(epcount + "");
 			}
 
 			plugin.arrows.add(theArrow);
@@ -917,7 +960,7 @@ public class SentryInstance {
 
 		myNPC.getNavigator().getDefaultParameters().range(Math.min(25, sentryRange));
 		myNPC.getNavigator().getDefaultParameters().stationaryTicks(5*20);
-		myNPC.getNavigator().getDefaultParameters().stuckAction(new BodyguardTeleportStuckAction(this));
+		//		myNPC.getNavigator().getDefaultParameters().stuckAction(new BodyguardTeleportStuckAction(this));
 
 		// plugin.getServer().broadcastMessage("NPC GUARDING!");
 
@@ -1014,10 +1057,10 @@ public class SentryInstance {
 			player = (LivingEntity) event.getDamager();
 		}
 
-		
+
 		if (Invincible)
 			return;
-		
+
 		// can i kill it? lets go kill it.
 		if (player != null) {
 			if (this.Retaliate) {
@@ -1118,22 +1161,15 @@ public class SentryInstance {
 				// plugin.getServer().broadcastMessage("Dead!");
 			}
 			else 	myNPC.getBukkitEntity().damage(finaldamage);
-
-
 		}
-
 	}
 
 	private void die(int finaldamage){
 		if (sentryStatus == Status.isDYING || sentryStatus == Status.isDEAD) return;
 		sentryStatus = Status.isDYING;
-		if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
-			((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
-			((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
-		}
-		else{
-			myNPC.getBukkitEntity().getLocation().getWorld().spawn(myNPC.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(5);
-		}
+
+
+
 
 		setTarget(null, false);
 		//		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
@@ -1150,11 +1186,33 @@ public class SentryInstance {
 		if		(!plugin.SentryDeath(_myDamamgers, myNPC))	{
 			//Denizen is NOT handling this death
 			sentryStatus = Status.isDEAD;
-			myNPC.despawn();
+
+			if (this.DropInventory)  myNPC.getBukkitEntity().getLocation().getWorld().spawn(myNPC.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(plugin.SentryEXP);
+
+
+			if (plugin.DieLikePlayers){
+				if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
+					//delete armor so it wont drop naturally.
+					((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
+					((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
+				}
+
+				myNPC.getBukkitEntity().setHealth(0);		
+			}
+			else{
+				if (myNPC.getBukkitEntity() instanceof HumanEntity && this.DropInventory) {
+					//manually drop inventory.
+					for( ItemStack is:	((HumanEntity) myNPC.getBukkitEntity()).getInventory().getArmorContents()){
+						if (is.getTypeId()>0)	myNPC.getBukkitEntity().getWorld().dropItemNaturally(myNPC.getBukkitEntity().getLocation(), is);
+					}	
+					ItemStack is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
+					if (is.getTypeId()>0) myNPC.getBukkitEntity().getWorld().dropItemNaturally(myNPC.getBukkitEntity().getLocation(),is );
+				}		
+
+				myNPC.despawn();
+			}
 		}
-
 	}
-
 
 	@EventHandler
 	public void onRightClick(NPCRightClickEvent event) {
@@ -1225,22 +1283,26 @@ public class SentryInstance {
 
 			if (guardEntity != null) {
 				// yarr... im a guarrrd.
-				if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused())  myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
+				myNPC.getDefaultGoalController().setPaused(true);
+				//	if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused())  myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
+
 				if (myNPC.getNavigator().getEntityTarget() == null || (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() != guardEntity)){
 					if (guardEntity.getLocation().getWorld() != myNPC.getBukkitEntity().getLocation().getWorld()){
 						myNPC.getBukkitEntity().teleport(guardEntity);
 						return;
 					}
 					myNPC.getNavigator().setTarget(guardEntity, false);
-					myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
+					//		myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
 					myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
 				}
 			} else {
-
-				myNPC.getNavigator().cancelNavigation();
-				if (myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
-					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);
-				}
+				//not a guard
+				//		myNPC.getNavigator().cancelNavigation();
+				if (myNPC.getDefaultGoalController().isPaused()) 
+					myNPC.getDefaultGoalController().setPaused(false);
+				//		if (myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
+				//		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(false);
+				//	}
 				else faceForward();
 			}
 			return;
@@ -1258,6 +1320,8 @@ public class SentryInstance {
 
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
 			is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
+			plugin.debug(myNPC.getName() + " weapon dur: " + is.getDurability() + " max " + is.getType().getMaxDurability());
+			is.setDurability((short) 1500);
 			weapon = is.getTypeId();
 		}
 
@@ -1265,6 +1329,7 @@ public class SentryInstance {
 		mclightning = false;
 		meleeTarget = null;
 		projectileTarget = null;
+		inciendary = false;
 		potionEffects = plugin.WeaponEffects.get(weapon);
 
 		if(weapon == plugin.archer){
@@ -1287,6 +1352,10 @@ public class SentryInstance {
 		}
 		else if(weapon == plugin.magi){
 			myProjectile = org.bukkit.entity.Snowball.class;
+			projectileTarget = theEntity;
+		}
+		else if(weapon == plugin.warlock1){
+			myProjectile = org.bukkit.entity.EnderPearl.class;
 			projectileTarget = theEntity;
 		}
 		else if(weapon == plugin.bombardier){
@@ -1317,11 +1386,15 @@ public class SentryInstance {
 
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
 
-			if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
-				//get off the path
-				myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
-			}
-			myNPC.getNavigator().cancelNavigation();
+
+			if (!myNPC.getDefaultGoalController().isPaused()) 
+				myNPC.getDefaultGoalController().setPaused(true);
+
+			//				if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
+			//					//get off the path
+			//					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
+			//				}
+			//		myNPC.getNavigator().cancelNavigation();
 			myNPC.getNavigator().setTarget(theEntity, true);
 			myNPC.getNavigator().getLocalParameters().speedModifier(getSpeed());
 			myNPC.getNavigator().getLocalParameters().stuckAction(giveup);

@@ -3,6 +3,8 @@ package net.aufdemrand.sentry;
 import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+
+import net.aufdemrand.sentry.SentryInstance.Status;
 import net.citizensnpcs.api.exception.NPCLoadException;
 
 import net.citizensnpcs.api.npc.NPC;
@@ -18,23 +20,16 @@ public class SentryTrait extends Trait implements Toggleable {
 
 	public SentryTrait() {
 		super("sentry");
+		plugin = (Sentry) Bukkit.getServer().getPluginManager().getPlugin("Sentry");
 	}
 	private SentryInstance thisInstance;
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void load(DataKey key) throws NPCLoadException {
+		plugin.debug(npc.getName() + " Load");
 
-		if(plugin==null)	plugin = (Sentry) Bukkit.getServer().getPluginManager().getPlugin("Sentry");
-
-		if (thisInstance !=null ){
-			thisInstance.cancelRunnable();
-			if (thisInstance.myNPC != null) thisInstance.myNPC.despawn();
-			thisInstance = null;
-		}
-
-		thisInstance = new SentryInstance(plugin);
-		thisInstance.myTrait = this;
+		ensureInst();
 
 		if(key.keyExists("traits")) key = key.getRelative("traits");
 
@@ -57,7 +52,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.WarningRange = key.getInt("WarningRange", plugin.getConfig().getInt("DefaultStats.WarningRange",0));
 		thisInstance.AttackRateSeconds =  key.getDouble("AttackRate", plugin.getConfig().getDouble("DefaultStats.AttackRate",2.0));
 		thisInstance.HealRate =  key.getDouble("HealRate", plugin.getConfig().getDouble("DefaultStats.HealRate",0.0));
-		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision",0));
+		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision",16));
 
 		if( key.keyExists("Spawn")){
 			try {
@@ -77,6 +72,14 @@ public class SentryTrait extends Trait implements Toggleable {
 		if (herp !=null) thisInstance.ignoreTargets= (List<String>) key.getRaw("Ignores");
 		else thisInstance.ignoreTargets = plugin.getConfig().getStringList("DefaultIgnores");
 
+		for(String S:thisInstance.validTargets){
+			S=S.toUpperCase();
+		}
+
+		for(String S:thisInstance.ignoreTargets){
+			S=S.toUpperCase();
+		}
+
 		thisInstance.loaded = true;
 
 	}
@@ -87,28 +90,33 @@ public class SentryTrait extends Trait implements Toggleable {
 
 	@Override
 	public void onSpawn() {
+		plugin.debug(npc.getName() + " onSpawn");
 
-		if (thisInstance == null ) {
+		ensureInst();
+
+		if (!thisInstance.loaded){
 			try {
+				plugin.debug(npc.getName() + " onSpawn call load");
 				load(new net.citizensnpcs.api.util.MemoryDataKey());
 			} catch (NPCLoadException e) {
 			}
-
 		}
-		
-		
+
+
 		if (!plugin.GroupsChecked) plugin.doGroups(); // lazy checking for lazy vault.
 
 		npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
 
-		thisInstance.myNPC = this.getNPC();
-
 		thisInstance.initialize();	
 
-		// this.getNPC().getBukkitEntity().teleport(this.getNPC().getBukkitEntity().getLocation());
+	}
 
-		//plugin.getServer().broadcastMessage("onSpawn");
-
+	private void ensureInst(){
+		if (thisInstance == null ) {
+			thisInstance = new SentryInstance(plugin);
+			thisInstance.myNPC = npc;
+			thisInstance.myTrait = this;
+		}
 	}
 
 	@Override
@@ -121,7 +129,23 @@ public class SentryTrait extends Trait implements Toggleable {
 			thisInstance.cancelRunnable();
 		}
 
+		plugin.debug(npc.getName() + " onRemove");
+
 		thisInstance = null;
+	}
+
+	@Override
+	public void onAttach() {
+		plugin.debug(npc.getName() + " onAttach");
+	}
+
+	@Override
+	public void onDespawn() {
+		plugin.debug(npc.getName() + " onDespawn");
+		if(thisInstance != null){
+			thisInstance.isRespawnable = System.currentTimeMillis() + thisInstance.RespawnDelaySeconds * 1000;
+			thisInstance.sentryStatus = Status.isDEAD;
+		}
 	}
 
 	@Override
@@ -156,7 +180,10 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
 		key.setBoolean("FriendlyFire", thisInstance.FriendlyFire);
 		key.setInt("NightVision", thisInstance.NightVision);
-		if (thisInstance.guardTarget !=null)	key.setString("GuardTarget", thisInstance.guardTarget);
+		
+		if (thisInstance.guardTarget !=null) key.setString("GuardTarget", thisInstance.guardTarget);
+		else if (key.keyExists("GuardTarget")) key.removeKey("GuardTarget");
+		
 		key.setString("Warning",thisInstance.WarningMessage);
 		key.setString("Greeting",thisInstance.GreetingMessage);
 	}

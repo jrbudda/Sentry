@@ -27,48 +27,20 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 
-/**
- * @author Administrator
- *
- */
-/**
- * @author Administrator
- *
- */
-/**
- * @author Administrator
- *
- */
-/**
- * @author Administrator
- *
- */
-/**
- * @author Administrator
- *
- */
-/**
- * @author Administrator
- *
- */
-/**
- * @author Administrator
- *
- */
 public class Sentry extends JavaPlugin {
 
 	public net.milkbowl.vault.permission.Permission perms = null;
-	public boolean debug = false;;
+	public boolean debug = false;
 	public boolean GroupsChecked = false; 
 	public Queue<Projectile> arrows = new LinkedList<Projectile>();
-
+	public boolean DieLikePlayers = false;
+	public int SentryEXP = 5;
 
 	public Map<Integer, Double> ArmorBuffs = new HashMap<Integer, Double>();
 	public Map<Integer, Double> StrengthBuffs = new HashMap<Integer, Double>();
@@ -88,21 +60,24 @@ public class Sentry extends JavaPlugin {
 			setupDenizenHook();
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath trigger with Denizen" + e.getMessage());
-			_dplugin =null;
 			_denizenTrigger =null;
 		}
 
-		if (_dplugin != null)	getLogger().log(Level.INFO,"NPCDeath Trigger and DIE command registered sucessfully with Denizen");
+		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Trigger and DIE command registered sucessfully with Denizen");
 		else getLogger().log(Level.INFO,"Could not register with Denizen");
 
-		if (setupTowny()) getLogger().log(Level.INFO,"Registered with Towny sucessfully" );
-		else getLogger().log(Level.INFO,"Could not register with Towny. the TOWN target will not function." );
 
-		if (setupFactions()) getLogger().log(Level.INFO,"Registered with Factions sucessfully" );
-		else getLogger().log(Level.INFO,"Could not register with Factions. the FACTION target will not function." );
+		if (checkPlugin("Towny")) getLogger().log(Level.INFO,"Registered with Towny sucessfully. the TOWN: and NATION: targets will function" );
+		else getLogger().log(Level.INFO,"Could not find or register with Towny" );
 
+		if (checkPlugin("Factions")) getLogger().log(Level.INFO,"Registered with Factions sucessfully. the FACTION: target will function" );
+		else getLogger().log(Level.INFO,"Could not find or register with Factions." );
+
+		if (checkPlugin("War")) getLogger().log(Level.INFO,"Registered with War sucessfully. The TEAM: target will function" );
+		else getLogger().log(Level.INFO,"Could not find or register with War. " );
 
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
+
 		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
 
 
@@ -120,7 +95,6 @@ public class Sentry extends JavaPlugin {
 		}, 40,  20*120);
 
 
-		this.saveDefaultConfig();
 		reloadMyConfig();
 	}
 
@@ -128,32 +102,31 @@ public class Sentry extends JavaPlugin {
 
 	//***Denizen Hook
 	private NpcdeathTrigger _denizenTrigger = null;
-	private Plugin _dplugin = null;
+	private DieCommand dc = null;
+	private boolean DenizenActive = false;
+
 
 	public boolean SentryDeath(List<Player> players, NPC npc){
 		if (_denizenTrigger !=null && npc !=null) return	_denizenTrigger.Die(players, npc);
 		return false;
 	}
 
-
-	
 	private void setupDenizenHook() throws ActivationException {
-		_dplugin = this.getServer().getPluginManager().getPlugin("Denizen");
-		if (_dplugin != null) {
-			if (_dplugin.isEnabled()) {
-				_denizenTrigger = new NpcdeathTrigger();
-				_denizenTrigger.activateAs("Npcdeath");
-				DieCommand dc = new DieCommand();
-				dc.activateAs("DIE");
-				dc.activateAs("LIVE");
-			}
-			else _dplugin =null;
+		DenizenActive = checkPlugin("Denizen");
+		if(DenizenActive){
+			_denizenTrigger = new NpcdeathTrigger();
+			_denizenTrigger.activateAs("Npcdeath");
+			DieCommand dc = new DieCommand();
+			dc.activateAs("DIE");
+			dc.activateAs("LIVE");
 		}
 	}
+
 	///
 
 	public SentryInstance getSentry(Entity ent){
 		if( ent == null) return null;
+		if(!(ent instanceof org.bukkit.entity.LivingEntity)) return null;
 		NPC npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(ent);
 		if (npc !=null && npc.hasTrait(SentryTrait.class)){
 			return npc.getTrait(SentryTrait.class).getInstance();
@@ -163,16 +136,15 @@ public class Sentry extends JavaPlugin {
 	}
 
 	public SentryInstance getSentry(NPC npc){
-
 		if (npc !=null && npc.hasTrait(SentryTrait.class)){
 			return npc.getTrait(SentryTrait.class).getInstance();
 		}
-
 		return null;
 	}
 
 
 	private void reloadMyConfig(){
+		this.saveDefaultConfig();
 		this.reloadConfig();
 		loadmap("ArmorBuffs", ArmorBuffs);
 		loadmap("StrengthBuffs", StrengthBuffs);
@@ -187,6 +159,10 @@ public class Sentry extends JavaPlugin {
 		sc2 = GetMat(getConfig().getString("AttackTypes.StormCaller2",null));
 		witchdoctor = GetMat(getConfig().getString("AttackTypes.WitchDoctor",null));
 		magi = GetMat(getConfig().getString("AttackTypes.IceMagi",null));
+		warlock1 = GetMat(getConfig().getString("AttackTypes.Warlock1",null));
+		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
+		SentryEXP = getConfig().getInt("Server.ExpValue",5);
+		if(dc!=null)	dc.dielikeplayer = DieLikePlayers;
 	}
 
 
@@ -199,6 +175,7 @@ public class Sentry extends JavaPlugin {
 	public  int bombardier = -1;
 	public  int witchdoctor = -1;
 	public  int magi = -1;
+	public int warlock1 = -1;
 
 
 
@@ -207,7 +184,10 @@ public class Sentry extends JavaPlugin {
 
 		if (S == null) return item;
 
-		org.bukkit.Material M = org.bukkit.Material.getMaterial(S.toUpperCase().split(":")[0]);
+		String[] args = S.toUpperCase().split(":");
+
+
+		org.bukkit.Material M = org.bukkit.Material.getMaterial(args[0]);
 
 		if (item == -1) {	
 			try {
@@ -216,8 +196,9 @@ public class Sentry extends JavaPlugin {
 			}
 		}
 
-		if (M!=null) item=M.getId();
-
+		if (M!=null){		
+			item=M.getId();
+		}
 
 		return item;
 	}
@@ -344,7 +325,7 @@ public class Sentry extends JavaPlugin {
 					getLogger().log(Level.WARNING,"No permission groups found.  the GROUP target will not function.");
 					perms = null;
 				}
-				else getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found." );
+				else getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found. The GROUP: target will function" );
 
 			} catch (Exception e) {
 				getLogger().log(Level.WARNING,"Error getting groups.  the GROUP target will not function.");
@@ -456,8 +437,7 @@ public class Sentry extends JavaPlugin {
 		}
 		else if (args[0].equalsIgnoreCase("debug")) {
 
-			if (debug) debug = false;
-			else debug = true;
+			debug = !debug;
 
 			player.sendMessage(ChatColor.GREEN + "Debug now: " + debug);
 			return true;
@@ -675,12 +655,13 @@ public class Sentry extends JavaPlugin {
 			else
 			{
 				if (inst.guardTarget == null){
-					player.sendMessage(ChatColor.RED +  ThisNPC.getName() + " is already set to guard its location" );   // Talk to the player.	
+					player.sendMessage(ChatColor.RED +  ThisNPC.getName() + " is already set to guard its immediate area" );   // Talk to the player.	
 				}
 				else{
-					player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now guarding its location. " );   // Talk to the player.
+					player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now guarding its immediate area. " );   // Talk to the player.
 				}
 				inst.setGuardTarget(null);
+
 			}
 			return true;
 		}
@@ -767,7 +748,7 @@ public class Sentry extends JavaPlugin {
 			else {
 
 				int HPs = Integer.valueOf(args[1]);
-				if (HPs > 10) HPs = 10;
+				if (HPs > 16) HPs = 16;
 				if (HPs <0)  HPs =0;
 
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Night Vision set to " + HPs+ ".");   // Talk to the player.
@@ -1020,7 +1001,7 @@ public class Sentry extends JavaPlugin {
 			}
 			else 		player.sendMessage(ChatColor.BLUE + "Target: " + inst.meleeTarget.toString());
 
-			if (inst.getGuardTarget() == null)	player.sendMessage(ChatColor.BLUE + "Guarding: My Location");
+			if (inst.getGuardTarget() == null)	player.sendMessage(ChatColor.BLUE + "Guarding: My Surroundings");
 			else 		player.sendMessage(ChatColor.BLUE + "Guarding: " + inst.getGuardTarget().toString());
 
 			return true;
@@ -1197,16 +1178,6 @@ public class Sentry extends JavaPlugin {
 	}
 
 
-
-	private boolean setupTowny(){
-		if(getServer().getPluginManager().getPlugin("Towny") != null){
-			if(getServer().getPluginManager().getPlugin("Towny").isEnabled() == true) {
-				TownyActive = true;
-			}	
-		}
-		return TownyActive;
-	}
-
 	//FactionsSuport
 	boolean FactionsActive = false;
 	public  String getFactionsTag(Player player) {
@@ -1219,13 +1190,28 @@ public class Sentry extends JavaPlugin {
 		}
 	}
 
-	private boolean setupFactions(){
-		if(getServer().getPluginManager().getPlugin("Factions") != null){
-			if(getServer().getPluginManager().getPlugin("Factions").isEnabled() == true) {
-				FactionsActive = true;
+
+	//War sSuport
+	boolean WarActive = false;
+	public  String getWarTeam(Player player) {
+		if (WarActive == false)return null;
+		try {
+			com.tommytony.war.Team t =com.tommytony.war.Team.getTeamByPlayerName(player.getName());
+			if (t!=null) return t.getName();
+		} catch (Exception e) {
+			getLogger().info("Error getting Team " + e.getMessage());
+			return null;
+		}
+		return null;
+	}
+
+	private boolean checkPlugin(String name){
+		if(getServer().getPluginManager().getPlugin(name) != null){
+			if(getServer().getPluginManager().getPlugin(name).isEnabled() == true) {
+				return true;
 			}	
 		}
-		return FactionsActive;
+		return false;
 	}
 
 	public boolean equip(NPC npc, ItemStack hand) {
@@ -1297,6 +1283,10 @@ public class Sentry extends JavaPlugin {
 
 
 
+	}
+
+	public void debug(String s){
+		if(debug) this.getServer().getLogger().info(s);
 	}
 
 }

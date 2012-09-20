@@ -1,5 +1,12 @@
 #Sentry configuration
 
+#Server-wide options for Sentry
+Server:
+ #If true Sentries will die like normal mobs, instead of being despawned. Player-type Sentry deaths will be announced in chat.
+ DieLikePlayers: false
+ #The amount of EXP sentries drop. Only works if Drops is turned on.
+ ExpValue: 5
+
 #Default stats for new Sentries
 DefaultStats:
  Strength: 1
@@ -49,6 +56,7 @@ AttackTypes:
  StormCaller2: BOOK
  #Note Witch Doctors need a potion equipped to know what to throw!
  WitchDoctor: POTION
+ Warlock1: ENDER_PEARL
 
 #The following items will ADD to the sentry's base armor. 
 #Decimals are allowed but all minecraft damamge is in integers. 

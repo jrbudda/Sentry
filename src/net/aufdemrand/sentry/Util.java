@@ -51,6 +51,9 @@ public class Util {
 
 		double derp =  g*(g*Math.pow(dist,2)+2*elev*v2);
 
+	
+		
+		
 		//Check unhittable.
 		if( v4 < derp) {
 			//target unreachable
@@ -62,17 +65,16 @@ public class Util {
 			return Math.atan( (v2-   Math.sqrt(v4 - derp))/(g*dist));
 		}
 
+		
+		
 	}
 
 
 
 	public static Vector normalizeVector(Vector victor){
-
 		double	mag = Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getY(), 2)  + Math.pow(victor.getZ(), 2)) ;
 		if (mag !=0) return victor.multiply(1/mag);
-
 		return victor.multiply(0);
-
 	}
 
 
