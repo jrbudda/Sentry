@@ -10,13 +10,14 @@ import net.citizensnpcs.api.npc.NPC;
 
 public class BodyguardTeleportStuckAction implements StuckAction{
 	SentryInstance inst =null;
-
-	BodyguardTeleportStuckAction(SentryInstance inst){
+	Sentry plugin = null;
+	BodyguardTeleportStuckAction(SentryInstance inst, Sentry plugin){
 		this.inst = inst; 
+		this.plugin = plugin;
 	}
 
 	@Override
-	public boolean run(NPC npc, Navigator navigator) {
+	public boolean run(final NPC npc, Navigator navigator) {
 
 		if (!npc.isSpawned())
 			return false;
@@ -33,10 +34,19 @@ public class BodyguardTeleportStuckAction implements StuckAction{
 			block = block.getRelative(BlockFace.UP);
 			if (++iterations >= MAX_ITERATIONS && !block.isEmpty())
 				block = base.getBlock();
+			break;
 		}
 
+		final Location loc = block.getLocation();
+		
+		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
 
-		npc.getBukkitEntity().teleport(block.getLocation());
+			@Override
+			public void run() {
+				npc.getBukkitEntity().teleport(loc);	
+			}
+
+		},2);
 
 		//	inst.plugin.getServer().broadcastMessage("bgtp stuck teleport");
 		return false;

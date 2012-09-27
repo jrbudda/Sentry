@@ -62,11 +62,7 @@ public class SentryInstance {
 
 		@Override
 		public void run() {
-
-			// plugin.getServer().broadcastMessage("tick " + (myNPC ==null) +
-			// " " + sentryStatus);
-
-
+			// plugin.getServer().broadcastMessage("tick " + (myNPC ==null) +			
 			if (((CitizensNPC)myNPC).getHandle() == null ) sentryStatus = Status.isDEAD; // incase it dies in a way im not handling.....
 
 			if (sentryStatus != Status.isDEAD &&  HealRate > 0) {
@@ -96,8 +92,6 @@ public class SentryInstance {
 
 			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0) {
 				// Respawn
-
-
 				// plugin.getServer().broadcastMessage("Spawning...");
 				if (guardEntity == null) {
 					myNPC.spawn(Spawn);
@@ -105,11 +99,8 @@ public class SentryInstance {
 					myNPC.spawn(guardEntity.getLocation().add(2, 0, 2));
 				}
 				return;
-
 			}
-
 			else if ((sentryStatus == Status.isHOSTILE || sentryStatus == Status.isRETALIATING) && myNPC.isSpawned()) {
-
 
 				if (sentryStatus == Status.isHOSTILE && System.currentTimeMillis() > oktoreasses) {
 					LivingEntity target = findTarget(sentryRange);
@@ -117,8 +108,7 @@ public class SentryInstance {
 					oktoreasses = (long) (System.currentTimeMillis() + 3000);
 				}
 
-
-				if (projectileTarget != null && !projectileTarget.isDead()) {
+				if (projectileTarget != null && !projectileTarget.isDead() && projectileTarget.getWorld() == myNPC.getBukkitEntity().getLocation().getWorld() ) {
 					if (_projTargetLostLoc == null)
 						_projTargetLostLoc = projectileTarget.getLocation();
 
@@ -138,7 +128,7 @@ public class SentryInstance {
 				else if (meleeTarget != null && !meleeTarget.isDead()) {
 
 					// Did it get away?
-					if (meleeTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation()) > sentryRange) {
+					if (meleeTarget.getWorld() != myNPC.getBukkitEntity().getLocation().getWorld() || meleeTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation()) > sentryRange) {
 						// it got away...
 						setTarget(null, false);
 					}
@@ -157,33 +147,34 @@ public class SentryInstance {
 				if (guardEntity instanceof Player){
 					if (((CraftPlayer)guardEntity).isOnline() == false){
 						guardEntity = null;
+						plugin.debug(myNPC.getName() + "offline!");
 					}
 				}
 
 				if (guardTarget != null && guardEntity == null) {
 					// daddy? where are u?
 					setGuardTarget(guardTarget);
+					plugin.debug(myNPC.getName() + "setgt2!");
 				}	
 
 				if (guardEntity !=null){
-
 					if (guardEntity.getLocation().getWorld() != myNPC.getBukkitEntity().getLocation().getWorld()){
-						myNPC.getBukkitEntity().teleport(guardEntity);
+						myNPC.despawn();
+						myNPC.spawn((guardEntity.getLocation().add(1, 0, 1)));
 					}
+					else{
 
-					double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
-					if(dist > 16) {
-						if (myNPC.getNavigator().getEntityTarget() == null) {
+						double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
+						plugin.debug(myNPC.getName() + dist + myNPC.getNavigator().isNavigating() + " " +myNPC.getNavigator().getEntityTarget() + " " );
+						if(dist > 16 && !myNPC.getNavigator().isNavigating()) {
 							myNPC.getNavigator().setTarget(guardEntity, false);
-							//	myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
-							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
+							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);	
+						}
+						else if (dist < 16 && myNPC.getNavigator().isNavigating()) {
+							myNPC.getNavigator().cancelNavigation();
 						}
 					}
-					else if (dist < 16) {
-						if (myNPC.getNavigator().isNavigating()) myNPC.getNavigator().cancelNavigation();
-					}
 				}
-
 
 				LivingEntity target = findTarget(sentryRange);
 				if (target !=null)	{
@@ -382,8 +373,8 @@ public class SentryInstance {
 				// too dark?
 				if (ll >= (16 - this.NightVision)) {
 
-					Vector victor = ((LivingEntity) aTarget).getEyeLocation().subtract(myNPC.getBukkitEntity().getEyeLocation()).toVector();
-					double dist = Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getZ(), 2));
+
+					double dist = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
 
 					boolean LOS = (((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle()).l(((CraftLivingEntity) aTarget).getHandle());
 					if (LOS) {					
@@ -843,6 +834,7 @@ public class SentryInstance {
 			Projectile theArrow = null;
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
 				net.minecraft.server.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), potiontype);
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -960,7 +952,7 @@ public class SentryInstance {
 
 		myNPC.getNavigator().getDefaultParameters().range(Math.min(25, sentryRange));
 		myNPC.getNavigator().getDefaultParameters().stationaryTicks(5*20);
-		//		myNPC.getNavigator().getDefaultParameters().stuckAction(new BodyguardTeleportStuckAction(this));
+		//	myNPC.getNavigator().getDefaultParameters().stuckAction(new BodyguardTeleportStuckAction(this, this.plugin));
 
 		// plugin.getServer().broadcastMessage("NPC GUARDING!");
 
@@ -1320,9 +1312,9 @@ public class SentryInstance {
 
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
 			is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
-			plugin.debug(myNPC.getName() + " weapon dur: " + is.getDurability() + " max " + is.getType().getMaxDurability());
-			is.setDurability((short) 1500);
 			weapon = is.getTypeId();
+			if(	weapon != plugin.witchdoctor) is.setDurability((short) 0);
+
 		}
 
 		lightning = false;
@@ -1390,11 +1382,6 @@ public class SentryInstance {
 			if (!myNPC.getDefaultGoalController().isPaused()) 
 				myNPC.getDefaultGoalController().setPaused(true);
 
-			//				if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()) {
-			//					//get off the path
-			//					myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
-			//				}
-			//		myNPC.getNavigator().cancelNavigation();
 			myNPC.getNavigator().setTarget(theEntity, true);
 			myNPC.getNavigator().getLocalParameters().speedModifier(getSpeed());
 			myNPC.getNavigator().getLocalParameters().stuckAction(giveup);

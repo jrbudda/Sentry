@@ -989,7 +989,7 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			player.sendMessage(ChatColor.GOLD + "------- Sentry Info for " + ThisNPC.getName() + "------");
+			player.sendMessage(ChatColor.GOLD + "------- Sentry Info for (" +ThisNPC.getId() + ") " +  ThisNPC.getName() + "------");
 			player.sendMessage(ChatColor.GREEN + inst.getStats());
 			player.sendMessage(ChatColor.GREEN + "Invincible: " + inst.Invincible + "  Retaliate: " + inst.Retaliate);
 			player.sendMessage(ChatColor.GREEN + "Drops Items: " + inst.DropInventory+ "  Critical Hits: " + inst.LuckyHits);
@@ -1034,7 +1034,6 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.add(arg.toUpperCase());
-					inst.setGuardTarget(null);
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + currentList.toString());
 					return true;
@@ -1044,7 +1043,6 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.remove(arg.toUpperCase());
-					inst.setGuardTarget(null);
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets removed. Now targeting " + currentList.toString());
 					return true;
@@ -1054,7 +1052,6 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.clear();
-					inst.setGuardTarget(null);
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets cleared.");
 					return true;
@@ -1107,7 +1104,6 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.add(arg.toUpperCase());
-					inst.setGuardTarget(null);
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + currentList.toString());
 					return true;
@@ -1117,7 +1113,6 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.remove(arg.toUpperCase());
-					inst.setGuardTarget(null);
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore removed. Now ignoring " + currentList.toString());
 					return true;
@@ -1127,7 +1122,6 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.clear();
-					inst.setGuardTarget(null);
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore cleared.");
 					return true;

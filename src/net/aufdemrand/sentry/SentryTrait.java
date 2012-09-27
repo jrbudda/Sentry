@@ -12,6 +12,7 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.trait.Toggleable;
 
+
 public class SentryTrait extends Trait implements Toggleable {
 
 	private Sentry plugin = null;
@@ -33,7 +34,7 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		if(key.keyExists("traits")) key = key.getRelative("traits");
 
-		isToggled=	key.getBoolean("toggled", true);
+		isToggled=	key.getBoolean("toggled", isToggled());
 		thisInstance.Retaliate=	key.getBoolean("Retaliate", plugin.getConfig().getBoolean("DefaultOptions.Retaliate",true));
 		thisInstance.Invincible=	key.getBoolean("Invincinble", plugin.getConfig().getBoolean("DefaultOptions.Invincible",false));
 		thisInstance.DropInventory=	key.getBoolean("DropInventory", plugin.getConfig().getBoolean("DefaultOptions.Drops",false));
@@ -132,11 +133,13 @@ public class SentryTrait extends Trait implements Toggleable {
 		plugin.debug(npc.getName() + " onRemove");
 
 		thisInstance = null;
+		isToggled = false;
 	}
 
 	@Override
 	public void onAttach() {
 		plugin.debug(npc.getName() + " onAttach");
+		isToggled = true;
 	}
 
 	@Override

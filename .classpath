@@ -9,7 +9,7 @@
 	<classpathentry kind="lib" path="C:/Minecraft/Towny.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/Factions.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/denizen-0.75-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="C:/Minecraft/plugins/citizens-2.0.1.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/war-1.7.2.jar"/>
+	<classpathentry kind="lib" path="C:/Minecraft/plugins/Citizens2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

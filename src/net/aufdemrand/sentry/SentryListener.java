@@ -52,11 +52,11 @@ public class SentryListener implements Listener {
 	//	public void ncom(net.citizensnpcs.api.ai.event.NavigationCompleteEvent event) {
 	//		plugin.getLogger().info("nav complete" );
 	//	}
-	//
-	//	@EventHandler
-	//	public void ncan(net.citizensnpcs.api.ai.event.NavigationCancelEvent event) {
-	//		plugin.getLogger().info("nav cancel " + event.getCancelReason());
-	//	}
+	
+		@EventHandler
+		public void ncan(net.citizensnpcs.api.ai.event.NavigationCancelEvent event) {
+			plugin.debug("nav cancel " + event.getNPC().getName() +  event.getCancelReason());
+		}
 
 
 	//	@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
@@ -102,6 +102,7 @@ public class SentryListener implements Listener {
 			if(sentry !=null){
 				sentry.epcount--;
 				if (sentry.epcount<0) sentry.epcount=0;
+				event.getEntity().getLocation().getWorld().playEffect(event.getEntity().getLocation(), org.bukkit.Effect.ENDER_SIGNAL, 1, 100);
 				//ender pearl from a sentry
 
 			}
@@ -249,8 +250,7 @@ public class SentryListener implements Listener {
 					if(v>150) v = 150;
 
 					entto.setVelocity(new Vector(0,v/20 ,0));
-					entto.getWorld().playEffect(entto.getLocation(), org.bukkit.Effect.ENDER_SIGNAL, 1, 100);
-
+		
 				}
 
 			}
