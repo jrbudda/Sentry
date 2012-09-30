@@ -67,13 +67,22 @@ public class Sentry extends JavaPlugin {
 		else getLogger().log(Level.INFO,"Could not register with Denizen");
 
 
-		if (checkPlugin("Towny")) getLogger().log(Level.INFO,"Registered with Towny sucessfully. the TOWN: and NATION: targets will function" );
+		if (checkPlugin("Towny")) {
+			getLogger().log(Level.INFO,"Registered with Towny sucessfully. the TOWN: and NATION: targets will function" );
+			TownyActive = true;
+		}
 		else getLogger().log(Level.INFO,"Could not find or register with Towny" );
 
-		if (checkPlugin("Factions")) getLogger().log(Level.INFO,"Registered with Factions sucessfully. the FACTION: target will function" );
+		if (checkPlugin("Factions")){
+			getLogger().log(Level.INFO,"Registered with Factions sucessfully. the FACTION: target will function" );
+			FactionsActive = true;
+		}
 		else getLogger().log(Level.INFO,"Could not find or register with Factions." );
 
-		if (checkPlugin("War")) getLogger().log(Level.INFO,"Registered with War sucessfully. The TEAM: target will function" );
+		if (checkPlugin("War")){
+			getLogger().log(Level.INFO,"Registered with War sucessfully. The TEAM: target will function" );
+			WarActive = true;
+		}
 		else getLogger().log(Level.INFO,"Could not find or register with War. " );
 
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));

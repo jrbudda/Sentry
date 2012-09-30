@@ -1,5 +1,6 @@
 package net.aufdemrand.sentry;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -65,21 +66,26 @@ public class SentryTrait extends Trait implements Toggleable {
 			if(  thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
 		}
 
+		List<String> targettemp = new ArrayList<String>();
+		List<String> ignoretemp = new ArrayList<String>();
+
 		Object derp =  key.getRaw("Targets");
-		if (derp !=null) thisInstance.validTargets= (List<String>) key.getRaw("Targets");
-		else thisInstance.validTargets = plugin.getConfig().getStringList("DefaultTargets");
+		if (derp !=null) targettemp= (List<String>) key.getRaw("Targets");
+		else targettemp = plugin.getConfig().getStringList("DefaultTargets");
 
 		Object herp =  key.getRaw("Ignores");
-		if (herp !=null) thisInstance.ignoreTargets= (List<String>) key.getRaw("Ignores");
-		else thisInstance.ignoreTargets = plugin.getConfig().getStringList("DefaultIgnores");
+		if (herp !=null) ignoretemp= (List<String>) key.getRaw("Ignores");
+		else ignoretemp= plugin.getConfig().getStringList("DefaultIgnores");
 
-		for(String S:thisInstance.validTargets){
-			S=S.toUpperCase();
+		
+		for (String string : targettemp) {
+			thisInstance.validTargets.add(string.toUpperCase());
+		}
+		
+		for (String string : ignoretemp) {
+			thisInstance.ignoreTargets.add(string.toUpperCase());
 		}
 
-		for(String S:thisInstance.ignoreTargets){
-			S=S.toUpperCase();
-		}
 
 		thisInstance.loaded = true;
 
@@ -183,10 +189,10 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
 		key.setBoolean("FriendlyFire", thisInstance.FriendlyFire);
 		key.setInt("NightVision", thisInstance.NightVision);
-		
+
 		if (thisInstance.guardTarget !=null) key.setString("GuardTarget", thisInstance.guardTarget);
 		else if (key.keyExists("GuardTarget")) key.removeKey("GuardTarget");
-		
+
 		key.setString("Warning",thisInstance.WarningMessage);
 		key.setString("Greeting",thisInstance.GreetingMessage);
 	}

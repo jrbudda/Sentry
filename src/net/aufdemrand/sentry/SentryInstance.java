@@ -163,8 +163,7 @@ public class SentryInstance {
 						myNPC.spawn((guardEntity.getLocation().add(1, 0, 1)));
 					}
 					else{
-
-						double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
+							double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
 						plugin.debug(myNPC.getName() + dist + myNPC.getNavigator().isNavigating() + " " +myNPC.getNavigator().getEntityTarget() + " " );
 						if(dist > 16 && !myNPC.getNavigator().isNavigating()) {
 							myNPC.getNavigator().setTarget(guardEntity, false);

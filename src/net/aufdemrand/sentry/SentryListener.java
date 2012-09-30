@@ -161,7 +161,7 @@ public class SentryListener implements Listener {
 		//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
 
 		switch (cause){
-		case CONTACT: case DROWNING: case LAVA: case FALL: case SUFFOCATION: case CUSTOM:  case BLOCK_EXPLOSION: case VOID: case SUICIDE: case MAGIC: 
+		case CONTACT: case DROWNING: case LAVA: case SUFFOCATION: case CUSTOM:  case BLOCK_EXPLOSION: case VOID: case SUICIDE: case MAGIC: 
 			inst.onEnvironmentDamae(event);
 			break;
 		case LIGHTNING: 
