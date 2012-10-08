@@ -765,6 +765,7 @@ public class Sentry extends JavaPlugin {
 				arg = arg.trim();
 
 				String str = arg.replaceAll("\"$", "").replaceAll("^\"", "").replaceAll("'$", "").replaceAll("^'", "");
+                str = ChatColor.translateAlternateColorCodes('&', str);
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " warning message set to " + ChatColor.RESET + str + ".");   // Talk to the player.
 				inst.WarningMessage = str;
 			}
