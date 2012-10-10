@@ -1,7 +1,5 @@
 package net.aufdemrand.sentry;
 
-import java.util.List;
-
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -173,6 +171,9 @@ public class SentryListener implements Listener {
 		case POISON:
 			if (!inst.isWitchDoctor()) inst.onEnvironmentDamae(event);
 			break;
+		case FALL:
+			event.setCancelled(true);
+			break;
 		default:
 			break;
 		}	
@@ -197,12 +198,12 @@ public class SentryListener implements Listener {
 			SentryInstance inst =plugin.getSentry(npc);
 
 			if (inst!=null && event.isCancelled() == false && inst.guardEntity == entto ){
-				if (inst.Retaliate) inst.setTarget((LivingEntity)entfrom, true);
+				if (inst.Retaliate && entfrom instanceof LivingEntity) inst.setTarget((LivingEntity) entfrom, true);
 			}
 
-			if (inst != null  && event.getDamage() > 0 && npc.isSpawned()  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false && npc.getBukkitEntity().getWorld() == entto.getWorld()){
+			if (inst != null && inst.hasEventTargets && event.getDamage() > 0 && npc.isSpawned()  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false && npc.getBukkitEntity().getWorld() == entto.getWorld()){
 				//pv-something event.
-				if ( ( event.isCancelled() == false && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp") && !inst.containsIgnore("event:pvp")) || 
+				if ( ( event.isCancelled() == false && entto instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp") && !inst.containsIgnore("event:pvp")) || 
 						(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc") && !inst.containsIgnore("event:pvnpc")) ||
 						(to !=null && inst.containsTarget("event:pvsentry") && !inst.containsIgnore("event:pvsentry")))	{
 					//looking for pvp or pvnpc event
@@ -212,7 +213,7 @@ public class SentryListener implements Listener {
 							//can see
 							if (npc.getBukkitEntity().hasLineOfSight(entfrom) || npc.getBukkitEntity().hasLineOfSight(entto)){
 								//have los
-								inst.setTarget((LivingEntity) entfrom, true); //attack the aggressor
+								inst.setTarget( (LivingEntity) entfrom, true); //attack the aggressor
 							}
 						}
 					}	

@@ -163,7 +163,7 @@ public class SentryInstance {
 						myNPC.spawn((guardEntity.getLocation().add(1, 0, 1)));
 					}
 					else{
-							double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
+						double dist = myNPC.getBukkitEntity().getLocation().distanceSquared(guardEntity.getLocation());
 						plugin.debug(myNPC.getName() + dist + myNPC.getNavigator().isNavigating() + " " +myNPC.getNavigator().getEntityTarget() + " " );
 						if(dist > 16 && !myNPC.getNavigator().isNavigating()) {
 							myNPC.getNavigator().setTarget(guardEntity, false);
@@ -175,7 +175,12 @@ public class SentryInstance {
 					}
 				}
 
-				LivingEntity target = findTarget(sentryRange);
+				LivingEntity target = null;
+
+				if(hasTargets){
+					target = findTarget(sentryRange);		
+				}
+
 				if (target !=null)	{
 					oktoreasses = (long) (System.currentTimeMillis() + 3000);
 					setTarget(target, false);
@@ -184,8 +189,39 @@ public class SentryInstance {
 			}
 
 		}
+	}
+
+	public void processTargets(){
+		try {
+			hasTargets= hasIgnores =hasEventTargets= hasGroupTargets= hasTownyTargets= hasFactionTargets= hasWarTargets= hasGroupIgnores= hasTownyIgnores= hasFactionsIgnores= hasWarIgnores = false;
+
+			for (String t: validTargets){
+
+				if (t.contains("EVENT:")) hasEventTargets = true;
+				else 	hasTargets = true;
+
+				if (plugin.perms!=null && plugin.perms.isEnabled() && t.contains("GROUP:")) hasGroupTargets = true;
+				if (plugin.FactionsActive && t.contains("FACTION:")) hasFactionTargets = true;
+				if (plugin.TownyActive && t.contains("TOWN:")) hasTownyTargets = true;
+				if (plugin.TownyActive && t.contains("NATION:")) hasTownyTargets = true;
+				if (plugin.WarActive && t.contains("TEAM:")) hasWarTargets = true;
+			}
+
+			for (String t: ignoreTargets){
+				hasIgnores = true;
+				if (plugin.perms!=null && plugin.perms.isEnabled() && t.contains("GROUP:")) hasGroupIgnores = true;
+				if (plugin.FactionsActive && t.contains("FACTION:")) hasFactionsIgnores = true;
+				if (plugin.TownyActive && t.contains("TOWN:")) hasTownyIgnores = true;
+				if (plugin.TownyActive && t.contains("NATION:")) hasTownyIgnores = true;
+				if (plugin.WarActive && t.contains("TEAM:")) hasWarIgnores = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 	}
+
+	public boolean hasTargets, hasIgnores, hasEventTargets, hasGroupTargets, hasTownyTargets, hasFactionTargets, hasWarTargets, hasGroupIgnores, hasTownyIgnores, hasFactionsIgnores, hasWarIgnores;
 
 	public enum Status {
 		isDEAD, isHOSTILE,isRETALIATING, isLOOKING, isDYING, isSTUCK
@@ -204,7 +240,6 @@ public class SentryInstance {
 	private long oktoFire = System.currentTimeMillis();
 	private long oktoheal = System.currentTimeMillis();
 	private long oktoreasses= System.currentTimeMillis();;
-	private int _logicTick = 10;
 	private List<Player> _myDamamgers = new ArrayList<Player>();
 
 	private GiveUpStuckAction giveup = new GiveUpStuckAction(this);
@@ -249,11 +284,14 @@ public class SentryInstance {
 
 	private Class<? extends Projectile> myProjectile;
 
-	private String getWarningMessage(Player player){
-		return WarningMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+	String getWarningMessage(Player player){
+		String str=  WarningMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+		return ChatColor.translateAlternateColorCodes('&', str);
+
 	}
-	private String getGreetingMEssage(Player player){
-		return GreetingMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+	String getGreetingMEssage(Player player){
+		String str=  GreetingMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
+		return ChatColor.translateAlternateColorCodes('&', str);
 	}
 
 	public boolean isPyromancer(){
@@ -436,126 +474,128 @@ public class SentryInstance {
 	private boolean _checkTarget (LivingEntity aTarget){
 		//cheak ignores
 
-		if (this.containsIgnore("ENTITY:ALL")) 	return false;
+		if(hasIgnores){
+			if (this.containsIgnore("ENTITY:ALL")) 	return false;
 
-		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
+			if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
 
-			if (this.containsIgnore("ENTITY:PLAYER")) {
-				return false;
-			}
-
-			else if ( this.containsIgnore("ENTITY:PLAYERS")) {
-				return false;
-			}
-
-			else{
-				String name = ((Player) aTarget).getName();
-
-				if ( this.containsIgnore("PLAYER:" + name)) 	return false;
-
-				if ( this.containsIgnore("ENTITY:OWNER")  && name.equalsIgnoreCase(myNPC.getTrait(Owner.class).getOwner()))		return false;
-
-				else if( plugin.perms!=null && plugin.perms.isEnabled()) {
-
-					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
-					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
-					//		String[] groups3 = plugin.perms.getPlayerGroups(aTarget.getWorld().getName(),name); // world perms
-					//	String[] groups4 = plugin.perms.getPlayerGroups((Player)aTarget); // world perms
-
-
-					if (groups1 !=null){
-						for (int i = 0; i < groups1.length; i++) {
-							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
-							if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
-						}	
-					}
-
-					if ( groups2 !=null){
-						for (int i = 0; i < groups2.length; i++) {
-							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
-							if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
-						}	
-					}
+				if (this.containsIgnore("ENTITY:PLAYER")) {
+					return false;
 				}
 
-				if( plugin.TownyActive ) {
-					String[] info = plugin.getResidentTownyInfo((Player)aTarget);
-
-					if (info[1]!=null) {
-						if (this.containsIgnore("TOWN:" + info[1]))	return false;
-					}
-
-					if (info[0]!=null) {
-						if (this.containsIgnore("NATION:" + info[0]))	return false;
-					}
+				else if ( this.containsIgnore("ENTITY:PLAYERS")) {
+					return false;
 				}
 
-				if( plugin.FactionsActive ) {
-					String faction = plugin.getFactionsTag((Player)aTarget);
-					//	plugin.getLogger().info(faction);
-					if (faction !=null) {
-						if (this.containsIgnore("FACTION:" + faction))	return false;
-					}
-				}
-				if( plugin.WarActive ) {
-					String team = plugin.getWarTeam((Player)aTarget);
-					//	plugin.getLogger().info(faction);
-					if (team !=null) {
-						if (this.containsIgnore("TEAM:" + team))	return false;
-					}
-				}
-			}
-		}
+				else{
+					String name = ((Player) aTarget).getName();
 
-		else if(net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
+					if ( this.containsIgnore("PLAYER:" + name)) 	return false;
 
-			if (this.containsIgnore("ENTITY:NPC")) {
-				return false;
-			}
+					if ( this.containsIgnore("ENTITY:OWNER")  && name.equalsIgnoreCase(myNPC.getTrait(Owner.class).getOwner()))		return false;
 
-			else if ( this.containsIgnore("ENTITY:NPCS")) {
-				return false;
-			}
+					else if(this.hasGroupIgnores) {
 
-			NPC npc =  net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(aTarget);
+						String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
+						String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
+						//		String[] groups3 = plugin.perms.getPlayerGroups(aTarget.getWorld().getName(),name); // world perms
+						//	String[] groups4 = plugin.perms.getPlayerGroups((Player)aTarget); // world perms
 
-			if (npc !=null) {
 
-				String name =npc.getName();
+						if (groups1 !=null){
+							for (int i = 0; i < groups1.length; i++) {
+								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+								if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
+							}	
+						}
 
-				if ( this.containsIgnore("NPC:" + name)) 	return false;
-
-				else if( plugin.perms!=null && plugin.perms.isEnabled()) {
-
-					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
-					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
-
-					if (groups1 !=null){
-						for (int i = 0; i < groups1.length; i++) {
-							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
-							if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
-						}	
+						if ( groups2 !=null){
+							for (int i = 0; i < groups2.length; i++) {
+								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+								if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
+							}	
+						}
 					}
 
-					if ( groups2 !=null){
-						for (int i = 0; i < groups2.length; i++) {
-							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
-							if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
-						}	
+					if(this.hasTownyIgnores) {
+						String[] info = plugin.getResidentTownyInfo((Player)aTarget);
+
+						if (info[1]!=null) {
+							if (this.containsIgnore("TOWN:" + info[1]))	return false;
+						}
+
+						if (info[0]!=null) {
+							if (this.containsIgnore("NATION:" + info[0]))	return false;
+						}
+					}
+
+					if( this.hasFactionsIgnores ) {
+						String faction = plugin.getFactionsTag((Player)aTarget);
+						//	plugin.getLogger().info(faction);
+						if (faction !=null) {
+							if (this.containsIgnore("FACTION:" + faction))	return false;
+						}
+					}
+					if( this.hasWarIgnores ) {
+						String team = plugin.getWarTeam((Player)aTarget);
+						//	plugin.getLogger().info(faction);
+						if (team !=null) {
+							if (this.containsIgnore("TEAM:" + team))	return false;
+						}
 					}
 				}
 			}
-		}
+
+			else if(net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
+
+				if (this.containsIgnore("ENTITY:NPC")) {
+					return false;
+				}
+
+				else if ( this.containsIgnore("ENTITY:NPCS")) {
+					return false;
+				}
+
+				NPC npc =  net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(aTarget);
+
+				if (npc !=null) {
+
+					String name =npc.getName();
+
+					if ( this.containsIgnore("NPC:" + name)) 	return false;
+
+					else if(this.hasGroupIgnores) {
+
+						String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
+						String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
+
+						if (groups1 !=null){
+							for (int i = 0; i < groups1.length; i++) {
+								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+								if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
+							}	
+						}
+
+						if ( groups2 !=null){
+							for (int i = 0; i < groups2.length; i++) {
+								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+								if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
+							}	
+						}
+					}
+				}
+			}
 
 
-		else if (aTarget instanceof Monster) {
-			if (this.containsIgnore("ENTITY:MONSTER")) 			return false;
-			else if ( this.containsIgnore("ENTITY:MONSTERS")) 			return false;
-			else if ( this.containsIgnore("ENTITY:" + ((LivingEntity) aTarget).getType()))		return false;
-		}
+			else if (aTarget instanceof Monster) {
+				if (this.containsIgnore("ENTITY:MONSTER")) 			return false;
+				else if ( this.containsIgnore("ENTITY:MONSTERS")) 			return false;
+				else if ( this.containsIgnore("ENTITY:" + ((LivingEntity) aTarget).getType()))		return false;
+			}
 
-		else if (aTarget instanceof LivingEntity) {
-			if (this.containsIgnore("ENTITY:" + ((LivingEntity) aTarget).getType()))	return false;
+			else if (aTarget instanceof LivingEntity) {
+				if (this.containsIgnore("ENTITY:" + ((LivingEntity) aTarget).getType()))	return false;
+			}
 		}
 
 		//not ignored, ok!
@@ -565,7 +605,6 @@ public class SentryInstance {
 
 		//Check if target
 		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
-
 
 			if (this.containsTarget("ENTITY:PLAYER")) {
 				return true;
@@ -580,7 +619,7 @@ public class SentryInstance {
 
 				if ( this.containsTarget("ENTITY:OWNER")  && name.equalsIgnoreCase(myNPC.getTrait(Owner.class).getOwner()))	 return true;
 
-				else if( plugin.perms!=null && plugin.perms.isEnabled()) {
+				if(this.hasGroupTargets) {
 
 					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
 					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
@@ -600,7 +639,7 @@ public class SentryInstance {
 					}
 				}
 
-				if(plugin.TownyActive ) {
+				if(this.hasTownyTargets) {
 					String[] info = plugin.getResidentTownyInfo((Player)aTarget);
 
 					if (info[1]!=null) {
@@ -612,13 +651,13 @@ public class SentryInstance {
 					}
 				}
 
-				if( plugin.FactionsActive ) {
+				if(this.hasFactionTargets ) {
 					String faction = plugin.getFactionsTag((Player)aTarget);
 					if (faction !=null) {
 						if (this.containsTarget("FACTION:" + faction))return true;
 					}
 				}
-				if( plugin.WarActive ) {
+				if(this.hasWarTargets ) {
 					String team = plugin.getWarTeam((Player)aTarget);
 					//	plugin.getLogger().info(faction);
 					if (team !=null) {
@@ -639,7 +678,7 @@ public class SentryInstance {
 			String name =npc.getName();
 
 			if ( this.containsTarget("NPC:" + name)) return true;
-			else if( plugin.perms!=null && plugin.perms.isEnabled()) {
+			else if(this.hasGroupTargets) {
 
 				String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
 				String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
@@ -681,7 +720,7 @@ public class SentryInstance {
 	Packet healanim = null;
 	Random r = new Random();
 	boolean lightning = false;
-	boolean mclightning = false;
+	int lightninglevel = 0;
 	short potiontype = 0;
 
 	public void Fire(LivingEntity theEntity) {
@@ -742,7 +781,7 @@ public class SentryInstance {
 		Vector targetVelocity = theEntity.getLocation().subtract(_projTargetLostLoc).toVector();
 		// plugin.getServer().broadcastMessage("tv" + targetVelocity);
 
-		targetVelocity.multiply(20 / _logicTick);
+		targetVelocity.multiply(20 / plugin.LogicTicks);
 
 		Location to = Util.leadLocation(targetsHeart, targetVelocity, hangtime);
 		// plugin.getServer().broadcastMessage("to " + to);
@@ -819,13 +858,17 @@ public class SentryInstance {
 
 
 		if(lightning){
-			if (mclightning){
+			if (lightninglevel ==2){
 				to.getWorld().strikeLightning(to);
 			}
-			else{
+			else if (lightninglevel == 1){
 				to.getWorld().strikeLightningEffect(to);
 				theEntity.damage(getStrength(), myNPC.getBukkitEntity());
 			}	
+			else if (lightninglevel == 3){
+				to.getWorld().strikeLightningEffect(to);
+				theEntity.setHealth(0);
+			}
 		}
 		else
 		{
@@ -955,8 +998,10 @@ public class SentryInstance {
 
 		// plugin.getServer().broadcastMessage("NPC GUARDING!");
 
+		processTargets();
+
 		if (taskID == null) {
-			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(), 40,  _logicTick);
+			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(), 40,  plugin.LogicTicks);
 		}
 
 	}
@@ -1253,6 +1298,8 @@ public class SentryInstance {
 
 		if (theEntity == myNPC.getBukkitEntity()) return; //I don't care how you got here. No. just No.
 
+
+
 		if (theEntity == null) {
 			// this gets called while npc is dead, reset things.
 			sentryStatus = Status.isLOOKING;
@@ -1317,7 +1364,7 @@ public class SentryInstance {
 		}
 
 		lightning = false;
-		mclightning = false;
+		lightninglevel = 0;
 		meleeTarget = null;
 		projectileTarget = null;
 		inciendary = false;
@@ -1363,20 +1410,27 @@ public class SentryInstance {
 			projectileTarget = theEntity;
 			meleeTarget = null;
 			lightning = true;
+			lightninglevel = 1;	
 		}
 		else if (weapon == plugin.sc2){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			projectileTarget = theEntity;
 			meleeTarget = null;
 			lightning = true;
-			mclightning = true;	
+			lightninglevel = 2;	
+		}
+		else if (weapon == plugin.sc3){
+			myProjectile = org.bukkit.entity.ThrownPotion.class;
+			projectileTarget = theEntity;
+			meleeTarget = null;
+			lightning = true;
+			lightninglevel = 3;	
 		}
 		else{
 			// Manual Attack
 			meleeTarget = theEntity;
 
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
-
 
 			if (!myNPC.getDefaultGoalController().isPaused()) 
 				myNPC.getDefaultGoalController().setPaused(true);

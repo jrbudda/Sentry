@@ -1,6 +1,6 @@
 name: Sentry
 author: aufdemrand, jrbudda
-version: 1.0.2
+version: 1.1
 main: net.aufdemrand.sentry.Sentry
 depend:
   - Citizens
@@ -50,7 +50,6 @@ permissions:
        sentry.options.retaliate: true
        sentry.options.drops: true
        sentry.options.criticals: true 
-       sentry.options.friendlyfire: true 
   sentry.spawn:
      deafult: op
   sentry.target:
@@ -94,6 +93,4 @@ permissions:
   sentry.options.drops: 
      default: op
   sentry.options.criticals: 
-     default: op
-  sentry.options.friendlyfire: 
      default: op

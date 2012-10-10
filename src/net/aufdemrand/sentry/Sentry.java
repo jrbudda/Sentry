@@ -151,7 +151,6 @@ public class Sentry extends JavaPlugin {
 		return null;
 	}
 
-
 	private void reloadMyConfig(){
 		this.saveDefaultConfig();
 		this.reloadConfig();
@@ -159,6 +158,10 @@ public class Sentry extends JavaPlugin {
 		loadmap("StrengthBuffs", StrengthBuffs);
 		loadmap("SpeedBuffs", SpeedBuffs);
 		loadpots("WeaponEffects",WeaponEffects);
+		loaditemlist("Helmets", Helmets);
+		loaditemlist("Chestplates",Chestplates);
+		loaditemlist("Leggings", Leggings);
+		loaditemlist("Boots", Boots);
 		archer = GetMat(getConfig().getString("AttackTypes.Archer",null));
 		pyro1 = GetMat(getConfig().getString("AttackTypes.Pyro1",null));
 		pyro2 = GetMat(getConfig().getString("AttackTypes.Pyro2",null));
@@ -168,12 +171,13 @@ public class Sentry extends JavaPlugin {
 		sc2 = GetMat(getConfig().getString("AttackTypes.StormCaller2",null));
 		witchdoctor = GetMat(getConfig().getString("AttackTypes.WitchDoctor",null));
 		magi = GetMat(getConfig().getString("AttackTypes.IceMagi",null));
+		sc3 = GetMat(getConfig().getString("AttackTypes.StormCaller3",null));
 		warlock1 = GetMat(getConfig().getString("AttackTypes.Warlock1",null));
 		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
+		LogicTicks = getConfig().getInt("Server.LogicTicks",10);
 		SentryEXP = getConfig().getInt("Server.ExpValue",5);
 		if(dc!=null)	dc.dielikeplayer = DieLikePlayers;
 	}
-
 
 	public  int archer = -1;
 	public  int pyro1 = -1;
@@ -185,8 +189,24 @@ public class Sentry extends JavaPlugin {
 	public  int witchdoctor = -1;
 	public  int magi = -1;
 	public int warlock1 = -1;
+	public int sc3 = -1;
+	public int LogicTicks = 10;
+	public List<Integer> Helmets = new LinkedList<Integer>(java.util.Arrays.asList(298,302,306,310,314,91,86));
+	public List<Integer> Chestplates  =  new LinkedList<Integer>(java.util.Arrays.asList(299,303,307,311,315));
+	public List<Integer> Leggings  = new LinkedList<Integer>( java.util.Arrays.asList(300,304,308,312,316));
+	public List<Integer> Boots  = new LinkedList<Integer>( java.util.Arrays.asList(301,305,309,313,317));
 
+	public void loaditemlist(String key, List<Integer> list){
+		List<String> strs = getConfig().getStringList(key);
 
+		if (strs.size() > 0) list.clear();
+
+		for(String s: getConfig().getStringList(key)){
+			int	item = GetMat(s.trim());
+			list.add(item);
+		}
+
+	}
 
 	private int GetMat(String S){
 		int item = -1;
@@ -294,6 +314,8 @@ public class Sentry extends JavaPlugin {
 	}
 
 
+	
+	
 
 	private boolean setupPermissions()
 	{
@@ -515,10 +537,7 @@ public class Sentry extends JavaPlugin {
 						return true;
 					}
 				}
-
-
 			}
-
 		}
 
 		// Commands
@@ -622,7 +641,7 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("drops")) {
-			if(!player.hasPermission("sentry.options.retaliate")) {
+			if(!player.hasPermission("sentry.options.drops")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
@@ -959,11 +978,11 @@ public class Sentry extends JavaPlugin {
 				arg = arg.trim();
 
 				String str = arg.replaceAll("\"$", "").replaceAll("^\"", "").replaceAll("'$", "").replaceAll("^'", "");
-				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " warning message set to " + ChatColor.RESET + str + ".");   // Talk to the player.
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " warning message set to " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&',str) + ".");   // Talk to the player.
 				inst.WarningMessage = str;
 			}
 			else{
-				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Warning Message is: " + ChatColor.RESET + inst.WarningMessage);
+				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Warning Message is: " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&',inst.WarningMessage));
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry warning 'The Text to use'");
 			}
 			return true;
@@ -983,11 +1002,11 @@ public class Sentry extends JavaPlugin {
 				arg = arg.trim();
 
 				String str = arg.replaceAll("\"$", "").replaceAll("^\"", "").replaceAll("'$", "").replaceAll("^'", "");
-				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Greeting message set to "+ ChatColor.RESET  + str + ".");   // Talk to the player.
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Greeting message set to "+ ChatColor.RESET  + ChatColor.translateAlternateColorCodes('&',str) + ".");   // Talk to the player.
 				inst.GreetingMessage = str;
 			}
 			else{
-				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Greeting Message is: " + ChatColor.RESET + inst.GreetingMessage);
+				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Greeting Message is: " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&',inst.GreetingMessage));
 				player.sendMessage(ChatColor.GOLD + "Usage: /sentry greeting 'The Text to use'");
 			}
 			return true;
@@ -1043,6 +1062,7 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.add(arg.toUpperCase());
+					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + currentList.toString());
 					return true;
@@ -1052,6 +1072,7 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.remove(arg.toUpperCase());
+					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets removed. Now targeting " + currentList.toString());
 					return true;
@@ -1061,6 +1082,7 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.validTargets;
 					currentList.clear();
+					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets cleared.");
 					return true;
@@ -1113,6 +1135,7 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.add(arg.toUpperCase());
+					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + currentList.toString());
 					return true;
@@ -1122,6 +1145,7 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.remove(arg.toUpperCase());
+					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore removed. Now ignoring " + currentList.toString());
 					return true;
@@ -1131,6 +1155,7 @@ public class Sentry extends JavaPlugin {
 
 					List<String> currentList =	inst.ignoreTargets;
 					currentList.clear();
+					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore cleared.");
 					return true;
@@ -1223,40 +1248,11 @@ public class Sentry extends JavaPlugin {
 		int slot = 0;
 		Material type = hand == null ? Material.AIR : hand.getType();
 		// First, determine the slot to edit
-		switch (type) {
-		case PUMPKIN:
-		case JACK_O_LANTERN:
-		case LEATHER_HELMET:
-		case CHAINMAIL_HELMET:
-		case GOLD_HELMET:
-		case IRON_HELMET:
-		case DIAMOND_HELMET:
-			slot = 1;
-			break;
-		case LEATHER_CHESTPLATE:
-		case CHAINMAIL_CHESTPLATE:
-		case GOLD_CHESTPLATE:
-		case IRON_CHESTPLATE:
-		case DIAMOND_CHESTPLATE:
-			slot = 2;
-			break;
-		case LEATHER_LEGGINGS:
-		case CHAINMAIL_LEGGINGS:
-		case GOLD_LEGGINGS:
-		case IRON_LEGGINGS:
-		case DIAMOND_LEGGINGS:
-			slot = 3;
-			break;
-		case LEATHER_BOOTS:
-		case CHAINMAIL_BOOTS:
-		case GOLD_BOOTS:
-		case IRON_BOOTS:
-		case DIAMOND_BOOTS:
-			slot = 4;
-			break;
-		default:
-			break;
-		}
+
+		if (Helmets.contains(type.getId())) slot = 1;
+		else if (Chestplates.contains(type.getId())) slot = 2;
+		else if (Leggings.contains(type.getId())) slot = 3;
+		else if (Boots.contains(type.getId())) slot = 4;
 
 		// Now edit the equipment based on the slot
 		// Set the proper slot with one of the item
@@ -1284,12 +1280,13 @@ public class Sentry extends JavaPlugin {
 			return true;	
 		}
 
-
-
 	}
 
+
+	
 	public void debug(String s){
 		if(debug) this.getServer().getLogger().info(s);
 	}
 
 }
+

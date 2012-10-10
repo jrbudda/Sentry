@@ -6,6 +6,9 @@ Server:
  DieLikePlayers: false
  #The amount of EXP sentries drop. Only works if Drops is turned on.
  ExpValue: 5
+ #This is how often, in ticks, the Sentry performs his interal logic looking for targets, etc. Increasing this value may lighten server load, 
+ #but will decrease Sentries responsiveness and maximum rate of fire.
+ LogicTicks: 10
 
 #Default stats for new Sentries
 DefaultStats:
@@ -30,8 +33,8 @@ DefaultOptions:
  
 #Default texts for new Sentries. You can use <NPC> and <PLAYER> as placeholders.
 DefaultTexts:
- Warning: <NPC> says Halt! Come no closer!
- Greeting: <NPC> says Welcome, <PLAYER>
+ Warning: "&c<NPC> says Halt! Come no closer!"
+ Greeting: "&a<NPC> says Welcome, <PLAYER>"
  
 #Default target list for new Sentries. 
 DefaultTargets:
@@ -54,6 +57,7 @@ AttackTypes:
  IceMagi: SNOW_BALL
  StormCaller1: PAPER
  StormCaller2: BOOK
+ StormCaller3: BOOK_AND_QUILL
  #Note Witch Doctors need a potion equipped to know what to throw!
  WitchDoctor: POTION
  Warlock1: ENDER_PEARL
@@ -84,3 +88,42 @@ SpeedBuffs:
 WeaponEffects:
  - SNOW_BALL slow:20
  #- GOLD_SWORD poison:60:2 confusion
+ 
+ 
+  
+#The lists below control what items are equipped as armor. These should only be changed to disable specific armors or add extended (i.e. Spout) items.
+ 
+#The following items will be equipped as helmets, can use name or id #
+Helmets:
+   - PUMPKIN
+   - JACK_O_LANTERN
+   - LEATHER_HELMET
+   - CHAINMAIL_HELMET
+   - GOLD_HELMET
+   - IRON_HELMET
+   - DIAMOND_HELMET
+   
+#The following items will be equipped as chestplates, can use name or id #.
+Chestplates:
+    - LEATHER_CHESTPLATE
+    - CHAINMAIL_CHESTPLATE
+    - GOLD_CHESTPLATE
+    - IRON_CHESTPLATE
+    - DIAMOND_CHESTPLATE
+  
+#The following items will be equipped as leggings, can use name or id #
+Leggings:
+    - LEATHER_LEGGINGS
+    - CHAINMAIL_LEGGINGS
+    - GOLD_LEGGINGS
+    - IRON_LEGGINGS
+    - DIAMOND_LEGGINGS
+    
+#The following items will be equipped as boots, can use name or id #
+Boots:  
+    - LEATHER_BOOTS
+    - CHAINMAIL_BOOTS
+    - GOLD_BOOTS
+    - IRON_BOOTS
+    - DIAMOND_BOOTS
+    
