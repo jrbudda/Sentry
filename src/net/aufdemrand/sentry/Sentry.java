@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 //import java.util.Map;
 import java.util.logging.Level;
 
@@ -59,11 +60,13 @@ public class Sentry extends JavaPlugin {
 		try {
 			setupDenizenHook();
 		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath trigger with Denizen" + e.getMessage());
-			_denizenTrigger =null;
+			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
+			_denizenTrigger1 =null;
+			_denizenTrigger2 =null;
+			_denizenTriggerOwner =null;
 		}
 
-		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Trigger and DIE command registered sucessfully with Denizen");
+		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Triggers and DIE/LIVE command registered sucessfully with Denizen");
 		else getLogger().log(Level.INFO,"Could not register with Denizen");
 
 
@@ -110,21 +113,36 @@ public class Sentry extends JavaPlugin {
 
 
 	//***Denizen Hook
-	private NpcdeathTrigger _denizenTrigger = null;
+	private NpcdeathTrigger _denizenTrigger1 = null;
+	private NpcdeathTrigger _denizenTrigger2 = null;
+	private NpcdeathTriggerOwner _denizenTriggerOwner = null;
 	private DieCommand dc = null;
 	private boolean DenizenActive = false;
 
 
-	public boolean SentryDeath(List<Player> players, NPC npc){
-		if (_denizenTrigger !=null && npc !=null) return	_denizenTrigger.Die(players, npc);
-		return false;
+	public boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
+		boolean a = false, b = false, c = false;
+		if (_denizenTrigger1 !=null && npc !=null) a=	_denizenTrigger1.Die(_myDamamgers, npc);
+		if (_denizenTrigger2 !=null && npc !=null) b=	_denizenTrigger2.Die(_myDamamgers, npc);
+		if (_denizenTriggerOwner !=null && npc !=null) c=	_denizenTriggerOwner.Die(npc);
+		debug("Looking for death triggers..." + (a||b||c));
+		return (a||b||c);
 	}
+
 
 	private void setupDenizenHook() throws ActivationException {
 		DenizenActive = checkPlugin("Denizen");
 		if(DenizenActive){
-			_denizenTrigger = new NpcdeathTrigger();
-			_denizenTrigger.activateAs("Npcdeath");
+
+			_denizenTrigger1 = new NpcdeathTrigger();
+			_denizenTrigger1.activateAs("Npcdeath");
+
+//			_denizenTrigger2 = new NpcdeathTrigger();
+//			_denizenTrigger2.activateAs("NPCDEATH KILLERS");
+//
+//			_denizenTriggerOwner = new NpcdeathTriggerOwner();
+//			_denizenTriggerOwner.activateAs("NPCDEATH OWNER");
+
 			DieCommand dc = new DieCommand();
 			dc.activateAs("DIE");
 			dc.activateAs("LIVE");
@@ -314,8 +332,8 @@ public class Sentry extends JavaPlugin {
 	}
 
 
-	
-	
+
+
 
 	private boolean setupPermissions()
 	{
@@ -1060,37 +1078,33 @@ public class Sentry extends JavaPlugin {
 
 				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
 
-					List<String> currentList =	inst.validTargets;
-					currentList.add(arg.toUpperCase());
+					inst.validTargets.add(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
-					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + currentList.toString());
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + 	inst.validTargets.toString());
 					return true;
 				}
 
 				else if (args[1].equals("remove") && arg.length() > 0 && arg.split(":").length>1) {
 
-					List<String> currentList =	inst.validTargets;
-					currentList.remove(arg.toUpperCase());
+					inst.validTargets.remove(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
-					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets removed. Now targeting " + currentList.toString());
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets removed. Now targeting " + 	inst.validTargets.toString());
 					return true;
 				}
 
 				else if (args[1].equals("clear")) {
 
-					List<String> currentList =	inst.validTargets;
-					currentList.clear();
+
+					inst.validTargets.clear();
 					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Targets cleared.");
 					return true;
 				}
 				else if (args[1].equals("list")) {
-
-					List<String> currentList =	inst.validTargets;
-					player.sendMessage(ChatColor.GREEN + "Targets: " + currentList.toString());
+					player.sendMessage(ChatColor.GREEN + "Targets: " + 	inst.validTargets.toString());
 					return true;
 				}
 
@@ -1133,28 +1147,26 @@ public class Sentry extends JavaPlugin {
 
 				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
 
-					List<String> currentList =	inst.ignoreTargets;
-					currentList.add(arg.toUpperCase());
+
+					inst.ignoreTargets.add(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
-					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + currentList.toString());
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + inst.ignoreTargets.toString());
 					return true;
 				}
 
 				else if (args[1].equals("remove") && arg.length() > 0 && arg.split(":").length>1) {
 
-					List<String> currentList =	inst.ignoreTargets;
-					currentList.remove(arg.toUpperCase());
+					inst.ignoreTargets.remove(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
-					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore removed. Now ignoring " + currentList.toString());
+					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore removed. Now ignoring " + inst.ignoreTargets.toString());
 					return true;
 				}
 
 				else if (args[1].equals("clear")) {
 
-					List<String> currentList =	inst.ignoreTargets;
-					currentList.clear();
+					inst.ignoreTargets.clear();
 					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore cleared.");
@@ -1162,8 +1174,7 @@ public class Sentry extends JavaPlugin {
 				}
 				else if (args[1].equals("list")) {
 
-					List<String> currentList =	inst.ignoreTargets;
-					player.sendMessage(ChatColor.GREEN + "Ignores: " + currentList.toString());
+					player.sendMessage(ChatColor.GREEN + "Ignores: " + inst.ignoreTargets.toString());
 					return true;
 				}
 
@@ -1283,7 +1294,7 @@ public class Sentry extends JavaPlugin {
 	}
 
 
-	
+
 	public void debug(String s){
 		if(debug) this.getServer().getLogger().info(s);
 	}

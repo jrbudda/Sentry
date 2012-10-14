@@ -77,13 +77,18 @@ public class SentryTrait extends Trait implements Toggleable {
 		if (herp !=null) ignoretemp= (List<String>) key.getRaw("Ignores");
 		else ignoretemp= plugin.getConfig().getStringList("DefaultIgnores");
 
-
 		for (String string : targettemp) {
-			thisInstance.validTargets.add(string.toUpperCase());
+			if(!thisInstance.validTargets.contains(string.toUpperCase())){
+				thisInstance.validTargets.add(string.toUpperCase());
+			}
 		}
 
 		for (String string : ignoretemp) {
-			thisInstance.ignoreTargets.add(string.toUpperCase());
+			if(!thisInstance.ignoreTargets.contains(string.toUpperCase())){
+				thisInstance.ignoreTargets.add(string.toUpperCase());		
+			}
+
+
 		}
 
 

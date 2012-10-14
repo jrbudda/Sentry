@@ -1,6 +1,7 @@
 package net.aufdemrand.sentry;
 
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 
 import org.bukkit.entity.Player;
@@ -13,7 +14,7 @@ import net.citizensnpcs.api.npc.NPC;
 
 public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTrigger{
 
-	public  boolean Die(List<Player> players, NPC npc) {
+	public  boolean Die(Set<Player> _myDamamgers, NPC npc) {
 
 		DenizenNPC theDenizen = plugin.getDenizenNPCRegistry().getDenizen(npc);
 
@@ -23,7 +24,8 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTri
 		}
 
 		try {
-			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath") == false) {
+			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath") == false && 
+					theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath killers") == false) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Npcdeath Trigger not enabled");
 				return false; 
 			}
@@ -31,15 +33,12 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTri
 			return false;
 		}
 
-
 		ScriptHelper sE = plugin.getScriptEngine().helper;
-		if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Parsing NPCDeath Trigger.");
+		if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Parsing NPCDeath Killers Trigger.");
 
 		boolean founone =false;
 
-		for (Player thePlayer:players){
-
-
+		for (Player thePlayer:_myDamamgers){
 			if(thePlayer !=null && thePlayer.getLocation().distance(npc.getBukkitEntity().getLocation()) > 300) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, thePlayer.getName()+ " is to far away.");
 				continue;

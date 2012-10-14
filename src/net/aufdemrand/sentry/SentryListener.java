@@ -201,7 +201,7 @@ public class SentryListener implements Listener {
 				if (inst.Retaliate && entfrom instanceof LivingEntity) inst.setTarget((LivingEntity) entfrom, true);
 			}
 
-			if (inst != null && inst.hasEventTargets && event.getDamage() > 0 && npc.isSpawned()  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false && npc.getBukkitEntity().getWorld() == entto.getWorld()){
+			if (inst != null && inst.hasTargetType(16) && event.getDamage() > 0 && npc.isSpawned()  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false && npc.getBukkitEntity().getWorld() == entto.getWorld()){
 				//pv-something event.
 				if ( ( event.isCancelled() == false && entto instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp") && !inst.containsIgnore("event:pvp")) || 
 						(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc") && !inst.containsIgnore("event:pvnpc")) ||
@@ -230,6 +230,8 @@ public class SentryListener implements Listener {
 			//uncancel if not bodyguard.
 			if (from.guardTarget ==null) event.setCancelled(false);	
 
+			if(entto.hasMetadata(NPC.DEFAULT_PROTECTED_METADATA) && entto.getMetadata(NPC.DEFAULT_PROTECTED_METADATA).get(0).asBoolean()) event.setCancelled(true);	
+			
 			//dont hurt guard target.
 			if(entto == from.guardEntity && !from.FriendlyFire) event.setCancelled(true);
 
