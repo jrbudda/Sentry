@@ -4,6 +4,10 @@ import java.util.logging.Level;
 import org.bukkit.entity.LivingEntity;
 import net.aufdemrand.denizen.commands.AbstractCommand;
 import net.aufdemrand.denizen.scripts.ScriptEntry;
+import net.aufdemrand.sentry.SentryInstance.Status;
+import net.citizensnpcs.api.ai.GoalSelector;
+
+
 
 
 public class DieCommand extends AbstractCommand {
@@ -16,6 +20,8 @@ public class DieCommand extends AbstractCommand {
 	public boolean execute(ScriptEntry theEntry) {
 		/* Execute the command, if all required variables are filled. */
 		LivingEntity ent = theEntry.getDenizen().getEntity();
+
+		SentryInstance inst = theEntry.getDenizen().getCitizensEntity().getTrait(SentryTrait.class).getInstance();
 
 		if (ent!=null){
 			if (theEntry.getCommand().equalsIgnoreCase("LIVE")){
@@ -32,10 +38,9 @@ public class DieCommand extends AbstractCommand {
 				}			
 			}
 			else{
-				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Goodbye, cruel world.");
 
-				if(dielikeplayer) theEntry.getDenizen().getEntity().setHealth(0);
-				else theEntry.getDenizen().getCitizensEntity().despawn();
+				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Goodbye, cruel world... ");
+				inst.die( false);
 
 			}		
 			return true;

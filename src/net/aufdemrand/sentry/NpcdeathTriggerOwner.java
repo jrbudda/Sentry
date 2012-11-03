@@ -23,7 +23,7 @@ public class NpcdeathTriggerOwner extends net.aufdemrand.denizen.triggers.Abstra
 		}
 
 		try {
-			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeath") == false) {
+			if (theDenizen.getCitizensEntity().getTrait(DenizenTrait.class).triggerIsEnabled("Npcdeathowner") == false) {
 				if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "NPCDeath Owner Trigger not enabled");
 				return false; 
 			}
@@ -63,7 +63,7 @@ public class NpcdeathTriggerOwner extends net.aufdemrand.denizen.triggers.Abstra
 			sE.queueScriptEntries(thePlayer, sE.buildScriptEntries(thePlayer, theDenizen, theScript, theScriptName, theStep), QueueType.TRIGGER);
 		}
 		else{
-			if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "...found no matching Npcdeath Trigger on step " + theStep + " of " + theScriptName);
+			if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "...found no matching Npcdeathowner Trigger on step " + theStep + " of " + theScriptName);
 		}
 
 

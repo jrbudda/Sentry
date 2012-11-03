@@ -18,6 +18,7 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.TraitInfo;
 import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.api.trait.trait.Owner;
+import net.minecraft.server.LocaleI18n;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -47,6 +48,20 @@ public class Sentry extends JavaPlugin {
 	public Map<Integer, Double> StrengthBuffs = new HashMap<Integer, Double>();
 	public Map<Integer, Double> SpeedBuffs = new HashMap<Integer, Double>();
 	public Map<Integer, List<PotionEffect>> WeaponEffects = new HashMap<Integer, List<PotionEffect>>();
+
+	public String MissMessage = "";
+	public String HitMessage = "";
+	public String BlockMessage = "";
+	public String GlanceMessage = "";
+	public String Crit1Message = "";
+	public String Crit2Message = "";
+	public String Crit3Message = "";
+
+	public int MissChance;
+	public int GlanceChance;
+	public int Crit1Chance;
+	public int Crit2Chance;
+	public int Crit3Chance;
 
 	@Override
 	public void onEnable() {
@@ -88,6 +103,12 @@ public class Sentry extends JavaPlugin {
 		}
 		else getLogger().log(Level.INFO,"Could not find or register with War. " );
 
+		if (checkPlugin("SimpleClans")){
+			getLogger().log(Level.INFO,"Registered with SimpleClans sucessfully. The CLAN: target will function" );
+			ClansActive = true;
+		}
+		else getLogger().log(Level.INFO,"Could not find or register with SimpleClans. " );
+
 		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
 
 		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
@@ -123,7 +144,6 @@ public class Sentry extends JavaPlugin {
 	public boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
 		boolean a = false, b = false, c = false;
 		if (_denizenTrigger1 !=null && npc !=null) a=	_denizenTrigger1.Die(_myDamamgers, npc);
-		if (_denizenTrigger2 !=null && npc !=null) b=	_denizenTrigger2.Die(_myDamamgers, npc);
 		if (_denizenTriggerOwner !=null && npc !=null) c=	_denizenTriggerOwner.Die(npc);
 		debug("Looking for death triggers..." + (a||b||c));
 		return (a||b||c);
@@ -137,11 +157,12 @@ public class Sentry extends JavaPlugin {
 			_denizenTrigger1 = new NpcdeathTrigger();
 			_denizenTrigger1.activateAs("Npcdeath");
 
-//			_denizenTrigger2 = new NpcdeathTrigger();
-//			_denizenTrigger2.activateAs("NPCDEATH KILLERS");
-//
-//			_denizenTriggerOwner = new NpcdeathTriggerOwner();
-//			_denizenTriggerOwner.activateAs("NPCDEATH OWNER");
+			//		_denizenTrigger2 = new NpcdeathTrigger();
+			//		_denizenTrigger2.activateAs("NPCDEATH KILLERS");
+			//
+
+			_denizenTriggerOwner = new NpcdeathTriggerOwner();
+			_denizenTriggerOwner.activateAs("Npcdeathowner");
 
 			DieCommand dc = new DieCommand();
 			dc.activateAs("DIE");
@@ -191,10 +212,24 @@ public class Sentry extends JavaPlugin {
 		magi = GetMat(getConfig().getString("AttackTypes.IceMagi",null));
 		sc3 = GetMat(getConfig().getString("AttackTypes.StormCaller3",null));
 		warlock1 = GetMat(getConfig().getString("AttackTypes.Warlock1",null));
+		warlock2 = GetMat(getConfig().getString("AttackTypes.Warlock2",null));
+		warlock3 = GetMat(getConfig().getString("AttackTypes.Warlock3",null));
 		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
 		LogicTicks = getConfig().getInt("Server.LogicTicks",10);
 		SentryEXP = getConfig().getInt("Server.ExpValue",5);
 		if(dc!=null)	dc.dielikeplayer = DieLikePlayers;
+		MissMessage = getConfig().getString("GlobalTexts.Miss", null);
+		HitMessage = getConfig().getString("GlobalTexts.Hit", null);
+		BlockMessage = getConfig().getString("GlobalTexts.Block", null);
+		Crit1Message = getConfig().getString("GlobalTexts.Crit1", null);
+		Crit2Message = getConfig().getString("GlobalTexts.Crit2", null);
+		Crit3Message = getConfig().getString("GlobalTexts.Crit3", null);
+		GlanceMessage = getConfig().getString("GlobalTexts.Glance", null);
+		MissChance = getConfig().getInt("HitChances.Miss",0);
+		GlanceChance = getConfig().getInt("HitChances.Glance",0);
+		Crit1Chance = getConfig().getInt("HitChances.Crit1",0);
+		Crit2Chance = getConfig().getInt("HitChances.Crit2",0);
+		Crit3Chance = getConfig().getInt("HitChances.Crit3",0);
 	}
 
 	public  int archer = -1;
@@ -207,6 +242,8 @@ public class Sentry extends JavaPlugin {
 	public  int witchdoctor = -1;
 	public  int magi = -1;
 	public int warlock1 = -1;
+	public int warlock2 = -1;
+	public int warlock3 = -1;
 	public int sc3 = -1;
 	public int LogicTicks = 10;
 	public List<Integer> Helmets = new LinkedList<Integer>(java.util.Arrays.asList(298,302,306,310,314,91,86));
@@ -315,12 +352,13 @@ public class Sentry extends JavaPlugin {
 
 			if (args.length < 2) continue;
 
+		
 			int item  = GetMat(args[0]);
 
 			List<PotionEffect> list = new ArrayList<PotionEffect>();
 
 			for(int i = 1;i< args.length;i++){
-				PotionEffect val = getpot(args[1]);
+				PotionEffect val = getpot(args[i]);
 				if(val !=null) list.add(val);
 
 			}
@@ -430,6 +468,13 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 
+		
+		Boolean set = null;
+		if (args.length == 2){
+			if (args[1].equalsIgnoreCase("true")) set = true;
+			else if (args[1].equalsIgnoreCase("false")) set = false;
+		}
+		
 
 		if (args[0].equalsIgnoreCase("help")) {
 
@@ -533,13 +578,11 @@ public class Sentry extends JavaPlugin {
 		}
 
 
-		if (sender instanceof Player){
+		if (sender instanceof Player && !CitizensAPI.getNPCRegistry().isNPC((Entity) sender)){
 
 			if (ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
 				//OK!
-
 			}
-
 			else {
 				//not player is owner
 				if (((Player)sender).hasPermission("citizens.admin") == false){
@@ -615,14 +658,17 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			if (inst.Invincible) {
+						
+			inst.Invincible = set ==null ?  !inst.Invincible: set;
+			
+			if (!inst.Invincible) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " now takes damage..");   // Talk to the player.
 			}
 			else{
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " now INVINCIBLE.");   // Talk to the player.
 			}
 
-			inst.Invincible = !inst.Invincible;
+		
 
 			return true;
 		}
@@ -631,31 +677,34 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			if (inst.Retaliate) {
+			
+			inst.Retaliate = set ==null ?  !inst.Retaliate: set;
+			
+			if (!inst.Retaliate) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will not retaliate.");   // Talk to the player.
 			}
 			else{
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will retalitate against all attackers.");   // Talk to the player.
 			}
 
-			inst.Retaliate = !inst.Retaliate;
-
-			return true;
+				return true;
 		}
 		else if (args[0].equalsIgnoreCase("criticals")) {
 			if(!player.hasPermission("sentry.options.criticals")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			if (inst.LuckyHits) {
-				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will take normal damamge.");   // Talk to the player.
+			
+			inst.LuckyHits = set ==null ?  !inst.LuckyHits: set;
+			
+			if (!inst.LuckyHits) {
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will take normal damage.");   // Talk to the player.
 			}
 			else{
 				player.sendMessage(ChatColor.GREEN +ThisNPC.getName() + " will take critical hits.");   // Talk to the player.
 			}
 
-			inst.LuckyHits = !inst.LuckyHits;
-
+	
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("drops")) {
@@ -663,14 +712,15 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			if (!inst.DropInventory) {
+			
+			inst.DropInventory = set ==null ?  !inst.DropInventory: set;
+			
+			if (inst.DropInventory) {
 				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " will drop items");   // Talk to the player.
 			}
 			else{
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will not drop items.");   // Talk to the player.
 			}
-
-			inst.DropInventory = !inst.DropInventory;
 
 			return true;
 		}
@@ -963,6 +1013,7 @@ public class Sentry extends JavaPlugin {
 					if(args[1].equalsIgnoreCase("none")){
 						//remove equipment
 						equip(ThisNPC, null);
+						inst.UpdateWeapon();
 						player.sendMessage(ChatColor.YELLOW +ThisNPC.getName() + "'s equipment cleared."); 
 
 					}
@@ -971,6 +1022,7 @@ public class Sentry extends JavaPlugin {
 						if (mat>0){
 							ItemStack is = new ItemStack(mat);
 							if (equip(ThisNPC, is)){
+								inst.UpdateWeapon();
 								player.sendMessage(ChatColor.GREEN +" equipped " + is.getType().toString() + " on "+ ThisNPC.getName()); 
 							}
 							else player.sendMessage(ChatColor.RED +" Could not equip: invalid mob type?"); 
@@ -1039,7 +1091,7 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GREEN + inst.getStats());
 			player.sendMessage(ChatColor.GREEN + "Invincible: " + inst.Invincible + "  Retaliate: " + inst.Retaliate);
 			player.sendMessage(ChatColor.GREEN + "Drops Items: " + inst.DropInventory+ "  Critical Hits: " + inst.LuckyHits);
-			player.sendMessage(ChatColor.GREEN + "Respawn Delay: " + inst.RespawnDelaySeconds + "s" + " Friendly Fire: " + inst.FriendlyFire );
+			player.sendMessage(ChatColor.GREEN + "Respawn Delay: " + inst.RespawnDelaySeconds + "s");
 			player.sendMessage(ChatColor.BLUE + "Status: " + inst.sentryStatus);
 			if (inst.meleeTarget == null){
 				if(inst.projectileTarget ==null) player.sendMessage(ChatColor.BLUE + "Target: Nothing");
@@ -1077,8 +1129,7 @@ public class Sentry extends JavaPlugin {
 
 
 				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
-
-					inst.validTargets.add(arg.toUpperCase());
+					if (!inst.containsTarget(arg.toUpperCase())) inst.validTargets.add(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Target added. Now targeting " + 	inst.validTargets.toString());
@@ -1146,9 +1197,7 @@ public class Sentry extends JavaPlugin {
 				arg = arg.trim();
 
 				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
-
-
-					inst.ignoreTargets.add(arg.toUpperCase());
+					if (!inst.containsIgnore(arg.toUpperCase()))	inst.ignoreTargets.add(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
 					player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " Ignore added. Now ignoring " + inst.ignoreTargets.toString());
@@ -1229,7 +1278,6 @@ public class Sentry extends JavaPlugin {
 		}
 	}
 
-
 	//War sSuport
 	boolean WarActive = false;
 	public  String getWarTeam(Player player) {
@@ -1239,6 +1287,20 @@ public class Sentry extends JavaPlugin {
 			if (t!=null) return t.getName();
 		} catch (Exception e) {
 			getLogger().info("Error getting Team " + e.getMessage());
+			return null;
+		}
+		return null;
+	}
+
+	//SimpleClans sSuport
+	boolean ClansActive = false;
+	public  String getClan(Player player) {
+		if (ClansActive == false)return null;
+		try {
+			net.sacredlabyrinth.phaed.simpleclans.Clan c =	net.sacredlabyrinth.phaed.simpleclans.SimpleClans.getInstance().getClanManager().getClanByPlayerName(player.getName());
+			if(c!=null) return c.getName();
+		} catch (Exception e) {
+			getLogger().info("Error getting Clan " + e.getMessage());
 			return null;
 		}
 		return null;
@@ -1293,6 +1355,27 @@ public class Sentry extends JavaPlugin {
 
 	}
 
+	public static String getLocalItemName(int MatId){
+		if (MatId==0) return  "Hand";
+		if(MatId < 256){
+			net.minecraft.server.Block b =net.minecraft.server.Block.byId[MatId];
+			return	b.getName();
+		}
+		else{
+			net.minecraft.server.Item b =net.minecraft.server.Item.byId[MatId];
+			 return LocaleI18n.get(b.getName() + ".name");
+		}
+	}
+
+	public String format(String input, NPC npc, CommandSender player, int item, String amount){
+		if(input == null) return null;
+		input = input.replace("<NPC>",npc.getName());
+		input = input.replace("<PLAYER>", player == null ? "" : player.getName());
+		input = input.replace("<ITEM>", getLocalItemName(item));
+		input = input.replace("<AMOUNT>", amount.toString());
+		input =	ChatColor.translateAlternateColorCodes('&', input);
+		return input;
+	}
 
 
 	public void debug(String s){

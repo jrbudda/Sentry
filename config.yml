@@ -45,6 +45,24 @@ DefaultTargets:
 DefaultIgnores:
  #- entity:owner
 
+
+#Configurable messages used by all Sentries. You can use <NPC>, <PLAYER>, <ITEM>, and <AMOUNT> as placeholders. Remove a message or set it to "" to prevent it from displaying at all.
+GlobalTexts:
+ Miss: "&7*** You MISS <NPC>."
+ Hit: "&f*** You hit <NPC> for <AMOUNT> damage."
+ Crit1: "&e*** You injure <NPC> for <AMOUNT> damage."
+ Crit2: "&6*** You MAIM <NPC> with your <ITEM> for <AMOUNT> damage."
+ Crit3: "&c*** You DISEMBOWEL <NPC> with your <ITEM> for <AMOUNT> damage."
+ Block: "&7*** You fail to penetrate <NPC>'s armor."
+ Glance: "&7*** Your blow glances off <NPC> for <AMOUNT> damage."
+ 
+#These are the percentage chancees of doing a certain damage to a Sentry if Criticals is turned on. Whole numbers only. Remove or Set to 0 to disable a hit type.
+HitChances:
+ Miss: 4
+ Glance: 4
+ Crit1: 6
+ Crit2: 4
+ Crit3: 2
  
 #Set the item used by each type of Sentry. Use item name or id #. 
 #Remove an entry to disable that attack type. Any other item makes a Brawler.
@@ -61,9 +79,10 @@ AttackTypes:
  #Note Witch Doctors need a potion equipped to know what to throw!
  WitchDoctor: POTION
  Warlock1: ENDER_PEARL
+ Warlock2: SKULL_ITEM
 
 #The following items will ADD to the sentry's base armor. 
-#Decimals are allowed but all minecraft damamge is in integers. 
+#Decimals are allowed but all minecraft damge is in integers. 
 #You would need 2 items of 0.3 Armor buff to add 1 point of armor.
 ArmorBuffs:
  #- IRON_HELMET 1.0

@@ -26,11 +26,11 @@ public class SentryTrait extends Trait implements Toggleable {
 	}
 	private SentryInstance thisInstance;
 
+		
 	@SuppressWarnings("unchecked")
 	@Override
 	public void load(DataKey key) throws NPCLoadException {
 		plugin.debug(npc.getName() + " Load");
-
 		ensureInst();
 
 		if(key.keyExists("traits")) key = key.getRelative("traits");
@@ -39,7 +39,6 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.Retaliate=	key.getBoolean("Retaliate", plugin.getConfig().getBoolean("DefaultOptions.Retaliate",true));
 		thisInstance.Invincible=	key.getBoolean("Invincinble", plugin.getConfig().getBoolean("DefaultOptions.Invincible",false));
 		thisInstance.DropInventory=	key.getBoolean("DropInventory", plugin.getConfig().getBoolean("DefaultOptions.Drops",false));
-		thisInstance.FriendlyFire = key.getBoolean("FriendlyFire", plugin.getConfig().getBoolean("DefaultOptions.FriendlyFire",false));
 		thisInstance.LuckyHits=	key.getBoolean("CriticalHits", plugin.getConfig().getBoolean("DefaultOptions.Criticals",true));
 		thisInstance.sentryHealth=	key.getInt("Health", plugin.getConfig().getInt("DefaultStats.Health",20));
 		thisInstance.sentryRange=	key.getInt("Range", plugin.getConfig().getInt("DefaultStats.Range",10));
@@ -66,6 +65,8 @@ public class SentryTrait extends Trait implements Toggleable {
 			if(  thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
 		}
 
+		if (thisInstance.guardTarget != null && thisInstance.guardTarget.isEmpty()) thisInstance.guardTarget = null;
+		
 		List<String> targettemp = new ArrayList<String>();
 		List<String> ignoretemp = new ArrayList<String>();
 
@@ -102,6 +103,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		return thisInstance;
 	}
 
+	
 	@Override
 	public void onSpawn() {
 		plugin.debug(npc.getName() + " onSpawn");
@@ -194,7 +196,6 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setInt("Strength", thisInstance.Strength);
 		key.setInt("WarningRange", thisInstance.WarningRange);
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
-		key.setBoolean("FriendlyFire", thisInstance.FriendlyFire);
 		key.setInt("NightVision", thisInstance.NightVision);
 
 		if (thisInstance.guardTarget !=null) key.setString("GuardTarget", thisInstance.guardTarget);

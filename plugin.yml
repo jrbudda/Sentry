@@ -1,6 +1,6 @@
 name: Sentry
 author: aufdemrand, jrbudda
-version: 1.1.1
+version: 1.2.1
 main: net.aufdemrand.sentry.Sentry
 depend:
   - Citizens
@@ -10,6 +10,7 @@ softdepend:
   - Towny
   - Factions
   - War
+  - SimpleClans
 commands:
   sentry:
     description: Lists sentry commands.

@@ -19,6 +19,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTri
 		DenizenNPC theDenizen = plugin.getDenizenNPCRegistry().getDenizen(npc);
 
 		if (theDenizen==null) {
+			if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "Can't get Denizen!");
 			//how did u get here?
 			return false;
 		}
@@ -30,6 +31,7 @@ public class NpcdeathTrigger extends net.aufdemrand.denizen.triggers.AbstractTri
 				return false; 
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 

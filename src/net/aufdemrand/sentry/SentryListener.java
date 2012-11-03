@@ -132,6 +132,7 @@ public class SentryListener implements Listener {
 	}
 
 
+	
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
 	public void tarsdfget(EntityTargetEvent event) {
 		SentryInstance inst = plugin.getSentry(event.getTarget());
@@ -150,11 +151,14 @@ public class SentryListener implements Listener {
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void EnvDamage(EntityDamageEvent event) {
+		
 		if (event instanceof EntityDamageByEntityEvent) return;
+		
 		SentryInstance inst = plugin.getSentry(event.getEntity());
-
 		if (inst == null) return;
-
+		
+		event.setCancelled(true);
+		
 		DamageCause cause = event.getCause();
 		//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
 
@@ -172,13 +176,13 @@ public class SentryListener implements Listener {
 			if (!inst.isWitchDoctor()) inst.onEnvironmentDamae(event);
 			break;
 		case FALL:
-			event.setCancelled(true);
 			break;
 		default:
 			break;
 		}	
 	}
 
+	
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST) //highest for worldguard...
 	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent  event) {
@@ -233,10 +237,10 @@ public class SentryListener implements Listener {
 			if(entto.hasMetadata(NPC.DEFAULT_PROTECTED_METADATA) && entto.getMetadata(NPC.DEFAULT_PROTECTED_METADATA).get(0).asBoolean()) event.setCancelled(true);	
 			
 			//dont hurt guard target.
-			if(entto == from.guardEntity && !from.FriendlyFire) event.setCancelled(true);
+			if(entto == from.guardEntity) event.setCancelled(true);
 
 			//stop hittin yourself.
-			if(entfrom == entto && !from.FriendlyFire) event.setCancelled(true);
+			if(entfrom == entto) event.setCancelled(true);
 
 			//apply potion effects
 			if (from.potionEffects!=null && event.isCancelled() == false){		
@@ -264,7 +268,7 @@ public class SentryListener implements Listener {
 			//to a sentry
 
 			//stop hittin yourself.
-			if (entfrom == entto && !from.FriendlyFire) return;
+			if (entfrom == entto) return;
 
 			//innate protections
 			if (event.getCause() == DamageCause.LIGHTNING && to.isStormcaller()) return;
@@ -274,7 +278,7 @@ public class SentryListener implements Listener {
 			if (to.guardTarget ==null) event.setCancelled(false);	
 
 			//dont take damamge from guard entity.
-			if(entfrom == to.guardEntity && !to.FriendlyFire) event.setCancelled(true);
+			if(entfrom == to.guardEntity) event.setCancelled(true);
 
 			NPC npc =null;
 			if (entfrom!=null)	 npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(entfrom);
