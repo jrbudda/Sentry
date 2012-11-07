@@ -311,15 +311,22 @@ public class SentryInstance {
 					}
 				}
 
-				if(this.hasTargetType(towny)) {
+				if(this.hasTargetType(towny) || (this.hasTargetType(townyenemies))) {
 					String[] info = plugin.getResidentTownyInfo((Player)aTarget);
 
-					if (info[1]!=null) {
+					if (this.hasTargetType(towny) && info[1]!=null) {
 						if (this.containsTarget("TOWN:" + info[1]))return true;
 					}
 
 					if (info[0]!=null) {
-						if (this.containsTarget("NATION:" + info[0]))return true;
+						if (this.hasTargetType(towny) && this.containsTarget("NATION:" + info[0]))return true;
+
+						if(this.hasTargetType(townyenemies)){
+							for (String s : NationsEnemies) {
+								if (plugin.isNationEnemy(s,  info[0]))	return true;
+							}	
+						}
+
 					}
 				}
 
@@ -348,7 +355,7 @@ public class SentryInstance {
 
 		else if( net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
 
-			if (this.containsTarget("ENTITY:NPC") || this.containsTarget("ENTITY:NPCS")) {
+			if (this.hasTargetType(npcs)) {
 				return true;
 			}
 
@@ -737,16 +744,16 @@ public class SentryInstance {
 		{
 
 			Projectile theArrow = null;
-					
-					
+
+
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
 				net.minecraft.server.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 
-				
-								
+
+
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), potiontype);
-				
-				
+
+
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
 			}
@@ -928,7 +935,6 @@ public class SentryInstance {
 		if (taskID == null) {
 			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(), 40 + this.myNPC.getId(),  plugin.LogicTicks);
 		}
-
 	}
 
 	public boolean isPyromancer(){
@@ -1164,10 +1170,11 @@ public class SentryInstance {
 	final int groups = 2048;
 	final int owner = 4096;
 	final int clans = 8192;
-
+	final int townyenemies = 16384;
 	private int targets = 0;
 	private int ignores = 0;
 
+	List<String> NationsEnemies = new ArrayList<String>();
 
 	public void processTargets(){
 		try {
@@ -1176,6 +1183,7 @@ public class SentryInstance {
 			ignores = 0;
 			_ignoreTargets.clear();
 			_validTargets.clear();
+			NationsEnemies.clear();
 
 			for (String t: validTargets){
 				if (t.contains("ENTITY:ALL")) targets |= all;	
@@ -1191,6 +1199,10 @@ public class SentryInstance {
 					else	if(t.contains("ENTITY:")) targets |= namedentities;
 					else	if (plugin.FactionsActive && t.contains("FACTION:")) targets |= faction;
 					else	if (plugin.TownyActive && t.contains("TOWN:")) targets |= towny;
+					else	if (plugin.TownyActive && t.contains("NATIONENEMIES:")) {
+						targets |= townyenemies;
+						NationsEnemies.add(t.split(":")[1]);
+					}
 					else	if (plugin.TownyActive && t.contains("NATION:"))  targets |= towny;
 					else	if (plugin.WarActive && t.contains("TEAM:"))  targets |= war;
 					else	if (plugin.ClansActive && t.contains("CLAN:"))  targets |= clans;
@@ -1425,7 +1437,7 @@ public class SentryInstance {
 			weapon = is.getTypeId();
 			if(	weapon != plugin.witchdoctor) is.setDurability((short) 0);
 		}
-	
+
 		lightning = false;
 		lightninglevel = 0;
 		inciendary = false;
@@ -1513,8 +1525,8 @@ public class SentryInstance {
 
 		if (theEntity == null) {
 			// no hostile target
-	
-				
+
+
 			//		plugin.getServer().broadcastMessage(myNPC.getNavigator().getTargetAsLocation().toString());
 			//plugin.getServer().broadcastMessage(((Boolean)myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()).toString());
 
@@ -1554,15 +1566,15 @@ public class SentryInstance {
 
 		if(!myNPC.getNavigator().isNavigating()) faceEntity(myNPC.getBukkitEntity(), theEntity);
 
-		
+
 		plugin.debug("Set Target");
-		
+
 		if(UpdateWeapon()){
 			//ranged
 			plugin.debug("Set Target ranged");
 			projectileTarget = theEntity;	
 			meleeTarget = null;
-			
+
 		}
 		else
 		{

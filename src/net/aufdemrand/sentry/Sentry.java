@@ -22,6 +22,7 @@ import net.minecraft.server.LocaleI18n;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -33,6 +34,8 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+
+import com.palmergames.bukkit.towny.object.TownBlock;
 
 
 public class Sentry extends JavaPlugin {
@@ -352,7 +355,7 @@ public class Sentry extends JavaPlugin {
 
 			if (args.length < 2) continue;
 
-		
+
 			int item  = GetMat(args[0]);
 
 			List<PotionEffect> list = new ArrayList<PotionEffect>();
@@ -468,13 +471,13 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 
-		
+
 		Boolean set = null;
 		if (args.length == 2){
 			if (args[1].equalsIgnoreCase("true")) set = true;
 			else if (args[1].equalsIgnoreCase("false")) set = false;
 		}
-		
+
 
 		if (args[0].equalsIgnoreCase("help")) {
 
@@ -658,9 +661,9 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-						
+
 			inst.Invincible = set ==null ?  !inst.Invincible: set;
-			
+
 			if (!inst.Invincible) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " now takes damage..");   // Talk to the player.
 			}
@@ -668,7 +671,7 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " now INVINCIBLE.");   // Talk to the player.
 			}
 
-		
+
 
 			return true;
 		}
@@ -677,9 +680,9 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			
+
 			inst.Retaliate = set ==null ?  !inst.Retaliate: set;
-			
+
 			if (!inst.Retaliate) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will not retaliate.");   // Talk to the player.
 			}
@@ -687,16 +690,16 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will retalitate against all attackers.");   // Talk to the player.
 			}
 
-				return true;
+			return true;
 		}
 		else if (args[0].equalsIgnoreCase("criticals")) {
 			if(!player.hasPermission("sentry.options.criticals")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			
+
 			inst.LuckyHits = set ==null ?  !inst.LuckyHits: set;
-			
+
 			if (!inst.LuckyHits) {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will take normal damage.");   // Talk to the player.
 			}
@@ -704,7 +707,7 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.GREEN +ThisNPC.getName() + " will take critical hits.");   // Talk to the player.
 			}
 
-	
+
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("drops")) {
@@ -712,9 +715,9 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			
+
 			inst.DropInventory = set ==null ?  !inst.DropInventory: set;
-			
+
 			if (inst.DropInventory) {
 				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " will drop items");   // Talk to the player.
 			}
@@ -1128,7 +1131,20 @@ public class Sentry extends JavaPlugin {
 				arg = arg.trim();
 
 
+				if(arg.equalsIgnoreCase("nationenemies") && inst.myNPC.isSpawned()){
+					String natname = getNationNameForLocation(inst.myNPC.getBukkitEntity().getLocation());
+					if (natname !=null) {
+						arg += ":" + natname;
+					}
+					else 	{
+						player.sendMessage(ChatColor.RED + "Could not get Nation for this NPC's location");
+						return true;
+					}
+				}
+				
 				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
+
+				
 					if (!inst.containsTarget(arg.toUpperCase())) inst.validTargets.add(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
@@ -1250,7 +1266,6 @@ public class Sentry extends JavaPlugin {
 		com.palmergames.bukkit.towny.object.Resident resident;
 		try {
 			resident = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getResident(player.getName());
-
 			if(resident.hasTown()) {
 				info[1] = resident.getTown().getName();
 				if( resident.getTown().hasNation()){
@@ -1263,6 +1278,38 @@ public class Sentry extends JavaPlugin {
 		}
 
 		return info;
+	}
+
+	public boolean isNationEnemy(String Nation1, String Nation2) {
+		if (TownyActive == false)return false;
+		if (Nation1.equalsIgnoreCase(Nation2)) return false;
+		try {
+
+			if (!com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().hasNation(Nation1) || !com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().hasNation(Nation2)) return false;
+
+			com.palmergames.bukkit.towny.object.Nation theNation1 = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getNation(Nation1);
+			com.palmergames.bukkit.towny.object.Nation theNation2 = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getNation(Nation2);
+
+			if(theNation1.hasEnemy(theNation2) ||theNation2.hasEnemy(theNation1) ) return true;
+
+		} catch (Exception e) {
+			return false;
+		}
+
+		return false;
+	}
+
+	public String getNationNameForLocation(Location l) {
+		if (TownyActive == false)return null;
+		try {
+			TownBlock tb = com.palmergames.bukkit.towny.object.TownyUniverse.getTownBlock(l);
+			if (tb !=null){
+				if (tb.getTown().hasNation()) return tb.getTown().getNation().getName();
+			}
+		} catch (Exception e) {
+			return null;
+		}
+		return null;
 	}
 
 
@@ -1363,7 +1410,7 @@ public class Sentry extends JavaPlugin {
 		}
 		else{
 			net.minecraft.server.Item b =net.minecraft.server.Item.byId[MatId];
-			 return LocaleI18n.get(b.getName() + ".name");
+			return LocaleI18n.get(b.getName() + ".name");
 		}
 	}
 
