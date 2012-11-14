@@ -289,7 +289,7 @@ public class SentryListener implements Listener {
 				}
 			}
 
-			//		plugin.getLogger().info("end:  Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
+			//plugin.getLogger().info("end:  Damage " + event.getCause().toString() + " " + event.getDamage() + " " + event.isCancelled());
 
 			//process event
 			if (!event.isCancelled()) to.onDamage(event);		

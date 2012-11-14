@@ -596,6 +596,11 @@ public class SentryInstance {
 		return null;
 	}
 
+
+	public void Draw(boolean on){
+		((org.bukkit.craftbukkit.entity.CraftLivingEntity)(myNPC.getBukkitEntity())).getHandle().d(on);
+	}
+
 	public void Fire(LivingEntity theEntity) {
 
 		double v = 34;
@@ -794,7 +799,14 @@ public class SentryInstance {
 		if (effect != null)
 			myNPC.getBukkitEntity().getWorld().playEffect(myNPC.getBukkitEntity().getLocation(), effect, null);
 
-		if (shootanim!=null  && myNPC.getBukkitEntity() instanceof Player)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),shootanim , 64);
+		if (myProjectile == Arrow.class){
+			Draw(false);
+		}
+		else {
+			if (shootanim!=null  && myNPC.getBukkitEntity() instanceof Player)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),shootanim , 64);
+		}
+		
+
 
 
 	}
@@ -1312,6 +1324,8 @@ public class SentryInstance {
 
 					if (!myNPC.getNavigator().isNavigating())	faceEntity(myNPC.getBukkitEntity(), projectileTarget);
 
+					Draw(true);
+					
 					if (System.currentTimeMillis() > oktoFire) {
 						// Fire!
 						oktoFire = (long) (System.currentTimeMillis() + AttackRateSeconds * 1000.0);
@@ -1324,13 +1338,21 @@ public class SentryInstance {
 				}
 
 				else if (meleeTarget != null && !meleeTarget.isDead()) {
-
-					// Did it get away?
-					if (meleeTarget.getWorld() != myNPC.getBukkitEntity().getLocation().getWorld() || meleeTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation()) > sentryRange) {
-						// it got away...
+					
+					if (meleeTarget.getWorld() == myNPC.getBukkitEntity().getLocation().getWorld()) {
+						double dist=  meleeTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
+						//block if in range 
+						Draw(dist < 5);
+						// Did it get away?
+						if(dist > sentryRange) {
+							// it got away...
+							setTarget(null, false);
+						}
+					}
+					else {
 						setTarget(null, false);
 					}
-
+				
 				}
 
 				else {
@@ -1516,7 +1538,7 @@ public class SentryInstance {
 			projectileTarget = null;
 			meleeTarget = null;
 			_projTargetLostLoc = null;
-		}
+					}
 
 		if (myNPC == null)
 			return;
@@ -1526,6 +1548,7 @@ public class SentryInstance {
 		if (theEntity == null) {
 			// no hostile target
 
+			Draw(false);
 
 			//		plugin.getServer().broadcastMessage(myNPC.getNavigator().getTargetAsLocation().toString());
 			//plugin.getServer().broadcastMessage(((Boolean)myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()).toString());
