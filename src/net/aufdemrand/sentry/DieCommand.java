@@ -27,10 +27,10 @@ public class DieCommand extends AbstractCommand {
 			if (theEntry.getCommand().equalsIgnoreCase("LIVE")){
 				if (theEntry.getDenizen().getCitizensEntity().hasTrait(SentryTrait.class)){
 					boolean deaggro = false;
-
-					for(String arg : theEntry.arguments()){
-						if (arg.equalsIgnoreCase("peace")) deaggro = true;
-					}
+					if (theEntry.arguments() != null)
+						for(String arg : theEntry.arguments()){
+							if (arg.equalsIgnoreCase("peace")) deaggro = true;
+						}
 
 					if (plugin.debugMode) plugin.getLogger().log(Level.INFO, "RISE! " + theEntry.getDenizen().getName() + "!");
 					theEntry.getDenizen().getCitizensEntity().getTrait(SentryTrait.class).getInstance().sentryStatus = net.aufdemrand.sentry.SentryInstance.Status.isLOOKING;
