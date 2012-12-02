@@ -40,6 +40,16 @@ public class SentryListener implements Listener {
 	//	}
 	//	
 
+	@EventHandler(ignoreCancelled = true)
+	public void despawn(net.citizensnpcs.api.event.NPCDespawnEvent event) {
+		SentryInstance sentry = plugin.getSentry(event.getNPC());
+		//dont despawn active bodyguaards on chunk unload
+		if(sentry !=null && event.getReason() == net.citizensnpcs.api.event.DespawnReason.CHUNK_UNLOAD && sentry.guardEntity != null){
+			event.setCancelled(true);
+		}
+	}
+
+
 	//	@EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
 	//	public void C2Reload(org.bukkit.event.entity.CreatureSpawnEvent event) {
 	//		plugin.getLogger().log(Level.INFO, "SPAWN " + event.isCancelled() + " " + event.getEntityType().toString());
@@ -50,11 +60,11 @@ public class SentryListener implements Listener {
 	//	public void ncom(net.citizensnpcs.api.ai.event.NavigationCompleteEvent event) {
 	//		plugin.getLogger().info("nav complete" );
 	//	}
-	
-		@EventHandler
-		public void ncan(net.citizensnpcs.api.ai.event.NavigationCancelEvent event) {
-			plugin.debug("nav cancel " + event.getNPC().getName() +  event.getCancelReason());
-		}
+
+	@EventHandler
+	public void ncan(net.citizensnpcs.api.ai.event.NavigationCancelEvent event) {
+		plugin.debug("nav cancel " + event.getNPC().getName() +  event.getCancelReason());
+	}
 
 
 	//	@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
@@ -132,7 +142,7 @@ public class SentryListener implements Listener {
 	}
 
 
-	
+
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGH)
 	public void tarsdfget(EntityTargetEvent event) {
 		SentryInstance inst = plugin.getSentry(event.getTarget());
@@ -151,14 +161,14 @@ public class SentryListener implements Listener {
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void EnvDamage(EntityDamageEvent event) {
-		
+
 		if (event instanceof EntityDamageByEntityEvent) return;
-		
+
 		SentryInstance inst = plugin.getSentry(event.getEntity());
 		if (inst == null) return;
-		
+
 		event.setCancelled(true);
-		
+
 		DamageCause cause = event.getCause();
 		//	plugin.getLogger().log(Level.INFO, "Damage " + cause.toString() + " " + event.getDamage());
 
@@ -182,7 +192,7 @@ public class SentryListener implements Listener {
 		}	
 	}
 
-	
+
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST) //highest for worldguard...
 	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent  event) {
@@ -235,7 +245,7 @@ public class SentryListener implements Listener {
 			if (from.guardTarget ==null) event.setCancelled(false);	
 
 			if(entto.hasMetadata(NPC.DEFAULT_PROTECTED_METADATA) && entto.getMetadata(NPC.DEFAULT_PROTECTED_METADATA).get(0).asBoolean()) event.setCancelled(true);	
-			
+
 			//dont hurt guard target.
 			if(entto == from.guardEntity) event.setCancelled(true);
 
@@ -257,7 +267,7 @@ public class SentryListener implements Listener {
 					if(v>150) v = 150;
 
 					entto.setVelocity(new Vector(0,v/20 ,0));
-		
+
 				}
 
 			}

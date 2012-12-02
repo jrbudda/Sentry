@@ -945,7 +945,7 @@ public class SentryInstance {
 		processTargets();
 
 		if (taskID == null) {
-			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogicRunnable(), 40 + this.myNPC.getId(),  plugin.LogicTicks);
+			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogic(), 40 + this.myNPC.getId(),  plugin.LogicTicks);
 		}
 	}
 
@@ -1246,7 +1246,7 @@ public class SentryInstance {
 	}
 
 
-	private class SentryLogicRunnable implements Runnable {
+	private class SentryLogic implements Runnable {
 
 		@Override
 		public void run() {
@@ -1299,8 +1299,10 @@ public class SentryInstance {
 
 			}
 
-			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0) {
+			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0 & Spawn.getChunk().isLoaded()) {
 				// Respawn
+				
+				
 				plugin.debug("respawning" + myNPC.getName());
 				if (guardEntity == null) {
 					myNPC.spawn(Spawn);
