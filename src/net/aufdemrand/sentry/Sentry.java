@@ -18,7 +18,6 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.TraitInfo;
 import net.citizensnpcs.api.trait.trait.Equipment;
 import net.citizensnpcs.api.trait.trait.Owner;
-import net.minecraft.server.LocaleI18n;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -77,6 +76,12 @@ public class Sentry extends JavaPlugin {
 
 		try {
 			setupDenizenHook();
+		}
+		catch(NoClassDefFoundError e){
+			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
+			_denizenTrigger1 =null;
+			_denizenTrigger2 =null;
+			_denizenTriggerOwner =null;
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
 			_denizenTrigger1 =null;
@@ -1012,13 +1017,13 @@ public class Sentry extends JavaPlugin {
 
 			else {
 
-				if(ThisNPC instanceof net.citizensnpcs.npc.entity.CitizensHumanNPC || ThisNPC instanceof net.citizensnpcs.npc.entity.CitizensEndermanNPC){
+
+				if(ThisNPC.getBukkitEntity().getType() == org.bukkit.entity.EntityType.ENDERMAN || ThisNPC.getBukkitEntity().getType() == org.bukkit.entity.EntityType.PLAYER){
 					if(args[1].equalsIgnoreCase("none")){
 						//remove equipment
 						equip(ThisNPC, null);
 						inst.UpdateWeapon();
 						player.sendMessage(ChatColor.YELLOW +ThisNPC.getName() + "'s equipment cleared."); 
-
 					}
 					else{
 						int mat = GetMat(args[1]);
@@ -1141,10 +1146,10 @@ public class Sentry extends JavaPlugin {
 						return true;
 					}
 				}
-				
+
 				if (args[1].equals("add") && arg.length() > 0 && arg.split(":").length>1) {
 
-				
+
 					if (!inst.containsTarget(arg.toUpperCase())) inst.validTargets.add(arg.toUpperCase());
 					inst.processTargets();
 					inst.setTarget(null, false);
@@ -1402,23 +1407,11 @@ public class Sentry extends JavaPlugin {
 
 	}
 
-	public static String getLocalItemName(int MatId){
-		if (MatId==0) return  "Hand";
-		if(MatId < 256){
-			net.minecraft.server.Block b =net.minecraft.server.Block.byId[MatId];
-			return	b.getName();
-		}
-		else{
-			net.minecraft.server.Item b =net.minecraft.server.Item.byId[MatId];
-			return LocaleI18n.get(b.getName() + ".name");
-		}
-	}
-
 	public String format(String input, NPC npc, CommandSender player, int item, String amount){
 		if(input == null) return null;
 		input = input.replace("<NPC>",npc.getName());
 		input = input.replace("<PLAYER>", player == null ? "" : player.getName());
-		input = input.replace("<ITEM>", getLocalItemName(item));
+		input = input.replace("<ITEM>", Util.getLocalItemName(item));
 		input = input.replace("<AMOUNT>", amount.toString());
 		input =	ChatColor.translateAlternateColorCodes('&', input);
 		return input;

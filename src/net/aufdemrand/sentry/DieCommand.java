@@ -4,9 +4,6 @@ import java.util.logging.Level;
 import org.bukkit.entity.LivingEntity;
 import net.aufdemrand.denizen.commands.AbstractCommand;
 import net.aufdemrand.denizen.scripts.ScriptEntry;
-import net.aufdemrand.sentry.SentryInstance.Status;
-import net.citizensnpcs.api.ai.GoalSelector;
-
 
 
 

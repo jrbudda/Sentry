@@ -1,5 +1,9 @@
 package net.aufdemrand.sentry;
 
+import net.minecraft.server.v1_4_6.Block;
+import net.minecraft.server.v1_4_6.Item;
+import net.minecraft.server.v1_4_6.LocaleI18n;
+
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
@@ -25,6 +29,19 @@ public class Util {
 
 	}
 
+	
+	public static String getLocalItemName(int MatId){
+		if (MatId==0) return  "Hand";
+		if(MatId < 256){
+			Block b =Block.byId[MatId];
+			return	b.getName();
+		}
+		else{
+			Item b =Item.byId[MatId];
+			return LocaleI18n.get(b.getName() + ".name");
+		}
+	}
+	
 	public static double hangtime(double launchAngle, double v, double elev, double g){
 
 

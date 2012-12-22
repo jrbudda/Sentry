@@ -2,9 +2,10 @@ package net.aufdemrand.sentry;
 
 import java.util.Random;
 
-import net.minecraft.server.Entity;
-import net.minecraft.server.MathHelper;
+import net.minecraft.server.v1_4_6.Entity;
+import net.minecraft.server.v1_4_6.MathHelper;
 
+import org.bukkit.craftbukkit.v1_4_6.entity.CraftEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class SpiderAttackStrategy implements net.citizensnpcs.api.ai.AttackStrategy{
@@ -21,8 +22,8 @@ public class SpiderAttackStrategy implements net.citizensnpcs.api.ai.AttackStrat
 
 		plugin.debug("Spider ATTACK!");
 
-		Entity entity = ((org.bukkit.craftbukkit.entity.CraftEntity)arg1).getHandle();
-		Entity me = ((org.bukkit.craftbukkit.entity.CraftEntity)arg0).getHandle();
+		Entity entity = ((CraftEntity)arg1).getHandle();
+		Entity me = ((CraftEntity)arg0).getHandle();
 
 		if (this.random.nextInt(20) == 0) {
 				double d0 = entity.locX - me.locX;

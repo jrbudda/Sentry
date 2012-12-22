@@ -12,11 +12,17 @@ import java.util.Set;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
-import net.citizensnpcs.npc.CitizensNPC;
-import net.minecraft.server.EntityLiving;
-import net.minecraft.server.EntityPotion;
-import net.minecraft.server.Packet;
-import net.minecraft.server.Packet18ArmAnimation;
+
+//Version Specifics
+import net.minecraft.server.v1_4_6.EntityLiving;
+import net.minecraft.server.v1_4_6.EntityPotion;
+import net.minecraft.server.v1_4_6.Packet;
+import net.minecraft.server.v1_4_6.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_4_6.CraftWorld;
+import org.bukkit.craftbukkit.v1_4_6.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_4_6.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_4_6.inventory.CraftItemStack;
+/////////////////////////
 
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
@@ -24,10 +30,7 @@ import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftEntity;
-import org.bukkit.craftbukkit.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.inventory.CraftItemStack;
+
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ExperienceOrb;
@@ -45,6 +48,7 @@ import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
+
 
 public class SentryInstance {
 
@@ -102,7 +106,7 @@ public class SentryInstance {
 	/* plugin Constructer */
 	Sentry plugin;
 	public List<PotionEffect> potionEffects = null;
-	net.minecraft.server.ItemStack potiontype = null;
+	ItemStack potiontype = null;
 	public LivingEntity projectileTarget;
 	Random r = new Random();
 	public Integer RespawnDelaySeconds = 10;
@@ -118,7 +122,6 @@ public class SentryInstance {
 
 	public Double sentryWeight = 1.0;
 
-	Packet shootanim = null;
 	public Location Spawn = null;
 
 	public Integer Strength = 1;
@@ -598,7 +601,7 @@ public class SentryInstance {
 
 
 	public void Draw(boolean on){
-		((org.bukkit.craftbukkit.entity.CraftLivingEntity)(myNPC.getBukkitEntity())).getHandle().d(on);
+		((CraftLivingEntity)(myNPC.getBukkitEntity())).getHandle().d(on);
 	}
 
 	public void Fire(LivingEntity theEntity) {
@@ -752,15 +755,13 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
-
-
-
-				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), potiontype);
-
-
+				net.minecraft.server.v1_4_6.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
-				theArrow = (Projectile) ent.getBukkitEntity();
+			theArrow = (Projectile) ent.getBukkitEntity();
+				
+							
+				
 			}
 
 			else if(myProjectile == org.bukkit.entity.EnderPearl.class){
@@ -803,7 +804,9 @@ public class SentryInstance {
 			Draw(false);
 		}
 		else {
-			if (shootanim!=null  && myNPC.getBukkitEntity() instanceof Player)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),shootanim , 64);
+			if(myNPC.getBukkitEntity() instanceof org.bukkit.entity.Player)	{
+				net.citizensnpcs.util.PlayerAnimation.ARM_SWING.play((Player) myNPC.getBukkitEntity(), 64);
+				}
 		}
 		
 
@@ -915,7 +918,6 @@ public class SentryInstance {
 		this.sentryStatus = Status.isLOOKING;
 		faceForward();
 
-		shootanim = new Packet18ArmAnimation( ((CraftEntity)myNPC.getBukkitEntity()).getHandle(),1);
 		healanim = new Packet18ArmAnimation( ((CraftEntity)myNPC.getBukkitEntity()).getHandle(),6);
 
 		//	Packet derp = new net.minecraft.server.Packet15Place();
@@ -1289,8 +1291,9 @@ public class SentryInstance {
 							setHealth(sentryHealth);
 						}
 
-						if (healanim!=null)net.citizensnpcs.util.Util.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),healanim , 64);
-
+						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),healanim , 64);
+				
+						
 						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
 
 					}
@@ -1454,7 +1457,7 @@ public class SentryInstance {
 	public boolean UpdateWeapon(){
 		int weapon = 0;
 
-		org.bukkit.inventory.ItemStack is = null;
+		ItemStack is = null;
 
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
 			is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
@@ -1500,10 +1503,10 @@ public class SentryInstance {
 		}
 		else if(weapon == plugin.witchdoctor || myNPC.getBukkitEntity() instanceof org.bukkit.entity.Witch ){
 			if (is == null){
-				is = new CraftItemStack(373,1,(short) 16396);
+				is = new ItemStack(373,1,(short) 16396);	
 			}
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
-			potiontype = ((org.bukkit.craftbukkit.inventory.CraftItemStack)is).getHandle();
+			potiontype = is;
 		}
 		else if(weapon == plugin.sc1){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
@@ -1527,7 +1530,8 @@ public class SentryInstance {
 		return true;
 	}
 	public void setTarget(LivingEntity theEntity, boolean isretaliation) {
-		if (((CitizensNPC)myNPC).getHandle() == null ) return;
+		
+		if (myNPC.getBukkitEntity() == null ) return;
 
 		if (theEntity == myNPC.getBukkitEntity()) return; //I don't care how you got here. No. just No.
 
