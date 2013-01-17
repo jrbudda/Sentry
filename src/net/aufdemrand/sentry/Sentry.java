@@ -12,6 +12,8 @@ import java.util.Set;
 //import java.util.Map;
 import java.util.logging.Level;
 
+import net.aufdemrand.denizen.Denizen;
+import net.aufdemrand.denizen.npc.DenizenNPC;
 import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -79,14 +81,8 @@ public class Sentry extends JavaPlugin {
 		}
 		catch(NoClassDefFoundError e){
 			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
-			_denizenTrigger1 =null;
-			_denizenTrigger2 =null;
-			_denizenTriggerOwner =null;
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
-			_denizenTrigger1 =null;
-			_denizenTrigger2 =null;
-			_denizenTriggerOwner =null;
 		}
 
 		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Triggers and DIE/LIVE command registered sucessfully with Denizen");
@@ -135,46 +131,55 @@ public class Sentry extends JavaPlugin {
 			}
 		}, 40,  20*120);
 
-
 		reloadMyConfig();
 	}
 
-
-
 	//***Denizen Hook
-	private NpcdeathTrigger _denizenTrigger1 = null;
-	private NpcdeathTrigger _denizenTrigger2 = null;
-	private NpcdeathTriggerOwner _denizenTriggerOwner = null;
-	private DieCommand dc = null;
 	private boolean DenizenActive = false;
 
-
 	public boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
+		if (!DenizenActive) return false;
+
 		boolean a = false, b = false, c = false;
-		if (_denizenTrigger1 !=null && npc !=null) a=	_denizenTrigger1.Die(_myDamamgers, npc);
-		if (_denizenTriggerOwner !=null && npc !=null) c=	_denizenTriggerOwner.Die(npc);
-		debug("Looking for death triggers..." + (a||b||c));
-		return (a||b||c);
+
+		net.aufdemrand.denizen.Denizen d = (Denizen) getServer().getPluginManager().getPlugin("Denizen");
+
+		String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
+
+		if(vers.contains("0.7")) {
+
+			net.aufdemrand.sentry.denizen.v7.Util.SentryDeath(_myDamamgers, npc, getServer());
+
+		}
+		else if(vers.contains("0.8")){
+			return false;
+		}
+		return false;
+
 	}
 
+	public void DenizenAction(NPC npc, String action){
+		if(DenizenActive){
+			net.aufdemrand.denizen.Denizen d = (Denizen) getServer().getPluginManager().getPlugin("Denizen");
+			DenizenNPC dnpc = d.getNPCRegistry().getDenizen(npc);
+
+			if (dnpc != null){
+				dnpc.action(action, null);
+			}
+		}
+	}
 
 	private void setupDenizenHook() throws ActivationException {
 		DenizenActive = checkPlugin("Denizen");
 		if(DenizenActive){
+			String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
+			if(vers.contains("0.7")) {
+				net.aufdemrand.sentry.denizen.v7.Util.setupDenizenHook(DieLikePlayers);
+			}
+			else if(vers.contains("0.8")){
 
-			_denizenTrigger1 = new NpcdeathTrigger();
-			_denizenTrigger1.activateAs("Npcdeath");
+			}
 
-			//		_denizenTrigger2 = new NpcdeathTrigger();
-			//		_denizenTrigger2.activateAs("NPCDEATH KILLERS");
-			//
-
-			_denizenTriggerOwner = new NpcdeathTriggerOwner();
-			_denizenTriggerOwner.activateAs("Npcdeathowner");
-
-			DieCommand dc = new DieCommand();
-			dc.activateAs("DIE");
-			dc.activateAs("LIVE");
 		}
 	}
 
@@ -225,7 +230,6 @@ public class Sentry extends JavaPlugin {
 		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
 		LogicTicks = getConfig().getInt("Server.LogicTicks",10);
 		SentryEXP = getConfig().getInt("Server.ExpValue",5);
-		if(dc!=null)	dc.dielikeplayer = DieLikePlayers;
 		MissMessage = getConfig().getString("GlobalTexts.Miss", null);
 		HitMessage = getConfig().getString("GlobalTexts.Hit", null);
 		BlockMessage = getConfig().getString("GlobalTexts.Block", null);
@@ -238,6 +242,8 @@ public class Sentry extends JavaPlugin {
 		Crit1Chance = getConfig().getInt("HitChances.Crit1",0);
 		Crit2Chance = getConfig().getInt("HitChances.Crit2",0);
 		Crit3Chance = getConfig().getInt("HitChances.Crit3",0);
+
+
 	}
 
 	public  int archer = -1;
