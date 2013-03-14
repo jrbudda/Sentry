@@ -985,14 +985,14 @@ public class SentryInstance {
 
 	public void onDamage(EntityDamageByEntityEvent event) {
 
-		event.setCancelled(true);
-		myNPC.getBukkitEntity().setLastDamageCause(event);
-		if(sentryStatus == Status.isDYING) return;
-
 		if (!myNPC.isSpawned()) {
 			// \\how did youg get here?
 			return;
 		}
+		
+		event.setCancelled(true);
+		myNPC.getBukkitEntity().setLastDamageCause(event);
+		if(sentryStatus == Status.isDYING) return;
 
 		if (guardTarget != null && guardEntity == null) return; //dont take damage when bodyguard target isnt around.
 
