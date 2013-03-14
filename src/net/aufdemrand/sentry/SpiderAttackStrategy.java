@@ -2,10 +2,10 @@ package net.aufdemrand.sentry;
 
 import java.util.Random;
 
-import net.minecraft.server.v1_4_6.Entity;
-import net.minecraft.server.v1_4_6.MathHelper;
+import net.minecraft.server.v1_4_R1.Entity;
+import net.minecraft.server.v1_4_R1.MathHelper;
 
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_4_R1.entity.CraftEntity;
 import org.bukkit.entity.LivingEntity;
 
 public class SpiderAttackStrategy implements net.citizensnpcs.api.ai.AttackStrategy{

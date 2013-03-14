@@ -11,7 +11,6 @@
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/Citizens2.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/SimpleClans-2.4.1.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/CitizensAPI.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/java/SentryDenizen7API.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/denizen-0.8-PRERELEASE.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

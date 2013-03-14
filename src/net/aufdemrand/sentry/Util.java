@@ -1,8 +1,8 @@
 package net.aufdemrand.sentry;
 
-import net.minecraft.server.v1_4_6.Block;
-import net.minecraft.server.v1_4_6.Item;
-import net.minecraft.server.v1_4_6.LocaleI18n;
+import net.minecraft.server.v1_4_R1.Block;
+import net.minecraft.server.v1_4_R1.Item;
+import net.minecraft.server.v1_4_R1.LocaleI18n;
 
 import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;

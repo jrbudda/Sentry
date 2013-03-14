@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.logging.Level;
 
 import net.aufdemrand.denizen.Denizen;
-import net.aufdemrand.denizen.npc.DenizenNPC;
+import net.aufdemrand.sentry.denizen.v8.NpcdeathTrigger;
 import net.citizensnpcs.Citizens;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
@@ -41,241 +41,184 @@ import com.palmergames.bukkit.towny.object.TownBlock;
 
 public class Sentry extends JavaPlugin {
 
-	public net.milkbowl.vault.permission.Permission perms = null;
-	public boolean debug = false;
-	public boolean GroupsChecked = false; 
-	public Queue<Projectile> arrows = new LinkedList<Projectile>();
-	public boolean DieLikePlayers = false;
-	public int SentryEXP = 5;
-
+	public  int archer = -1;
 	public Map<Integer, Double> ArmorBuffs = new HashMap<Integer, Double>();
-	public Map<Integer, Double> StrengthBuffs = new HashMap<Integer, Double>();
-	public Map<Integer, Double> SpeedBuffs = new HashMap<Integer, Double>();
-	public Map<Integer, List<PotionEffect>> WeaponEffects = new HashMap<Integer, List<PotionEffect>>();
-
-	public String MissMessage = "";
-	public String HitMessage = "";
+	public Queue<Projectile> arrows = new LinkedList<Projectile>(); 
 	public String BlockMessage = "";
-	public String GlanceMessage = "";
-	public String Crit1Message = "";
-	public String Crit2Message = "";
-	public String Crit3Message = "";
+	public  int bombardier = -1;
+	public List<Integer> Boots  = new LinkedList<Integer>( java.util.Arrays.asList(301,305,309,313,317));
 
-	public int MissChance;
-	public int GlanceChance;
+	public List<Integer> Chestplates  =  new LinkedList<Integer>(java.util.Arrays.asList(299,303,307,311,315));
+	//SimpleClans sSuport
+	boolean ClansActive = false;
 	public int Crit1Chance;
+	public String Crit1Message = "";
+
 	public int Crit2Chance;
+	public String Crit2Message = "";
 	public int Crit3Chance;
-
-	@Override
-	public void onEnable() {
-
-		if(getServer().getPluginManager().getPlugin("Citizens") == null || getServer().getPluginManager().getPlugin("Citizens").isEnabled() == false) {
-			getLogger().log(Level.SEVERE, "Citizens 2.0 not found or not enabled");
-			getServer().getPluginManager().disablePlugin(this);	
-			return;
-		}	
-
-		try {
-			setupDenizenHook();
-		}
-		catch(NoClassDefFoundError e){
-			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
-		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
-		}
-
-		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Triggers and DIE/LIVE command registered sucessfully with Denizen");
-		else getLogger().log(Level.INFO,"Could not register with Denizen");
-
-
-		if (checkPlugin("Towny")) {
-			getLogger().log(Level.INFO,"Registered with Towny sucessfully. the TOWN: and NATION: targets will function" );
-			TownyActive = true;
-		}
-		else getLogger().log(Level.INFO,"Could not find or register with Towny" );
-
-		if (checkPlugin("Factions")){
-			getLogger().log(Level.INFO,"Registered with Factions sucessfully. the FACTION: target will function" );
-			FactionsActive = true;
-		}
-		else getLogger().log(Level.INFO,"Could not find or register with Factions." );
-
-		if (checkPlugin("War")){
-			getLogger().log(Level.INFO,"Registered with War sucessfully. The TEAM: target will function" );
-			WarActive = true;
-		}
-		else getLogger().log(Level.INFO,"Could not find or register with War. " );
-
-		if (checkPlugin("SimpleClans")){
-			getLogger().log(Level.INFO,"Registered with SimpleClans sucessfully. The CLAN: target will function" );
-			ClansActive = true;
-		}
-		else getLogger().log(Level.INFO,"Could not find or register with SimpleClans. " );
-
-		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
-
-		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
-
-
-		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-			public void run() {
-				//Unloaded chunk arrow cleanup
-				while (arrows.size() > 200) {
-					Projectile a = arrows.remove();
-					if (a!=null ){
-						a.remove();
-						//	x++;
-					}
-				}
-			}
-		}, 40,  20*120);
-
-		reloadMyConfig();
-	}
-
+	public String Crit3Message = "";
+	public boolean debug = false;
 	//***Denizen Hook
 	private boolean DenizenActive = false;
+	public boolean DieLikePlayers = false;
 
-	public boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
-		if (!DenizenActive) return false;
+	//FactionsSuport
+	boolean FactionsActive = false;
+	public int GlanceChance;
+	public String GlanceMessage = "";
+	public boolean GroupsChecked = false;
+	public List<Integer> Helmets = new LinkedList<Integer>(java.util.Arrays.asList(298,302,306,310,314,91,86));
 
-		boolean a = false, b = false, c = false;
+	public String HitMessage = "";
 
-		net.aufdemrand.denizen.Denizen d = (Denizen) getServer().getPluginManager().getPlugin("Denizen");
+	public List<Integer> Leggings  = new LinkedList<Integer>( java.util.Arrays.asList(300,304,308,312,316));
 
-		String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
+	public int LogicTicks = 10;
 
-		if(vers.contains("0.7")) {
+	public  int magi = -1;
 
-			net.aufdemrand.sentry.denizen.v7.Util.SentryDeath(_myDamamgers, npc, getServer());
+	public int MissChance;
 
-		}
-		else if(vers.contains("0.8")){
-			return false;
-		}
-		return false;
+	public String MissMessage = "";
 
-	}
+	public net.milkbowl.vault.permission.Permission perms = null;
 
-	public void DenizenAction(NPC npc, String action){
-		if(DenizenActive){
-			net.aufdemrand.denizen.Denizen d = (Denizen) getServer().getPluginManager().getPlugin("Denizen");
-			DenizenNPC dnpc = d.getNPCRegistry().getDenizen(npc);
-
-			if (dnpc != null){
-				dnpc.action(action, null);
-			}
-		}
-	}
-
-	private void setupDenizenHook() throws ActivationException {
-		DenizenActive = checkPlugin("Denizen");
-		if(DenizenActive){
-			String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
-			if(vers.contains("0.7")) {
-				net.aufdemrand.sentry.denizen.v7.Util.setupDenizenHook(DieLikePlayers);
-			}
-			else if(vers.contains("0.8")){
-
-			}
-
-		}
-	}
-
-	///
-
-	public SentryInstance getSentry(Entity ent){
-		if( ent == null) return null;
-		if(!(ent instanceof org.bukkit.entity.LivingEntity)) return null;
-		NPC npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(ent);
-		if (npc !=null && npc.hasTrait(SentryTrait.class)){
-			return npc.getTrait(SentryTrait.class).getInstance();
-		}
-
-		return null;
-	}
-
-	public SentryInstance getSentry(NPC npc){
-		if (npc !=null && npc.hasTrait(SentryTrait.class)){
-			return npc.getTrait(SentryTrait.class).getInstance();
-		}
-		return null;
-	}
-
-	private void reloadMyConfig(){
-		this.saveDefaultConfig();
-		this.reloadConfig();
-		loadmap("ArmorBuffs", ArmorBuffs);
-		loadmap("StrengthBuffs", StrengthBuffs);
-		loadmap("SpeedBuffs", SpeedBuffs);
-		loadpots("WeaponEffects",WeaponEffects);
-		loaditemlist("Helmets", Helmets);
-		loaditemlist("Chestplates",Chestplates);
-		loaditemlist("Leggings", Leggings);
-		loaditemlist("Boots", Boots);
-		archer = GetMat(getConfig().getString("AttackTypes.Archer",null));
-		pyro1 = GetMat(getConfig().getString("AttackTypes.Pyro1",null));
-		pyro2 = GetMat(getConfig().getString("AttackTypes.Pyro2",null));
-		pyro3 = GetMat(getConfig().getString("AttackTypes.Pyro3",null));
-		bombardier = GetMat(getConfig().getString("AttackTypes.Bombardier",null));
-		sc1 = GetMat(getConfig().getString("AttackTypes.StormCaller1",null));
-		sc2 = GetMat(getConfig().getString("AttackTypes.StormCaller2",null));
-		witchdoctor = GetMat(getConfig().getString("AttackTypes.WitchDoctor",null));
-		magi = GetMat(getConfig().getString("AttackTypes.IceMagi",null));
-		sc3 = GetMat(getConfig().getString("AttackTypes.StormCaller3",null));
-		warlock1 = GetMat(getConfig().getString("AttackTypes.Warlock1",null));
-		warlock2 = GetMat(getConfig().getString("AttackTypes.Warlock2",null));
-		warlock3 = GetMat(getConfig().getString("AttackTypes.Warlock3",null));
-		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
-		LogicTicks = getConfig().getInt("Server.LogicTicks",10);
-		SentryEXP = getConfig().getInt("Server.ExpValue",5);
-		MissMessage = getConfig().getString("GlobalTexts.Miss", null);
-		HitMessage = getConfig().getString("GlobalTexts.Hit", null);
-		BlockMessage = getConfig().getString("GlobalTexts.Block", null);
-		Crit1Message = getConfig().getString("GlobalTexts.Crit1", null);
-		Crit2Message = getConfig().getString("GlobalTexts.Crit2", null);
-		Crit3Message = getConfig().getString("GlobalTexts.Crit3", null);
-		GlanceMessage = getConfig().getString("GlobalTexts.Glance", null);
-		MissChance = getConfig().getInt("HitChances.Miss",0);
-		GlanceChance = getConfig().getInt("HitChances.Glance",0);
-		Crit1Chance = getConfig().getInt("HitChances.Crit1",0);
-		Crit2Chance = getConfig().getInt("HitChances.Crit2",0);
-		Crit3Chance = getConfig().getInt("HitChances.Crit3",0);
-
-
-	}
-
-	public  int archer = -1;
 	public  int pyro1 = -1;
+
 	public  int pyro2 = -1;
 	public  int pyro3 = -1;
 	public  int sc1 = -1;
 	public  int sc2 = -1;
-	public  int bombardier = -1;
-	public  int witchdoctor = -1;
-	public  int magi = -1;
+	public int sc3 = -1;
+	public int SentryEXP = 5;
+	public Map<Integer, Double> SpeedBuffs = new HashMap<Integer, Double>();
+	public Map<Integer, Double> StrengthBuffs = new HashMap<Integer, Double>();
+	//TownySupport
+	boolean TownyActive = false;
+	//War sSuport
+	boolean WarActive = false;
 	public int warlock1 = -1;
 	public int warlock2 = -1;
 	public int warlock3 = -1;
-	public int sc3 = -1;
-	public int LogicTicks = 10;
-	public List<Integer> Helmets = new LinkedList<Integer>(java.util.Arrays.asList(298,302,306,310,314,91,86));
-	public List<Integer> Chestplates  =  new LinkedList<Integer>(java.util.Arrays.asList(299,303,307,311,315));
-	public List<Integer> Leggings  = new LinkedList<Integer>( java.util.Arrays.asList(300,304,308,312,316));
-	public List<Integer> Boots  = new LinkedList<Integer>( java.util.Arrays.asList(301,305,309,313,317));
+	public Map<Integer, List<PotionEffect>> WeaponEffects = new HashMap<Integer, List<PotionEffect>>();
+	public  int witchdoctor = -1;
+	private boolean checkPlugin(String name){
+		if(getServer().getPluginManager().getPlugin(name) != null){
+			if(getServer().getPluginManager().getPlugin(name).isEnabled() == true) {
+				return true;
+			}	
+		}
+		return false;
+	}
+	public void debug(String s){
+		if(debug) this.getServer().getLogger().info(s);
+	}
+	
+	public void DenizenAction(NPC npc, String action){
+		if(DenizenActive){
+			net.aufdemrand.denizen.Denizen d = (Denizen) getServer().getPluginManager().getPlugin("Denizen");
+			net.aufdemrand.denizen.npc.dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
+			dnpc.action(action, null);
+		}
+	}
 
-	public void loaditemlist(String key, List<Integer> list){
-		List<String> strs = getConfig().getStringList(key);
+	public void doGroups(){
+		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault!  the GROUP target will not function.");
+		else{
+			try {
+				String[] Gr = perms.getGroups();
+				if (Gr.length == 0){
+					getLogger().log(Level.WARNING,"No permission groups found.  the GROUP target will not function.");
+					perms = null;
+				}
+				else getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found. The GROUP: target will function" );
 
-		if (strs.size() > 0) list.clear();
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING,"Error getting groups.  the GROUP target will not function.");
+				perms = null;
+			}	
+		}
 
-		for(String s: getConfig().getStringList(key)){
-			int	item = GetMat(s.trim());
-			list.add(item);
+		GroupsChecked = true;
+
+	}
+
+	public boolean equip(NPC npc, ItemStack hand) {
+		Equipment trait = npc.getTrait(Equipment.class);
+		if (trait == null) return false;
+		int slot = 0;
+		Material type = hand == null ? Material.AIR : hand.getType();
+		// First, determine the slot to edit
+
+		if (Helmets.contains(type.getId())) slot = 1;
+		else if (Chestplates.contains(type.getId())) slot = 2;
+		else if (Leggings.contains(type.getId())) slot = 3;
+		else if (Boots.contains(type.getId())) slot = 4;
+
+		// Now edit the equipment based on the slot
+		// Set the proper slot with one of the item
+
+		if(type == Material.AIR){
+			for (int i = 0; i < 5; i++) {
+				if (trait.get(i) != null && trait.get(i).getType() != Material.AIR) {
+					try {
+						trait.set(i, null);
+					} catch (Exception e) {
+					}   
+				}
+			}
+			return true;
+		}
+		else{
+			ItemStack clone = hand.clone();
+			clone.setAmount(1);
+
+			try {
+				trait.set(slot, clone);
+			} catch (Exception e) {
+				return false;
+			}
+			return true;	
 		}
 
 	}
+
+	public String format(String input, NPC npc, CommandSender player, int item, String amount){
+		if(input == null) return null;
+		input = input.replace("<NPC>",npc.getName());
+		input = input.replace("<PLAYER>", player == null ? "" : player.getName());
+		input = input.replace("<ITEM>", Util.getLocalItemName(item));
+		input = input.replace("<AMOUNT>", amount.toString());
+		input =	ChatColor.translateAlternateColorCodes('&', input);
+		return input;
+	}
+
+	public  String getClan(Player player) {
+		if (ClansActive == false)return null;
+		try {
+			net.sacredlabyrinth.phaed.simpleclans.Clan c =	net.sacredlabyrinth.phaed.simpleclans.SimpleClans.getInstance().getClanManager().getClanByPlayerName(player.getName());
+			if(c!=null) return c.getName();
+		} catch (Exception e) {
+			getLogger().info("Error getting Clan " + e.getMessage());
+			return null;
+		}
+		return null;
+	}
+
+	public  String getFactionsTag(Player player) {
+		if (FactionsActive == false)return null;
+		try {
+			return	com.massivecraft.factions.FPlayers.i.get(player).getTag();
+		} catch (Exception e) {
+			getLogger().info("Error getting Faction " + e.getMessage());
+			return null;
+		}
+	}
+
+
+
+
 
 	private int GetMat(String S){
 		int item = -1;
@@ -300,6 +243,21 @@ public class Sentry extends JavaPlugin {
 
 		return item;
 	}
+
+
+	public String getNationNameForLocation(Location l) {
+		if (TownyActive == false)return null;
+		try {
+			TownBlock tb = com.palmergames.bukkit.towny.object.TownyUniverse.getTownBlock(l);
+			if (tb !=null){
+				if (tb.getTown().hasNation()) return tb.getTown().getNation().getName();
+			}
+		} catch (Exception e) {
+			return null;
+		}
+		return null;
+	}
+
 
 	private PotionEffect getpot(String S){
 		if (S == null) return null;
@@ -338,6 +296,90 @@ public class Sentry extends JavaPlugin {
 		return new PotionEffect(type,dur,amp);
 	}
 
+	public String[] getResidentTownyInfo(Player player) {
+		String[] info = {null,null};
+
+		if (TownyActive == false)return info;
+
+		com.palmergames.bukkit.towny.object.Resident resident;
+		try {
+			resident = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getResident(player.getName());
+			if(resident.hasTown()) {
+				info[1] = resident.getTown().getName();
+				if( resident.getTown().hasNation()){
+					info[0] =resident.getTown().getNation().getName();
+				}
+
+			}			
+		} catch (Exception e) {
+			return info;
+		}
+
+		return info;
+	}
+
+
+	public SentryInstance getSentry(Entity ent){
+		if( ent == null) return null;
+		if(!(ent instanceof org.bukkit.entity.LivingEntity)) return null;
+		NPC npc = net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(ent);
+		if (npc !=null && npc.hasTrait(SentryTrait.class)){
+			return npc.getTrait(SentryTrait.class).getInstance();
+		}
+
+		return null;
+	}
+
+	public SentryInstance getSentry(NPC npc){
+		if (npc !=null && npc.hasTrait(SentryTrait.class)){
+			return npc.getTrait(SentryTrait.class).getInstance();
+		}
+		return null;
+	}
+	public  String getWarTeam(Player player) {
+		if (WarActive == false)return null;
+		try {
+			com.tommytony.war.Team t =com.tommytony.war.Team.getTeamByPlayerName(player.getName());
+			if (t!=null) return t.getName();
+		} catch (Exception e) {
+			getLogger().info("Error getting Team " + e.getMessage());
+			return null;
+		}
+		return null;
+	}
+
+	public boolean isNationEnemy(String Nation1, String Nation2) {
+		if (TownyActive == false)return false;
+		if (Nation1.equalsIgnoreCase(Nation2)) return false;
+		try {
+
+			if (!com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().hasNation(Nation1) || !com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().hasNation(Nation2)) return false;
+
+			com.palmergames.bukkit.towny.object.Nation theNation1 = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getNation(Nation1);
+			com.palmergames.bukkit.towny.object.Nation theNation2 = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getNation(Nation2);
+
+			if(theNation1.hasEnemy(theNation2) ||theNation2.hasEnemy(theNation1) ) return true;
+
+		} catch (Exception e) {
+			return false;
+		}
+
+		return false;
+	}
+
+	public void loaditemlist(String key, List<Integer> list){
+		List<String> strs = getConfig().getStringList(key);
+
+		if (strs.size() > 0) list.clear();
+
+		for(String s: getConfig().getStringList(key)){
+			int	item = GetMat(s.trim());
+			list.add(item);
+		}
+
+	}
+
+
 	private void loadmap(String node, Map<Integer, Double> map){
 		map.clear();
 		for(String s: getConfig().getStringList(node)){
@@ -358,7 +400,6 @@ public class Sentry extends JavaPlugin {
 			}
 		}
 	}
-
 	private void loadpots(String node, Map<Integer, List<PotionEffect>> map){
 		map.clear();
 		for(String s: getConfig().getStringList(node)){
@@ -382,74 +423,6 @@ public class Sentry extends JavaPlugin {
 
 		}
 	}
-
-
-
-
-
-	private boolean setupPermissions()
-	{
-		try {
-
-			if(getServer().getPluginManager().getPlugin("Vault") == null || getServer().getPluginManager().getPlugin("Vault").isEnabled() == false) {
-				return false ;
-			}	
-
-			RegisteredServiceProvider<net.milkbowl.vault.permission.Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
-
-			if (permissionProvider != null) {
-				perms = permissionProvider.getProvider();
-			}
-
-			return (perms != null);
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
-
-	@Override
-	public void onDisable() {
-
-		getLogger().log(Level.INFO, " v" + getDescription().getVersion() + " disabled.");
-		Bukkit.getServer().getScheduler().cancelTasks(this);
-
-	}
-
-
-	public void doGroups(){
-		if (!setupPermissions()) getLogger().log(Level.WARNING,"Could not register with Vault!  the GROUP target will not function.");
-		else{
-			try {
-				String[] Gr = perms.getGroups();
-				if (Gr.length == 0){
-					getLogger().log(Level.WARNING,"No permission groups found.  the GROUP target will not function.");
-					perms = null;
-				}
-				else getLogger().log(Level.INFO,"Registered sucessfully with Vault: " + Gr.length + " groups found. The GROUP: target will function" );
-
-			} catch (Exception e) {
-				getLogger().log(Level.WARNING,"Error getting groups.  the GROUP target will not function.");
-				perms = null;
-			}	
-		}
-
-		GroupsChecked = true;
-
-	}
-
-	private	boolean tryParseInt(String value)  
-	{  
-		try  
-		{  
-			Integer.parseInt(value);  
-			return true;  
-		} catch(NumberFormatException nfe)  
-		{  
-			return false;  
-		}  
-	}
-
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String cmdLabel, String[] inargs) {
@@ -1266,166 +1239,189 @@ public class Sentry extends JavaPlugin {
 		}
 		return false;
 	}
+	@Override
+	public void onDisable() {
 
-	//TownySupport
-	boolean TownyActive = false;
-	public String[] getResidentTownyInfo(Player player) {
-		String[] info = {null,null};
+		getLogger().log(Level.INFO, " v" + getDescription().getVersion() + " disabled.");
+		Bukkit.getServer().getScheduler().cancelTasks(this);
 
-		if (TownyActive == false)return info;
-
-		com.palmergames.bukkit.towny.object.Resident resident;
-		try {
-			resident = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getResident(player.getName());
-			if(resident.hasTown()) {
-				info[1] = resident.getTown().getName();
-				if( resident.getTown().hasNation()){
-					info[0] =resident.getTown().getNation().getName();
-				}
-
-			}			
-		} catch (Exception e) {
-			return info;
-		}
-
-		return info;
 	}
 
-	public boolean isNationEnemy(String Nation1, String Nation2) {
-		if (TownyActive == false)return false;
-		if (Nation1.equalsIgnoreCase(Nation2)) return false;
+	@Override
+	public void onEnable() {
+
+		if(getServer().getPluginManager().getPlugin("Citizens") == null || getServer().getPluginManager().getPlugin("Citizens").isEnabled() == false) {
+			getLogger().log(Level.SEVERE, "Citizens 2.0 not found or not enabled");
+			getServer().getPluginManager().disablePlugin(this);	
+			return;
+		}	
+
+		try {
+			setupDenizenHook();
+		}
+		catch(NoClassDefFoundError e){
+			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "An error occured attempting to register the NPCDeath triggers with Denizen" + e.getMessage());
+		}
+
+		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Triggers and DIE/LIVE command registered sucessfully with Denizen");
+		else getLogger().log(Level.INFO,"Could not register with Denizen");
+
+
+		if (checkPlugin("Towny")) {
+			getLogger().log(Level.INFO,"Registered with Towny sucessfully. the TOWN: and NATION: targets will function" );
+			TownyActive = true;
+		}
+		else getLogger().log(Level.INFO,"Could not find or register with Towny" );
+
+		if (checkPlugin("Factions")){
+			getLogger().log(Level.INFO,"Registered with Factions sucessfully. the FACTION: target will function" );
+			FactionsActive = true;
+		}
+		else getLogger().log(Level.INFO,"Could not find or register with Factions." );
+
+		if (checkPlugin("War")){
+			getLogger().log(Level.INFO,"Registered with War sucessfully. The TEAM: target will function" );
+			WarActive = true;
+		}
+		else getLogger().log(Level.INFO,"Could not find or register with War. " );
+
+		if (checkPlugin("SimpleClans")){
+			getLogger().log(Level.INFO,"Registered with SimpleClans sucessfully. The CLAN: target will function" );
+			ClansActive = true;
+		}
+		else getLogger().log(Level.INFO,"Could not find or register with SimpleClans. " );
+
+		CitizensAPI.getTraitFactory().registerTrait(TraitInfo.create(SentryTrait.class).withName("sentry"));
+
+		this.getServer().getPluginManager().registerEvents(new SentryListener(this), this);
+
+
+		this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+			public void run() {
+				//Unloaded chunk arrow cleanup
+				while (arrows.size() > 200) {
+					Projectile a = arrows.remove();
+					if (a!=null ){
+						a.remove();
+						//	x++;
+					}
+				}
+			}
+		}, 40,  20*120);
+
+		reloadMyConfig();
+	}
+	private void reloadMyConfig(){
+		this.saveDefaultConfig();
+		this.reloadConfig();
+		loadmap("ArmorBuffs", ArmorBuffs);
+		loadmap("StrengthBuffs", StrengthBuffs);
+		loadmap("SpeedBuffs", SpeedBuffs);
+		loadpots("WeaponEffects",WeaponEffects);
+		loaditemlist("Helmets", Helmets);
+		loaditemlist("Chestplates",Chestplates);
+		loaditemlist("Leggings", Leggings);
+		loaditemlist("Boots", Boots);
+		archer = GetMat(getConfig().getString("AttackTypes.Archer",null));
+		pyro1 = GetMat(getConfig().getString("AttackTypes.Pyro1",null));
+		pyro2 = GetMat(getConfig().getString("AttackTypes.Pyro2",null));
+		pyro3 = GetMat(getConfig().getString("AttackTypes.Pyro3",null));
+		bombardier = GetMat(getConfig().getString("AttackTypes.Bombardier",null));
+		sc1 = GetMat(getConfig().getString("AttackTypes.StormCaller1",null));
+		sc2 = GetMat(getConfig().getString("AttackTypes.StormCaller2",null));
+		witchdoctor = GetMat(getConfig().getString("AttackTypes.WitchDoctor",null));
+		magi = GetMat(getConfig().getString("AttackTypes.IceMagi",null));
+		sc3 = GetMat(getConfig().getString("AttackTypes.StormCaller3",null));
+		warlock1 = GetMat(getConfig().getString("AttackTypes.Warlock1",null));
+		warlock2 = GetMat(getConfig().getString("AttackTypes.Warlock2",null));
+		warlock3 = GetMat(getConfig().getString("AttackTypes.Warlock3",null));
+		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
+		LogicTicks = getConfig().getInt("Server.LogicTicks",10);
+		SentryEXP = getConfig().getInt("Server.ExpValue",5);
+		MissMessage = getConfig().getString("GlobalTexts.Miss", null);
+		HitMessage = getConfig().getString("GlobalTexts.Hit", null);
+		BlockMessage = getConfig().getString("GlobalTexts.Block", null);
+		Crit1Message = getConfig().getString("GlobalTexts.Crit1", null);
+		Crit2Message = getConfig().getString("GlobalTexts.Crit2", null);
+		Crit3Message = getConfig().getString("GlobalTexts.Crit3", null);
+		GlanceMessage = getConfig().getString("GlobalTexts.Glance", null);
+		MissChance = getConfig().getInt("HitChances.Miss",0);
+		GlanceChance = getConfig().getInt("HitChances.Glance",0);
+		Crit1Chance = getConfig().getInt("HitChances.Crit1",0);
+		Crit2Chance = getConfig().getInt("HitChances.Crit2",0);
+		Crit3Chance = getConfig().getInt("HitChances.Crit3",0);
+
+
+	}
+
+	public boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
+		if (!DenizenActive) return false;
+
+		boolean a = false, b = false, c = false;
+
+		net.aufdemrand.denizen.Denizen d = (Denizen) getServer().getPluginManager().getPlugin("Denizen");
+
+		NpcdeathTrigger npcd = d.getTriggerRegistry().get(net.aufdemrand.sentry.denizen.v8.NpcdeathTrigger.class);
+		net.aufdemrand.sentry.denizen.v8.NpcdeathTriggerOwner npcdo = d.getTriggerRegistry().get(net.aufdemrand.sentry.denizen.v8.NpcdeathTriggerOwner.class);
+
+
+		if (npc !=null) a=	npcd.Die(_myDamamgers, npc);
+		if (npc !=null) c=	npcdo.Die(npc);
+		return (a||b||c);
+
+	}
+
+	private void setupDenizenHook() throws ActivationException {
+		DenizenActive = checkPlugin("Denizen");
+		if(DenizenActive){
+			String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
+			if(vers.contains("0.7")) {
+				DenizenActive = false;
+				//	net.aufdemrand.sentry.denizen.v7.Util.setupDenizenHook(DieLikePlayers);
+				getLogger().log(Level.WARNING, "Sentry is no longer compatible with Denizen .7");
+			}
+			else if(vers.contains("0.8")){
+				new net.aufdemrand.sentry.denizen.v8.NpcdeathTrigger().activate().as("Npcdeath");
+				new net.aufdemrand.sentry.denizen.v8.NpcdeathTriggerOwner().activate().as("Npcdeathowner");
+				net.aufdemrand.denizen.utilities.DenizenAPI._commandRegistry().register("DIE",  new net.aufdemrand.sentry.denizen.v8.DieCommand());
+				net.aufdemrand.denizen.utilities.DenizenAPI._commandRegistry().register("LIVE",  new net.aufdemrand.sentry.denizen.v8.LiveCommand());
+			}
+		}
+	}
+
+	private boolean setupPermissions()
+	{
 		try {
 
-			if (!com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().hasNation(Nation1) || !com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().hasNation(Nation2)) return false;
+			if(getServer().getPluginManager().getPlugin("Vault") == null || getServer().getPluginManager().getPlugin("Vault").isEnabled() == false) {
+				return false ;
+			}	
 
-			com.palmergames.bukkit.towny.object.Nation theNation1 = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getNation(Nation1);
-			com.palmergames.bukkit.towny.object.Nation theNation2 = com.palmergames.bukkit.towny.object.TownyUniverse.getDataSource().getNation(Nation2);
+			RegisteredServiceProvider<net.milkbowl.vault.permission.Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
 
-			if(theNation1.hasEnemy(theNation2) ||theNation2.hasEnemy(theNation1) ) return true;
+			if (permissionProvider != null) {
+				perms = permissionProvider.getProvider();
+			}
 
+			return (perms != null);
 		} catch (Exception e) {
 			return false;
 		}
-
-		return false;
-	}
-
-	public String getNationNameForLocation(Location l) {
-		if (TownyActive == false)return null;
-		try {
-			TownBlock tb = com.palmergames.bukkit.towny.object.TownyUniverse.getTownBlock(l);
-			if (tb !=null){
-				if (tb.getTown().hasNation()) return tb.getTown().getNation().getName();
-			}
-		} catch (Exception e) {
-			return null;
-		}
-		return null;
 	}
 
 
-	//FactionsSuport
-	boolean FactionsActive = false;
-	public  String getFactionsTag(Player player) {
-		if (FactionsActive == false)return null;
-		try {
-			return	com.massivecraft.factions.FPlayers.i.get(player).getTag();
-		} catch (Exception e) {
-			getLogger().info("Error getting Faction " + e.getMessage());
-			return null;
-		}
-	}
-
-	//War sSuport
-	boolean WarActive = false;
-	public  String getWarTeam(Player player) {
-		if (WarActive == false)return null;
-		try {
-			com.tommytony.war.Team t =com.tommytony.war.Team.getTeamByPlayerName(player.getName());
-			if (t!=null) return t.getName();
-		} catch (Exception e) {
-			getLogger().info("Error getting Team " + e.getMessage());
-			return null;
-		}
-		return null;
-	}
-
-	//SimpleClans sSuport
-	boolean ClansActive = false;
-	public  String getClan(Player player) {
-		if (ClansActive == false)return null;
-		try {
-			net.sacredlabyrinth.phaed.simpleclans.Clan c =	net.sacredlabyrinth.phaed.simpleclans.SimpleClans.getInstance().getClanManager().getClanByPlayerName(player.getName());
-			if(c!=null) return c.getName();
-		} catch (Exception e) {
-			getLogger().info("Error getting Clan " + e.getMessage());
-			return null;
-		}
-		return null;
-	}
-
-	private boolean checkPlugin(String name){
-		if(getServer().getPluginManager().getPlugin(name) != null){
-			if(getServer().getPluginManager().getPlugin(name).isEnabled() == true) {
-				return true;
-			}	
-		}
-		return false;
-	}
-
-	public boolean equip(NPC npc, ItemStack hand) {
-		Equipment trait = npc.getTrait(Equipment.class);
-		if (trait == null) return false;
-		int slot = 0;
-		Material type = hand == null ? Material.AIR : hand.getType();
-		// First, determine the slot to edit
-
-		if (Helmets.contains(type.getId())) slot = 1;
-		else if (Chestplates.contains(type.getId())) slot = 2;
-		else if (Leggings.contains(type.getId())) slot = 3;
-		else if (Boots.contains(type.getId())) slot = 4;
-
-		// Now edit the equipment based on the slot
-		// Set the proper slot with one of the item
-
-		if(type == Material.AIR){
-			for (int i = 0; i < 5; i++) {
-				if (trait.get(i) != null && trait.get(i).getType() != Material.AIR) {
-					try {
-						trait.set(i, null);
-					} catch (Exception e) {
-					}   
-				}
-			}
-			return true;
-		}
-		else{
-			ItemStack clone = hand.clone();
-			clone.setAmount(1);
-
-			try {
-				trait.set(slot, clone);
-			} catch (Exception e) {
-				return false;
-			}
-			return true;	
-		}
-
-	}
-
-	public String format(String input, NPC npc, CommandSender player, int item, String amount){
-		if(input == null) return null;
-		input = input.replace("<NPC>",npc.getName());
-		input = input.replace("<PLAYER>", player == null ? "" : player.getName());
-		input = input.replace("<ITEM>", Util.getLocalItemName(item));
-		input = input.replace("<AMOUNT>", amount.toString());
-		input =	ChatColor.translateAlternateColorCodes('&', input);
-		return input;
-	}
-
-
-	public void debug(String s){
-		if(debug) this.getServer().getLogger().info(s);
+	private	boolean tryParseInt(String value)  
+	{  
+		try  
+		{  
+			Integer.parseInt(value);  
+			return true;  
+		} catch(NumberFormatException nfe)  
+		{  
+			return false;  
+		}  
 	}
 
 }

@@ -1,6 +1,6 @@
 name: Sentry
 author: aufdemrand, jrbudda
-version: 1.3
+version: 1.3.2
 main: net.aufdemrand.sentry.Sentry
 depend:
   - Citizens

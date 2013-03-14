@@ -14,14 +14,14 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_4_6.EntityHuman;
-import net.minecraft.server.v1_4_6.EntityPotion;
-import net.minecraft.server.v1_4_6.Packet;
-import net.minecraft.server.v1_4_6.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_4_6.CraftWorld;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_4_6.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_4_6.inventory.CraftItemStack;
+import net.minecraft.server.v1_4_R1.EntityHuman;
+import net.minecraft.server.v1_4_R1.EntityPotion;
+import net.minecraft.server.v1_4_R1.Packet;
+import net.minecraft.server.v1_4_R1.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_4_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_4_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_4_R1.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -759,7 +759,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_4_6.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_4_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -986,14 +986,15 @@ public class SentryInstance {
 	public void onDamage(EntityDamageByEntityEvent event) {
 
 		event.setCancelled(true);
-		myNPC.getBukkitEntity().setLastDamageCause(event);
-		if(sentryStatus == Status.isDYING) return;
-
-		if (!myNPC.isSpawned()) {
-			// \\how did youg get here?
+ 		if(sentryStatus == Status.isDYING) return;
+		
+		if (myNPC == null || !myNPC.isSpawned()) {
+			// \\how did you get here?
 			return;
 		}
-
+		
+    	event.getEntity().setLastDamageCause(event);
+    	
 		if (guardTarget != null && guardEntity == null) return; //dont take damage when bodyguard target isnt around.
 
 		if (System.currentTimeMillis() <  okToTakedamage + 500) return;
@@ -1298,7 +1299,7 @@ public class SentryInstance {
 							setHealth(sentryHealth);
 						}
 
-						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketNearby(myNPC.getBukkitEntity().getLocation(),healanim , 64);
+						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(myNPC.getBukkitEntity().getLocation(),healanim);
 
 
 						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
@@ -1438,7 +1439,6 @@ public class SentryInstance {
 	}
 
 	public boolean setGuardTarget(String name) {
-		// plugin.getServer().broadcastMessage("Setting guard");
 
 		if (myNPC == null)
 			return false;
