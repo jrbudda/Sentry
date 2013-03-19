@@ -14,14 +14,14 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_4_R1.EntityHuman;
-import net.minecraft.server.v1_4_R1.EntityPotion;
-import net.minecraft.server.v1_4_R1.Packet;
-import net.minecraft.server.v1_4_R1.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_4_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_4_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_4_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_4_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_5_R1.EntityHuman;
+import net.minecraft.server.v1_5_R1.EntityPotion;
+import net.minecraft.server.v1_5_R1.Packet;
+import net.minecraft.server.v1_5_R1.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_5_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_5_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_5_R1.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -424,7 +424,7 @@ public class SentryInstance {
 		setTarget(null, false);
 		//		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 
-		if(!runscripts || !plugin.SentryDeath(_myDamamgers, myNPC))	{
+		if(!runscripts || !DenizenHook.SentryDeath(_myDamamgers, myNPC))	{
 
 			//Denizen is NOT handling this death
 
@@ -605,7 +605,7 @@ public class SentryInstance {
 
 
 	public void Draw(boolean on){
-		((CraftLivingEntity)(myNPC.getBukkitEntity())).getHandle().d(on);
+		((CraftLivingEntity)(myNPC.getBukkitEntity())).getHandle().e(on);
 	}
 
 	public void Fire(LivingEntity theEntity) {
@@ -759,7 +759,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_4_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_5_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
