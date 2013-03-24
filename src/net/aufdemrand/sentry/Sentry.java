@@ -49,7 +49,6 @@ public class Sentry extends JavaPlugin {
 	boolean ClansActive = false;
 	public int Crit1Chance;
 	public String Crit1Message = "";
-
 	public int Crit2Chance;
 	public String Crit2Message = "";
 	public int Crit3Chance;
@@ -1235,6 +1234,9 @@ public class Sentry extends JavaPlugin {
 
 	}
 
+	
+	boolean DenizenActive = false;
+	
 	@Override
 	public void onEnable() {
 
@@ -1244,9 +1246,7 @@ public class Sentry extends JavaPlugin {
 			return;
 		}	
 
-		boolean da = false;
-
-		try {
+	try {
 
 			if  (checkPlugin("Denizen")){	
 				String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
@@ -1257,7 +1257,7 @@ public class Sentry extends JavaPlugin {
 					DenizenHook.SentryPlugin = this;
 					DenizenHook.DenizenPlugin = getServer().getPluginManager().getPlugin("Denizen");
 					 DenizenHook.setupDenizenHook();
-					 da = true;
+					 DenizenActive = true;
 				}
 				else {
 					getLogger().log(Level.WARNING, "Unknown version of Denizen");
@@ -1270,7 +1270,7 @@ public class Sentry extends JavaPlugin {
 			getLogger().log(Level.WARNING, "An error occured attempting to register with Denizen " + e.getMessage());
 		}
 
-		if (da)	getLogger().log(Level.INFO,"NPCDeath Triggers and DIE/LIVE command registered sucessfully with Denizen");
+		if (DenizenActive)	getLogger().log(Level.INFO,"NPCDeath Triggers and DIE/LIVE command registered sucessfully with Denizen");
 		else getLogger().log(Level.INFO,"Could not register with Denizen");
 
 

@@ -14,14 +14,14 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_5_R1.EntityHuman;
-import net.minecraft.server.v1_5_R1.EntityPotion;
-import net.minecraft.server.v1_5_R1.Packet;
-import net.minecraft.server.v1_5_R1.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_5_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_5_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_5_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_5_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_5_R2.EntityHuman;
+import net.minecraft.server.v1_5_R2.EntityPotion;
+import net.minecraft.server.v1_5_R2.Packet;
+import net.minecraft.server.v1_5_R2.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_5_R2.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_5_R2.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -424,7 +424,14 @@ public class SentryInstance {
 		setTarget(null, false);
 		//		myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
 
-		if(!runscripts || !DenizenHook.SentryDeath(_myDamamgers, myNPC))	{
+
+		boolean handled = false;
+		
+		if(runscripts && plugin.DenizenActive){
+			handled = !DenizenHook.SentryDeath(_myDamamgers, myNPC);
+		}
+	
+		if(!handled){
 
 			//Denizen is NOT handling this death
 
@@ -759,7 +766,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_5_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_5_R2.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
