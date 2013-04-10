@@ -428,7 +428,7 @@ public class SentryInstance {
 		boolean handled = false;
 		
 		if(runscripts && plugin.DenizenActive){
-			handled = !DenizenHook.SentryDeath(_myDamamgers, myNPC);
+			handled = DenizenHook.SentryDeath(_myDamamgers, myNPC);
 		}
 	
 		if(!handled){
