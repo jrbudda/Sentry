@@ -14,14 +14,14 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_5_R2.EntityHuman;
-import net.minecraft.server.v1_5_R2.EntityPotion;
-import net.minecraft.server.v1_5_R2.Packet;
-import net.minecraft.server.v1_5_R2.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_5_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_5_R2.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_5_R2.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_5_R2.inventory.CraftItemStack;
+import net.minecraft.server.v1_5_R3.EntityHuman;
+import net.minecraft.server.v1_5_R3.EntityPotion;
+import net.minecraft.server.v1_5_R3.Packet;
+import net.minecraft.server.v1_5_R3.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_5_R3.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_5_R3.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_5_R3.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -73,7 +73,7 @@ public class SentryInstance {
 	public int epcount = 0;
 	private GiveUpStuckAction giveup = new GiveUpStuckAction(this);
 
-	public String GreetingMessage = "§a<NPC> says: Welcome, <PLAYER>!";
+	public String GreetingMessage = "&a<NPC> says: Welcome, <PLAYER>!";
 	public LivingEntity guardEntity = null;;
 	public String guardTarget = null;
 
@@ -130,7 +130,7 @@ public class SentryInstance {
 	private Integer taskID = null;
 
 
-	public String WarningMessage = "§c<NPC> says: Halt! Come no further!";
+	public String WarningMessage = "&a<NPC> says: Halt! Come no further!";
 
 	public Integer WarningRange = 0;
 
