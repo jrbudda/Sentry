@@ -58,7 +58,7 @@ public class Sentry extends JavaPlugin {
 	public boolean DieLikePlayers = false;
 
 	//FactionsSuport
-	boolean FactionsActive = false;
+	static boolean FactionsActive = false;
 	public int GlanceChance;
 	public String GlanceMessage = "";
 	public boolean GroupsChecked = false;
@@ -337,7 +337,7 @@ public class Sentry extends JavaPlugin {
 		return null;
 	}
 
-	public boolean isNationEnemy(String Nation1, String Nation2) {
+	boolean isNationEnemy(String Nation1, String Nation2) {
 		if (TownyActive == false)return false;
 		if (Nation1.equalsIgnoreCase(Nation2)) return false;
 		try {
@@ -356,18 +356,6 @@ public class Sentry extends JavaPlugin {
 		return false;
 	}
 
-	public boolean isFactionEnemy(String  faction1, String faction2) {
-		if (FactionsActive == false)return false;
-		if (faction1.equalsIgnoreCase(faction2)) return false;
-		try {
-
-		return	 com.massivecraft.factions.Factions.i.getByTag(faction1).getRelationTo( com.massivecraft.factions.Factions.i.getByTag(faction2)) == com.massivecraft.factions.struct.Rel.ENEMY;
-		
-		} catch (Exception e) {
-			return false;
-		}
-
-	}
 
 	public void loaditemlist(String key, List<Integer> list){
 		List<String> strs = getConfig().getStringList(key);

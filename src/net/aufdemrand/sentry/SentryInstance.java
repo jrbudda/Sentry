@@ -342,7 +342,7 @@ public class SentryInstance {
 						
 							if(this.hasTargetType(factionenemies)){
 								for (String s : FactionEnemies) {
-									if (plugin.isFactionEnemy(s, faction)) return true;
+									if (Util.isFactionEnemy(s, faction)) return true;
 								}	
 							}
 					}
