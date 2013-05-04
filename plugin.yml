@@ -1,16 +1,13 @@
 name: Sentry
-author: aufdemrand, jrbudda
-version: 1.3.3.3
+authors: [aufdemrand, jrbudda]
+description: Sentry is a Citizens 2.0 character trait that gives NPCs the ability to Attack, Kill, Guard, Use ranged or melee weapons and work with Denizen.
+version: 1.3.3.4
 main: net.aufdemrand.sentry.Sentry
-depend:
-  - Citizens
-softdepend:
-  - Denizen
-  - Vault
-  - Towny
-  - Factions
-  - War
-  - SimpleClans
+dev-url: http://dev.bukkit.org/server-mods/sentry-citizens2/
+website: http://wiki.citizensnpcs.com/Sentry
+depend: [Citizens]
+softdepend: [Denizen, Vault, Towny, Factions, War, SimpleClans]
+
 commands:
   sentry:
     description: Lists sentry commands.
