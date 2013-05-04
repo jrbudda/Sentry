@@ -333,12 +333,24 @@ public class SentryInstance {
 					}
 				}
 
-				if(this.hasTargetType(faction) ) {
+				if(this.hasTargetType(faction) || this.hasTargetType(factionenemies) ) {
+					
 					String faction = plugin.getFactionsTag((Player)aTarget);
+					
 					if (faction !=null) {
 						if (this.containsTarget("FACTION:" + faction))return true;
+						
+							if(this.hasTargetType(factionenemies)){
+								for (String s : FactionEnemies) {
+									if (plugin.isFactionEnemy(s, faction)) return true;
+								}	
+							}
 					}
 				}
+				
+		
+					
+				
 				if(this.hasTargetType(war) ) {
 					String team = plugin.getWarTeam((Player)aTarget);
 					//	plugin.getLogger().info(faction);
@@ -766,7 +778,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_5_R2.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_5_R3.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -1200,11 +1212,13 @@ public class SentryInstance {
 	final int owner = 4096;
 	final int clans = 8192;
 	final int townyenemies = 16384;
+	final int factionenemies = 16384*2;
 	private int targets = 0;
 	private int ignores = 0;
 
 	List<String> NationsEnemies = new ArrayList<String>();
-
+	List<String> FactionEnemies = new ArrayList<String>();
+	
 	public void processTargets(){
 		try {
 
@@ -1213,7 +1227,8 @@ public class SentryInstance {
 			_ignoreTargets.clear();
 			_validTargets.clear();
 			NationsEnemies.clear();
-
+			FactionEnemies.clear();
+			
 			for (String t: validTargets){
 				if (t.contains("ENTITY:ALL")) targets |= all;	
 				else	if(t.contains("ENTITY:MONSTER")) targets |= monsters;
@@ -1227,6 +1242,10 @@ public class SentryInstance {
 					else	if(t.contains("PLAYER:")) targets |= namedplayers;
 					else	if(t.contains("ENTITY:")) targets |= namedentities;
 					else	if (plugin.FactionsActive && t.contains("FACTION:")) targets |= faction;
+					else	if (plugin.FactionsActive && t.contains("FACTIONENEMIES:")){
+						targets |= factionenemies;
+						FactionEnemies.add(t.split(":")[1]);
+					}
 					else	if (plugin.TownyActive && t.contains("TOWN:")) targets |= towny;
 					else	if (plugin.TownyActive && t.contains("NATIONENEMIES:")) {
 						targets |= townyenemies;
@@ -1644,9 +1663,8 @@ public class SentryInstance {
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
 
 			if (!myNPC.getDefaultGoalController().isPaused()) 
-				myNPC.getDefaultGoalController().setPaused(true);
-
-			myNPC.getNavigator().setTarget(theEntity, true);
+				myNPC.getDefaultGoalController().setPaused(true);		
+			myNPC.getNavigator().setTarget((Entity)theEntity, true);
 			myNPC.getNavigator().getLocalParameters().speedModifier(getSpeed());
 			myNPC.getNavigator().getLocalParameters().stuckAction(giveup);
 			myNPC.getNavigator().getLocalParameters().stationaryTicks(5*20);

@@ -193,10 +193,12 @@ public class Sentry extends JavaPlugin {
 		return null;
 	}
 
+
+
 	public  String getFactionsTag(Player player) {
 		if (FactionsActive == false)return null;
 		try {
-			return	com.massivecraft.factions.FPlayers.i.get(player).getTag();
+			return	com.massivecraft.factions.FPlayers.i.get(player).getFaction().getTag();
 		} catch (Exception e) {
 			getLogger().info("Error getting Faction " + e.getMessage());
 			return null;
@@ -352,6 +354,19 @@ public class Sentry extends JavaPlugin {
 		}
 
 		return false;
+	}
+
+	public boolean isFactionEnemy(String  faction1, String faction2) {
+		if (FactionsActive == false)return false;
+		if (faction1.equalsIgnoreCase(faction2)) return false;
+		try {
+
+		return	 com.massivecraft.factions.Factions.i.getByTag(faction1).getRelationTo( com.massivecraft.factions.Factions.i.getByTag(faction2)) == com.massivecraft.factions.struct.Rel.ENEMY;
+		
+		} catch (Exception e) {
+			return false;
+		}
+
 	}
 
 	public void loaditemlist(String key, List<Integer> list){
@@ -1234,9 +1249,9 @@ public class Sentry extends JavaPlugin {
 
 	}
 
-	
+
 	boolean DenizenActive = false;
-	
+
 	@Override
 	public void onEnable() {
 
@@ -1246,7 +1261,7 @@ public class Sentry extends JavaPlugin {
 			return;
 		}	
 
-	try {
+		try {
 
 			if  (checkPlugin("Denizen")){	
 				String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
@@ -1256,8 +1271,8 @@ public class Sentry extends JavaPlugin {
 				else if(vers.contains("0.8")){
 					DenizenHook.SentryPlugin = this;
 					DenizenHook.DenizenPlugin = getServer().getPluginManager().getPlugin("Denizen");
-					 DenizenHook.setupDenizenHook();
-					 DenizenActive = true;
+					DenizenHook.setupDenizenHook();
+					DenizenActive = true;
 				}
 				else {
 					getLogger().log(Level.WARNING, "Unknown version of Denizen");
