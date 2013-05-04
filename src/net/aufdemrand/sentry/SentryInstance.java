@@ -334,23 +334,23 @@ public class SentryInstance {
 				}
 
 				if(this.hasTargetType(faction) || this.hasTargetType(factionenemies) ) {
-					
-					String faction = plugin.getFactionsTag((Player)aTarget);
-					
-					if (faction !=null) {
-						if (this.containsTarget("FACTION:" + faction))return true;
-						
+					if (Sentry.FactionsActive){
+						String faction = plugin.getFactionsTag((Player)aTarget);
+
+						if (faction !=null) {
+							if (this.containsTarget("FACTION:" + faction))return true;
+
 							if(this.hasTargetType(factionenemies)){
 								for (String s : FactionEnemies) {
-									if (Util.isFactionEnemy(s, faction)) return true;
+									if (FactionsUtil.isFactionEnemy(s, faction)) return true;
 								}	
 							}
+						}
 					}
 				}
-				
-		
-					
-				
+
+
+
 				if(this.hasTargetType(war) ) {
 					String team = plugin.getWarTeam((Player)aTarget);
 					//	plugin.getLogger().info(faction);
@@ -438,11 +438,11 @@ public class SentryInstance {
 
 
 		boolean handled = false;
-		
+
 		if(runscripts && plugin.DenizenActive){
 			handled = DenizenHook.SentryDeath(_myDamamgers, myNPC);
 		}
-	
+
 		if(!handled){
 
 			//Denizen is NOT handling this death
@@ -1005,15 +1005,15 @@ public class SentryInstance {
 	public void onDamage(EntityDamageByEntityEvent event) {
 
 		event.setCancelled(true);
- 		if(sentryStatus == Status.isDYING) return;
-		
+		if(sentryStatus == Status.isDYING) return;
+
 		if (myNPC == null || !myNPC.isSpawned()) {
 			// \\how did you get here?
 			return;
 		}
-		
-    	event.getEntity().setLastDamageCause(event);
-    	
+
+		event.getEntity().setLastDamageCause(event);
+
 		if (guardTarget != null && guardEntity == null) return; //dont take damage when bodyguard target isnt around.
 
 		if (System.currentTimeMillis() <  okToTakedamage + 500) return;
@@ -1218,7 +1218,7 @@ public class SentryInstance {
 
 	List<String> NationsEnemies = new ArrayList<String>();
 	List<String> FactionEnemies = new ArrayList<String>();
-	
+
 	public void processTargets(){
 		try {
 
@@ -1228,7 +1228,7 @@ public class SentryInstance {
 			_validTargets.clear();
 			NationsEnemies.clear();
 			FactionEnemies.clear();
-			
+
 			for (String t: validTargets){
 				if (t.contains("ENTITY:ALL")) targets |= all;	
 				else	if(t.contains("ENTITY:MONSTER")) targets |= monsters;
@@ -1241,8 +1241,8 @@ public class SentryInstance {
 					else if (t.contains("EVENT:"))  targets |= events;
 					else	if(t.contains("PLAYER:")) targets |= namedplayers;
 					else	if(t.contains("ENTITY:")) targets |= namedentities;
-					else	if (plugin.FactionsActive && t.contains("FACTION:")) targets |= faction;
-					else	if (plugin.FactionsActive && t.contains("FACTIONENEMIES:")){
+					else	if (Sentry.FactionsActive && t.contains("FACTION:")) targets |= faction;
+					else	if (Sentry.FactionsActive && t.contains("FACTIONENEMIES:")){
 						targets |= factionenemies;
 						FactionEnemies.add(t.split(":")[1]);
 					}
@@ -1268,7 +1268,7 @@ public class SentryInstance {
 					else	if(t.contains("NPC:")) ignores |= namednpcs;
 					else	if(t.contains("PLAYER:")) ignores |= namedplayers;
 					else	if(t.contains("ENTITY:")) ignores |= namedentities;
-					else	if (plugin.FactionsActive && t.contains("FACTION:")) ignores |= faction;
+					else	if (Sentry.FactionsActive && t.contains("FACTION:")) ignores |= faction;
 					else	if (plugin.TownyActive && t.contains("TOWN:")) ignores |= towny;
 					else	if (plugin.TownyActive && t.contains("NATION:"))  ignores |= towny;
 					else	if (plugin.WarActive && t.contains("TEAM:"))  ignores |= war;
