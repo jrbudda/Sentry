@@ -26,7 +26,7 @@ public class SentryTrait extends Trait implements Toggleable {
 	}
 	private SentryInstance thisInstance;
 
-		
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void load(DataKey key) throws NPCLoadException {
@@ -47,6 +47,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.sentryWeight=	 key.getDouble("Weight", plugin.getConfig().getDouble("DefaultStats.Weight",1.0));
 		thisInstance.Armor=		key.getInt("Armor", plugin.getConfig().getInt("DefaultStats.Armor",0));
 		thisInstance.Strength=		key.getInt("Strength", plugin.getConfig().getInt("DefaultStats.Strength",1));
+		thisInstance.FollowDistance =  key.getInt("FollowDistance", plugin.getConfig().getInt("DefaultStats.FollowDistance", 4));
 		thisInstance.guardTarget = (key.getString("GuardTarget", null));
 		thisInstance.GreetingMessage = (key.getString("Greeting",plugin.getConfig().getString("DefaultTexts.Greeting", "'§b<NPC> says Welcome, <PLAYER>'")));
 		thisInstance.WarningMessage = (key.getString("Warning",plugin.getConfig().getString("DefaultTexts.Warning", "'§c<NPC> says Halt! Come no closer!'")));
@@ -54,6 +55,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.AttackRateSeconds =  key.getDouble("AttackRate", plugin.getConfig().getDouble("DefaultStats.AttackRate",2.0));
 		thisInstance.HealRate =  key.getDouble("HealRate", plugin.getConfig().getDouble("DefaultStats.HealRate",0.0));
 		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision",16));
+		thisInstance.KillsDropInventory = key.getBoolean("KillDrops", plugin.getConfig().getBoolean("DefaultOptions.KillDrops", true));
 
 		if( key.keyExists("Spawn")){
 			try {
@@ -66,7 +68,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		}
 
 		if (thisInstance.guardTarget != null && thisInstance.guardTarget.isEmpty()) thisInstance.guardTarget = null;
-		
+
 		List<String> targettemp = new ArrayList<String>();
 		List<String> ignoretemp = new ArrayList<String>();
 
@@ -103,7 +105,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		return thisInstance;
 	}
 
-	
+
 	@Override
 	public void onSpawn() {
 		plugin.debug(npc.getName() + " onSpawn");
@@ -173,6 +175,8 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("Retaliate", thisInstance.Retaliate);
 		key.setBoolean("Invincinble", thisInstance.Invincible);
 		key.setBoolean("DropInventory", thisInstance.DropInventory);
+		key.setBoolean("KillDrops", thisInstance.KillsDropInventory);
+
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
 		key.setRaw("Targets", thisInstance.validTargets);
 		key.setRaw("Ignores", thisInstance.ignoreTargets);
@@ -197,7 +201,8 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setInt("WarningRange", thisInstance.WarningRange);
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
 		key.setInt("NightVision", thisInstance.NightVision);
-
+		key.setInt("FollowDistance", thisInstance.FollowDistance);
+		
 		if (thisInstance.guardTarget !=null) key.setString("GuardTarget", thisInstance.guardTarget);
 		else if (key.keyExists("GuardTarget")) key.removeKey("GuardTarget");
 

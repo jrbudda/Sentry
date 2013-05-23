@@ -490,6 +490,8 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  Sets the range, beyond the detection range, that the Sentry will warn targets.");
 			player.sendMessage(ChatColor.GOLD + "/sentry respawn [-1-2000000]");
 			player.sendMessage(ChatColor.GOLD + "  Sets the number of seconds after death the Sentry will respawn.");
+			player.sendMessage(ChatColor.GOLD + "/sentry follow [0-32]");
+			player.sendMessage(ChatColor.GOLD + "  Sets the number of block away a bodyguard will follow. Default is 4");
 			player.sendMessage(ChatColor.GOLD + "/sentry invincible");
 			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to take no damage or knockback.");
 			player.sendMessage(ChatColor.GOLD + "/sentry retaliate");
@@ -498,6 +500,8 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to take critical hits and misses");
 			player.sendMessage(ChatColor.GOLD + "/sentry drops");
 			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to drop equipped items on death");
+			player.sendMessage(ChatColor.GOLD + "/sentry killdrops");
+			player.sendMessage(ChatColor.GOLD + "  Toggle whether or not the sentries victims drop items and exp");
 			player.sendMessage(ChatColor.GOLD + "/sentry spawn");
 			player.sendMessage(ChatColor.GOLD + "  Set the sentry to respawn at its current location");
 			player.sendMessage(ChatColor.GOLD + "/sentry warning 'The Test to use'");
@@ -701,6 +705,23 @@ public class Sentry extends JavaPlugin {
 
 			return true;
 		}
+		else if (args[0].equalsIgnoreCase("killdrops")) {
+			if(!player.hasPermission("sentry.options.killdrops")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			inst.KillsDropInventory = set ==null ?  !inst.KillsDropInventory: set;
+
+			if (inst.KillsDropInventory) {
+				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + "'s kills will drop items or exp");   // Talk to the player.
+			}
+			else{
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + "'s kills will not drop items or exp.");   // Talk to the player.
+			}
+
+			return true;
+		}
 		else if (args[0].equalsIgnoreCase("guard")) {
 			if(!player.hasPermission("sentry.guard")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
@@ -739,6 +760,29 @@ public class Sentry extends JavaPlugin {
 			return true;
 		}
 
+		else if (args[0].equalsIgnoreCase("follow")) {
+			if(!player.hasPermission("sentry.stats.follow")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+			if (args.length <= 1) {
+				player.sendMessage(ChatColor.GOLD + ThisNPC.getName() + "'s Follow Distance is " + inst.FollowDistance);
+				player.sendMessage(ChatColor.GOLD + "Usage: /sentry follow [#]. Default is 4. ");
+			}
+			else {
+
+				int HPs = Integer.valueOf(args[1]);
+				if (HPs > 32) HPs = 32;
+				if (HPs <0)  HPs =0;
+
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " follow distance set to " + HPs + ".");   // Talk to the player.
+				inst.FollowDistance = HPs * HPs;
+
+			}
+
+			return true;
+		}
+
 		else if (args[0].equalsIgnoreCase("health")) {
 			if(!player.hasPermission("sentry.stats.health")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
@@ -757,6 +801,7 @@ public class Sentry extends JavaPlugin {
 
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " health set to " + HPs + ".");   // Talk to the player.
 				inst.sentryHealth = HPs;
+				inst.myNPC.getBukkitEntity().setMaxHealth(HPs);
 				inst.setHealth(HPs);
 			}
 
@@ -1068,7 +1113,7 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GREEN + inst.getStats());
 			player.sendMessage(ChatColor.GREEN + "Invincible: " + inst.Invincible + "  Retaliate: " + inst.Retaliate);
 			player.sendMessage(ChatColor.GREEN + "Drops Items: " + inst.DropInventory+ "  Critical Hits: " + inst.LuckyHits);
-			player.sendMessage(ChatColor.GREEN + "Respawn Delay: " + inst.RespawnDelaySeconds + "s");
+			player.sendMessage(ChatColor.GREEN + "Kills Drop Items: "+ inst.KillsDropInventory + "  Respawn Delay: " + inst.RespawnDelaySeconds + "s");
 			player.sendMessage(ChatColor.BLUE + "Status: " + inst.sentryStatus);
 			if (inst.meleeTarget == null){
 				if(inst.projectileTarget ==null) player.sendMessage(ChatColor.BLUE + "Target: Nothing");

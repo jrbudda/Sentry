@@ -26,19 +26,24 @@ public class SentryListener implements Listener {
 	public SentryListener(Sentry sentry) {
 		plugin = sentry;
 	}
-	//
-	//	@EventHandler
-	//	public void pushable(NPCPushEvent event) {
-	//		SentryInstance thisInstance = plugin.getSentry(event.getNPC());
-	//		if (thisInstance!=null){
-	//			event.setCancelled(false);
-	//		}
-	//	}
 
-	//	@EventHandler
-	//	public void C2Reload(CitizensReloadEvent event) {
-	//	}
-	//	
+
+	@EventHandler
+	public void kill(org.bukkit.event.entity.EntityDeathEvent event){
+
+			
+		if(event.getEntity() == null) return;
+	
+		//dont mess with player death.
+		if (event.getEntity() instanceof Player && event.getEntity().hasMetadata("NPC") == false) return;
+		
+		SentryInstance sentry = plugin.getSentry(event.getEntity().getKiller());
+
+		if(sentry !=null && sentry.KillsDropInventory == false){
+				event.getDrops().clear();
+			event.setDroppedExp(0);	
+		}
+	}
 
 	@EventHandler(ignoreCancelled = true)
 	public void despawn(net.citizensnpcs.api.event.NPCDespawnEvent event) {
@@ -47,38 +52,7 @@ public class SentryListener implements Listener {
 		if(sentry !=null && event.getReason() == net.citizensnpcs.api.event.DespawnReason.CHUNK_UNLOAD && sentry.guardEntity != null){
 			event.setCancelled(true);
 		}
-		
 	}
-
-
-	//	@EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
-	//	public void C2Reload(org.bukkit.event.entity.CreatureSpawnEvent event) {
-	//		plugin.getLogger().log(Level.INFO, "SPAWN " + event.isCancelled() + " " + event.getEntityType().toString());
-	//	}
-
-	//
-	//	@EventHandler
-	//	public void ncom(net.citizensnpcs.api.ai.event.NavigationCompleteEvent event) {
-	//		plugin.getLogger().info("nav complete" );
-	//	}
-
-	//	@EventHandler
-	//	public void ncan(net.citizensnpcs.api.ai.event.NavigationCancelEvent event) {
-	//		plugin.debug("nav cancel " + event.getNPC().getName() +  event.getCancelReason());
-	//	}
-
-
-	//		@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
-	//		public void tar123get(org.bukkit.event.entity.EntityDeathEvent event) {
-	//			plugin.debug("ED: " + event.getEntity().toString() + " ENTITYDEATH");
-	//		}
-	//		
-	//		@EventHandler(priority =org.bukkit.event.EventPriority.MONITOR)
-	//		public void tad12rget(net.citizensnpcs.api.event.NPCDeathEvent event) {
-	//			plugin.debug("NPCD: " + event.getNPC().getFullName() + " NPCDEATH" );
-	//		}
-
-
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void entteleportevent(org.bukkit.event.entity.EntityTeleportEvent event) {
@@ -108,9 +82,7 @@ public class SentryListener implements Listener {
 				if (sentry.epcount<0) sentry.epcount=0;
 				event.getEntity().getLocation().getWorld().playEffect(event.getEntity().getLocation(), org.bukkit.Effect.ENDER_SIGNAL, 1, 100);
 				//ender pearl from a sentry
-
 			}
-
 		}
 		else 	if (event.getEntity() instanceof org.bukkit.entity.SmallFireball){	
 			final org.bukkit.block.Block block = event.getEntity().getLocation().getBlock();
@@ -130,14 +102,9 @@ public class SentryListener implements Listener {
 					}
 				}
 						);
-
 			}
 		}
-
-
 	}
-
-
 
 	@EventHandler(ignoreCancelled = true, priority =org.bukkit.event.EventPriority.HIGH)
 	public void tarsdfget(EntityTargetEvent event) {
@@ -146,7 +113,6 @@ public class SentryListener implements Listener {
 			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
 		}
 	}
-
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void EnvDamage(EntityDamageEvent event) {
@@ -228,7 +194,9 @@ public class SentryListener implements Listener {
 			}
 		}
 
+
 		plugin.debug("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
+
 
 		if (from !=null) {
 			//from a sentry
@@ -237,8 +205,15 @@ public class SentryListener implements Listener {
 			//uncancel if not bodyguard.
 			if (from.guardTarget ==null) event.setCancelled(false);	
 
-			if(entto.hasMetadata(NPC.DEFAULT_PROTECTED_METADATA) && entto.getMetadata(NPC.DEFAULT_PROTECTED_METADATA).get(0).asBoolean()) event.setCancelled(true);	
-
+			//cancel if invulnerable non-sentry npc
+			if (to == null){
+				NPC n = CitizensAPI.getNPCRegistry().getNPC(entto);
+				if (n != null){
+					boolean derp = (Boolean) n.data().get(NPC.DEFAULT_PROTECTED_METADATA,true);
+					event.setCancelled(derp);
+				}	
+			}
+	
 			//dont hurt guard target.
 			if(entto == from.guardEntity) event.setCancelled(true);
 
@@ -294,13 +269,14 @@ public class SentryListener implements Listener {
 
 			//process event
 			if (!event.isCancelled()) to.onDamage(event);	
-			
+
 		}
 
 		return;
 	}
 
+	
 
-
+	
 }
 

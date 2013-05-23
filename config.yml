@@ -22,10 +22,12 @@ DefaultStats:
  Range: 10
  WarningRange: 0
  Respawn: 10
+ FollowDistance: 4
  
 #Default options for new Sentries
 DefaultOptions:
  Drops: false
+ KillDrops: true
  Criticals: true
  Invincible: false
  Retaliate: true

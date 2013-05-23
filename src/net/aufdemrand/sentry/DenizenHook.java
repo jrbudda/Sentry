@@ -35,13 +35,11 @@ public class DenizenHook {
 		NpcdeathTrigger npcd = d.getTriggerRegistry().get(NpcdeathTrigger.class);
 		NpcdeathTriggerOwner npcdo = d.getTriggerRegistry().get(NpcdeathTriggerOwner.class);
 
-
 		if (npc !=null) a=	npcd.Die(_myDamamgers, npc);
 		if (npc !=null) c=	npcdo.Die(npc);
 		return (a||b||c);
 
 	}
-
 
 	static void setupDenizenHook()  {
 
@@ -53,18 +51,17 @@ public class DenizenHook {
 		DieCommand dc = me.new DieCommand();
 		LiveCommand lc = me.new LiveCommand();
 
-		((Denizen) DenizenPlugin).getCommandRegistry().register("DIE",  dc);
-		((Denizen) DenizenPlugin).getCommandRegistry().register("LIVE",  lc);
-
+		dc.activate().as("die").withOptions("die", 0);
+		lc.activate().as("live").withOptions("live", 0);
 		
 		DenizenActive  =true;
 	}
 
-	public static void DenizenAction(NPC npc, String action){
+	public static void DenizenAction(NPC npc, String action, Player player){
 		if(DenizenActive){
 			net.aufdemrand.denizen.Denizen d = (Denizen) DenizenPlugin;
 			net.aufdemrand.denizen.npc.dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
-			dnpc.action(action, null);
+			dnpc.action(action, player);
 		}
 	}
 
@@ -119,7 +116,7 @@ public class DenizenHook {
 
 			if (inst!=null){
 				dB.log("Goodbye, cruel world... ");
-				inst.die(false);
+				inst.die(false, org.bukkit.event.entity.EntityDamageEvent.DamageCause.CUSTOM);
 			}
 			else if (ent != null){
 				ent.remove();

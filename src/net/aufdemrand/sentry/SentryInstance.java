@@ -4,6 +4,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
@@ -68,6 +70,7 @@ public class SentryInstance {
 
 	public Double AttackRateSeconds = 2.0;
 
+	public boolean KillsDropInventory = true;
 	public Boolean DropInventory = false;
 
 	public int epcount = 0;
@@ -129,6 +132,7 @@ public class SentryInstance {
 	/* Technicals */
 	private Integer taskID = null;
 
+	public int FollowDistance  = 16 ;
 
 	public String WarningMessage = "&a<NPC> says: Halt! Come no further!";
 
@@ -428,7 +432,7 @@ public class SentryInstance {
 		plugin.getServer().getScheduler().cancelTask(taskID);
 	}
 
-	public void die(boolean runscripts){
+	public void die(boolean runscripts, org.bukkit.event.entity.EntityDamageEvent.DamageCause cause){
 		if (sentryStatus == Status.isDYING || sentryStatus == Status.isDEAD) return;
 
 		sentryStatus = Status.isDYING;
@@ -446,6 +450,25 @@ public class SentryInstance {
 		if(!handled){
 
 			//Denizen is NOT handling this death
+
+			if (plugin.DenizenActive){
+				Entity killer = myNPC.getBukkitEntity().getKiller();
+
+				DenizenHook.DenizenAction(myNPC, "death", null);
+				DenizenHook.DenizenAction(myNPC, "death by" + cause.toString().replace(" " ,"_"), null);
+				if(killer !=null){
+					if(killer instanceof Player){
+						DenizenHook.DenizenAction(myNPC, "death by player", (Player) killer);
+					}
+					else {
+						DenizenHook.DenizenAction(myNPC, "death by entity", null);
+						DenizenHook.DenizenAction(myNPC, "death by " + killer.getType().toString(), null);
+					}
+				}
+			}
+
+
+			myNPC.getBukkitEntity().playEffect(EntityEffect.DEATH);
 
 			sentryStatus = Status.isDEAD;
 
@@ -501,7 +524,6 @@ public class SentryInstance {
 				} else {
 					isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
 				}
-
 
 			}
 		}
@@ -847,18 +869,22 @@ public class SentryInstance {
 
 		return (int) (Armor + mod);
 	}
+
 	String getGreetingMEssage(Player player){
 		String str=  GreetingMessage.replace("<NPC>", myNPC.getName()).replace("<PLAYER>", player.getName());
 		return ChatColor.translateAlternateColorCodes('&', str);
 	}
+
 	public LivingEntity getGuardTarget() {
 		return this.guardEntity;
 	}
+
 	public int getHealth(){
 		if (myNPC == null) return 0;
 		if (myNPC.getBukkitEntity() == null) return 0;
 		return ((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().getHealth(); 
 	}
+
 	public float getSpeed(){
 		double mod = 0;
 		if ( myNPC.getBukkitEntity() instanceof Player){
@@ -872,7 +898,10 @@ public class SentryInstance {
 		DecimalFormat df = new DecimalFormat("#.0");
 		int h = getHealth();
 
-		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + getArmor() + ChatColor.RED + " [STR]:" + ChatColor.WHITE + getStrength() + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(getSpeed()) + ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision + ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange;
+		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + getArmor() + 
+				ChatColor.RED + " [STR]:" + ChatColor.WHITE + getStrength() + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(getSpeed()) + 
+				ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision +
+				ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange + ChatColor.RED + " [FOL]:" + ChatColor.WHITE + Math.sqrt(FollowDistance);
 
 	}
 
@@ -922,9 +951,12 @@ public class SentryInstance {
 			Spawn = myNPC.getBukkitEntity().getLocation();
 
 
-		// defaultSpeed = myNPC.getNavigator().getSpeed();
+		if(plugin.DenizenActive){
+			if (myNPC.hasTrait(net.aufdemrand.denizen.npc.traits.HealthTrait.class)) myNPC.removeTrait(net.aufdemrand.denizen.npc.traits.HealthTrait.class);
+		}
 
 
+		myNPC.getBukkitEntity().setMaxHealth(sentryHealth);
 		setHealth(sentryHealth);
 		//		}
 		//		else {
@@ -1138,8 +1170,8 @@ public class SentryInstance {
 				//set the killer
 				if (event.getDamager() instanceof HumanEntity) 	((CraftLivingEntity)myNPC.getBukkitEntity()).getHandle().killer = (EntityHuman) ((CraftLivingEntity) event.getDamager()).getHandle();
 
-				die(true);
-				// plugin.getServer().broadcastMessage("Dead!");
+				die(true, event.getCause());
+
 			}
 			else 	myNPC.getBukkitEntity().damage(finaldamage);
 		}
@@ -1179,7 +1211,7 @@ public class SentryInstance {
 
 			if (getHealth() - finaldamage <= 0) {
 
-				die(true);
+				die(true, event.getCause());
 
 				// plugin.getServer().broadcastMessage("Dead!");
 			}
@@ -1318,7 +1350,6 @@ public class SentryInstance {
 						if (HealRate <0.5) heal = (int) (0.5 / HealRate);
 
 						if (getHealth() + heal <= sentryHealth){
-
 							setHealth(	getHealth() + heal);
 						}
 						else{
@@ -1431,11 +1462,11 @@ public class SentryInstance {
 						if(dist > 1024) {
 							myNPC.getBukkitEntity().teleport(guardEntity.getLocation().add(1,0,1));
 						}
-						else if(dist > 16 && !myNPC.getNavigator().isNavigating()) {
+						else if(dist > FollowDistance && !myNPC.getNavigator().isNavigating()) {
 							myNPC.getNavigator().setTarget(guardEntity, false);
 							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);	
 						}
-						else if (dist < 16 && myNPC.getNavigator().isNavigating()) {
+						else if (dist < FollowDistance && myNPC.getNavigator().isNavigating()) {
 							myNPC.getNavigator().cancelNavigation();
 						}
 					}
@@ -1497,7 +1528,7 @@ public class SentryInstance {
 	public void setHealth(int health){
 		if (myNPC == null) return;
 		if (myNPC.getBukkitEntity() == null) return;
-		((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().setHealth(health); 	
+		myNPC.getBukkitEntity().setHealth(health);
 	}
 
 
