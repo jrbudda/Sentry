@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -12,18 +11,17 @@ import java.util.Set;
 
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_5_R3.EntityHuman;
-import net.minecraft.server.v1_5_R3.EntityPotion;
-import net.minecraft.server.v1_5_R3.Packet;
-import net.minecraft.server.v1_5_R3.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_5_R3.inventory.CraftItemStack;
+import net.minecraft.server.v1_6_R1.EntityHuman;
+import net.minecraft.server.v1_6_R1.EntityPotion;
+import net.minecraft.server.v1_6_R1.Packet;
+import net.minecraft.server.v1_6_R1.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_6_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_6_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_6_R1.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -337,7 +335,7 @@ public class SentryInstance {
 					}
 				}
 
-				if(this.hasTargetType(faction) || this.hasTargetType(factionenemies) ) {
+				/*if(this.hasTargetType(faction) || this.hasTargetType(factionenemies) ) {
 					if (Sentry.FactionsActive){
 						String faction = plugin.getFactionsTag((Player)aTarget);
 
@@ -351,7 +349,7 @@ public class SentryInstance {
 							}
 						}
 					}
-				}
+				}*/
 
 
 
@@ -800,7 +798,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_5_R3.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_6_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -882,7 +880,7 @@ public class SentryInstance {
 	public int getHealth(){
 		if (myNPC == null) return 0;
 		if (myNPC.getBukkitEntity() == null) return 0;
-		return ((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().getHealth(); 
+		return (int)((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().getHealth(); 
 	}
 
 	public float getSpeed(){
@@ -1057,7 +1055,7 @@ public class SentryInstance {
 
 		hittype hit = hittype.normal;
 
-		int finaldamage = event.getDamage();
+		int finaldamage = (int)event.getDamage();
 
 		// Find the attacker
 		if (event.getDamager() instanceof Projectile) {
@@ -1193,7 +1191,7 @@ public class SentryInstance {
 
 		myNPC.getBukkitEntity().setLastDamageCause(event);
 
-		int finaldamage = event.getDamage();
+		int finaldamage = (int)event.getDamage();
 
 		if (event.getCause() == DamageCause.CONTACT || event.getCause() == DamageCause.BLOCK_EXPLOSION){
 			finaldamage -= getArmor();
@@ -1463,7 +1461,7 @@ public class SentryInstance {
 							myNPC.getBukkitEntity().teleport(guardEntity.getLocation().add(1,0,1));
 						}
 						else if(dist > FollowDistance && !myNPC.getNavigator().isNavigating()) {
-							myNPC.getNavigator().setTarget(guardEntity, false);
+							myNPC.getNavigator().setTarget((Entity)guardEntity, false);
 							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);	
 						}
 						else if (dist < FollowDistance && myNPC.getNavigator().isNavigating()) {
@@ -1651,7 +1649,7 @@ public class SentryInstance {
 						return;
 					}
 
-					myNPC.getNavigator().setTarget(guardEntity, false);
+					myNPC.getNavigator().setTarget((Entity)guardEntity, false);
 					//		myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
 					myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
 				}
