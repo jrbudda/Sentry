@@ -6,11 +6,12 @@
 	<classpathentry kind="lib" path="C:/Minecraft/craftbukkit.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/Vault.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/Towny.jar"/>
-	<classpathentry kind="lib" path="C:/Minecraft/Factions.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/war-1.7.2.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/plugins/Citizens2.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/SimpleClans-2.4.1.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/CitizensAPI.jar"/>
 	<classpathentry kind="lib" path="C:/Minecraft/denizen-0.8-PRERELEASE.jar"/>
+	<classpathentry kind="lib" path="C:/Minecraft/1.6/Factions.jar"/>
+	<classpathentry kind="lib" path="C:/Minecraft/1.6/mcore.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

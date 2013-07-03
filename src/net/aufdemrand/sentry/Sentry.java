@@ -57,6 +57,10 @@ public class Sentry extends JavaPlugin {
 	//***Denizen Hook
 	public boolean DieLikePlayers = false;
 
+	public boolean BodyguardsObeyProtection = true;
+	
+	public boolean IgnoreListInvincibility = true;
+	
 	//FactionsSuport
 	static boolean FactionsActive = false;
 	public int GlanceChance;
@@ -195,15 +199,6 @@ public class Sentry extends JavaPlugin {
 
 
 
-	public  String getFactionsTag(Player player) {
-		if (FactionsActive == false)return null;
-		try {
-			return	com.massivecraft.factions.FPlayers.i.get(player).getFaction().getTag();
-		} catch (Exception e) {
-			getLogger().info("Error getting Faction " + e.getMessage());
-			return null;
-		}
-	}
 
 
 
@@ -1298,10 +1293,10 @@ public class Sentry extends JavaPlugin {
 
 			if  (checkPlugin("Denizen")){	
 				String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
-				if(vers.contains("0.7")) {
+				if(vers.startsWith("0.7")) {
 					getLogger().log(Level.WARNING, "Sentry is not compatible with Denizen .7");
 				}
-				else if(vers.contains("0.8")){
+				else if(vers.startsWith("0.8") || vers.startsWith("0.9")){
 					DenizenHook.SentryPlugin = this;
 					DenizenHook.DenizenPlugin = getServer().getPluginManager().getPlugin("Denizen");
 					DenizenHook.setupDenizenHook();
@@ -1391,6 +1386,8 @@ public class Sentry extends JavaPlugin {
 		warlock2 = GetMat(getConfig().getString("AttackTypes.Warlock2",null));
 		warlock3 = GetMat(getConfig().getString("AttackTypes.Warlock3",null));
 		DieLikePlayers = getConfig().getBoolean("Server.DieLikePlayers",false);
+		BodyguardsObeyProtection = getConfig().getBoolean("Server.BodyguardsObeyProtection",true);
+		IgnoreListInvincibility =  getConfig().getBoolean("Server.IgnoreListInvincibility",true);
 		LogicTicks = getConfig().getInt("Server.LogicTicks",10);
 		SentryEXP = getConfig().getInt("Server.ExpValue",5);
 		MissMessage = getConfig().getString("GlobalTexts.Miss", null);
@@ -1428,7 +1425,9 @@ public class Sentry extends JavaPlugin {
 			}
 
 			return (perms != null);
+			
 		} catch (Exception e) {
+			e.printStackTrace();
 			return false;
 		}
 	}

@@ -4,6 +4,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -31,16 +32,15 @@ public class SentryListener implements Listener {
 	@EventHandler
 	public void kill(org.bukkit.event.entity.EntityDeathEvent event){
 
-			
 		if(event.getEntity() == null) return;
-	
+
 		//dont mess with player death.
 		if (event.getEntity() instanceof Player && event.getEntity().hasMetadata("NPC") == false) return;
-		
+
 		SentryInstance sentry = plugin.getSentry(event.getEntity().getKiller());
 
 		if(sentry !=null && sentry.KillsDropInventory == false){
-				event.getDrops().clear();
+			event.getDrops().clear();
 			event.setDroppedExp(0);	
 		}
 	}
@@ -147,7 +147,6 @@ public class SentryListener implements Listener {
 		}	
 	}
 
-
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST) //highest for worldguard...
 	public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent  event) {
 
@@ -185,7 +184,9 @@ public class SentryListener implements Listener {
 										(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc")) ||
 										(to !=null && inst.containsTarget("event:pvsentry")))	{
 									//Valid event, attack
-									inst.setTarget( (LivingEntity) entfrom, true); //attack the aggressor
+									if (!inst.isIgnored((LivingEntity)entfrom)){
+										inst.setTarget( (LivingEntity) entfrom, true); //attack the aggressor
+									}
 								}
 							}
 						}	
@@ -194,16 +195,28 @@ public class SentryListener implements Listener {
 			}
 		}
 
-
 		plugin.debug("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
 
-
 		if (from !=null) {
+			
+			//projectiles go thru ignore targets.
+			if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
+				if (entto instanceof LivingEntity && from.isIgnored((LivingEntity) entto)){
+					event.setCancelled(true);
+					event.getDamager().remove();
+					Projectile newProjectile =	(Projectile)(entfrom.getWorld().spawnEntity(event.getDamager().getLocation().add(event.getDamager().getVelocity()), event.getDamager().getType()));
+					newProjectile.setVelocity(event.getDamager().getVelocity());		
+					newProjectile.setShooter((LivingEntity) entfrom);
+					newProjectile.setTicksLived(event.getDamager().getTicksLived());
+					return;
+				}
+			}
+			
 			//from a sentry
 			event.setDamage(from.getStrength());
 
 			//uncancel if not bodyguard.
-			if (from.guardTarget ==null) event.setCancelled(false);	
+			if (from.guardTarget == null || plugin.BodyguardsObeyProtection == false) event.setCancelled(false);	
 
 			//cancel if invulnerable non-sentry npc
 			if (to == null){
@@ -213,7 +226,7 @@ public class SentryListener implements Listener {
 					event.setCancelled(derp);
 				}	
 			}
-	
+
 			//dont hurt guard target.
 			if(entto == from.guardEntity) event.setCancelled(true);
 
@@ -275,8 +288,8 @@ public class SentryListener implements Listener {
 		return;
 	}
 
-	
 
-	
+
+
 }
 

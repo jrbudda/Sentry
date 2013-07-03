@@ -9,7 +9,11 @@ Server:
  #This is how often, in ticks, the Sentry performs his interal logic looking for targets, etc. Increasing this value may lighten server load, 
  #but will decrease Sentries responsiveness and maximum rate of fire.
  LogicTicks: 10
-
+ #Whether or not Sentries in bodyguard mode always deal damage regardless of other protection plugins.
+ BodyguardsObeyProtection: true
+ #Whether or not Sentries are immune to damage from entites on their ignore list. Immunity to damage also prevents retaliation.
+ IgnoreListInvincibility: true
+ 
 #Default stats for new Sentries
 DefaultStats:
  Strength: 1
@@ -40,12 +44,12 @@ DefaultTexts:
  
 #Default target list for new Sentries. 
 DefaultTargets:
- #- entity:monster
+ #- "entity:monster"
 
  
 #Default ignore list for new Sentries
 DefaultIgnores:
- #- entity:owner
+ #- "entity:owner"
 
 
 #Configurable messages used by all Sentries. You can use <NPC>, <PLAYER>, <ITEM>, and <AMOUNT> as placeholders. Remove a message or set it to "" to prevent it from displaying at all.

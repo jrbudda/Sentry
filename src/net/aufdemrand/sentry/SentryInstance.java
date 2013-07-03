@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -12,7 +11,6 @@ import java.util.Set;
 
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
@@ -158,129 +156,134 @@ public class SentryInstance {
 		return (this.ignores & type) == type;
 	}
 
-	private boolean checkTarget (LivingEntity aTarget){
+	public boolean isIgnored(LivingEntity aTarget){
 		//cheak ignores
 
-		if(ignores > 0){
+		if(ignores == 0) return false;
 
-			if (hasIgnoreType(all)) return false;
+		if (hasIgnoreType(all)) return true;
 
-			if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
+		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
 
-				if (hasIgnoreType(players)) return false;		
+			if (hasIgnoreType(players)) return true;		
 
-				else{
-					String name = ((Player) aTarget).getName();
+			else{
+				String name = ((Player) aTarget).getName();
 
-					if ( this.hasIgnoreType(namedplayers) && containsIgnore("PLAYER:" + name)) 	return false;
+				if ( this.hasIgnoreType(namedplayers) && containsIgnore("PLAYER:" + name)) 	return true;
 
-					if ( this.hasIgnoreType(owner)  && name.equalsIgnoreCase(myNPC.getTrait(Owner.class).getOwner()))		return false;
+				if ( this.hasIgnoreType(owner)  && name.equalsIgnoreCase(myNPC.getTrait(Owner.class).getOwner()))		return true;
 
-					else if(this.hasIgnoreType(groups)) {
+				else if(this.hasIgnoreType(groups)) {
 
-						String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
-						String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
-						//		String[] groups3 = plugin.perms.getPlayerGroups(aTarget.getWorld().getName(),name); // world perms
-						//	String[] groups4 = plugin.perms.getPlayerGroups((Player)aTarget); // world perms
+					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
+					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
+					//		String[] groups3 = plugin.perms.getPlayerGroups(aTarget.getWorld().getName(),name); // world perms
+					//	String[] groups4 = plugin.perms.getPlayerGroups((Player)aTarget); // world perms
 
 
-						if (groups1 !=null){
-							for (int i = 0; i < groups1.length; i++) {
-								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
-								if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
-							}	
-						}
-
-						if ( groups2 !=null){
-							for (int i = 0; i < groups2.length; i++) {
-								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
-								if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
-							}	
-						}
+					if (groups1 !=null){
+						for (int i = 0; i < groups1.length; i++) {
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+							if (this.containsIgnore("GROUP:" + groups1[i]))	return true;
+						}	
 					}
 
-					if(this.hasIgnoreType(towny)) {
-						String[] info = plugin.getResidentTownyInfo((Player)aTarget);
-
-						if (info[1]!=null) {
-							if (this.containsIgnore("TOWN:" + info[1]))	return false;
-						}
-
-						if (info[0]!=null) {
-							if (this.containsIgnore("NATION:" + info[0]))	return false;
-						}
-					}
-
-					if( this.hasIgnoreType(faction) ) {
-						String faction = plugin.getFactionsTag((Player)aTarget);
-						//	plugin.getLogger().info(faction);
-						if (faction !=null) {
-							if (this.containsIgnore("FACTION:" + faction))	return false;
-						}
-					}
-					if( this.hasIgnoreType(war) ) {
-						String team = plugin.getWarTeam((Player)aTarget);
-						//	plugin.getLogger().info(faction);
-						if (team !=null) {
-							if (this.containsIgnore("TEAM:" + team))	return false;
-						}
-					}
-					if( this.hasIgnoreType(clans) ) {
-						String clan = plugin.getClan((Player)aTarget);
-						//	plugin.getLogger().info(faction);
-						if (clan !=null) {
-							if (this.containsIgnore("CLAN:" + clan))	return false;
-						}
+					if ( groups2 !=null){
+						for (int i = 0; i < groups2.length; i++) {
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+							if (this.containsIgnore("GROUP:" + groups2[i]))		return true;
+						}	
 					}
 				}
-			}
 
-			else if(net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
+				if(this.hasIgnoreType(towny)) {
+					String[] info = plugin.getResidentTownyInfo((Player)aTarget);
 
-				if (this.hasIgnoreType(npcs)) {
-					return false;
-				}
+					if (info[1]!=null) {
+						if (this.containsIgnore("TOWN:" + info[1]))	return true;
+					}
 
-				NPC npc =  net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(aTarget);
-
-				if (npc !=null) {
-
-					String name =npc.getName();
-
-					if (this.hasIgnoreType(namednpcs) && this.containsIgnore("NPC:" + name)) 	return false;
-
-					else if(hasIgnoreType(groups)) {
-
-						String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
-						String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
-
-						if (groups1 !=null){
-							for (int i = 0; i < groups1.length; i++) {
-								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
-								if (this.containsIgnore("GROUP:" + groups1[i]))	return false;
-							}	
-						}
-
-						if ( groups2 !=null){
-							for (int i = 0; i < groups2.length; i++) {
-								//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
-								if (this.containsIgnore("GROUP:" + groups2[i]))		return false;
-							}	
-						}
+					if (info[0]!=null) {
+						if (this.containsIgnore("NATION:" + info[0]))	return true;
 					}
 				}
-			}
 
-
-			else if (aTarget instanceof Monster && hasIgnoreType(monsters)) return false;
-
-			else if (aTarget instanceof LivingEntity && hasIgnoreType(namedentities)) {
-				if (this.containsIgnore("ENTITY:" + aTarget.getType()))	return false;
+				if( this.hasIgnoreType(faction) ) {
+					String faction = FactionsUtil.getFactionsTag((Player)aTarget);
+					//	plugin.getLogger().info(faction);
+					if (faction !=null) {
+						if (this.containsIgnore("FACTION:" + faction))	return true;
+					}
+				}
+				if( this.hasIgnoreType(war) ) {
+					String team = plugin.getWarTeam((Player)aTarget);
+					//	plugin.getLogger().info(faction);
+					if (team !=null) {
+						if (this.containsIgnore("TEAM:" + team))	return true;
+					}
+				}
+				if( this.hasIgnoreType(clans) ) {
+					String clan = plugin.getClan((Player)aTarget);
+					//	plugin.getLogger().info(faction);
+					if (clan !=null) {
+						if (this.containsIgnore("CLAN:" + clan))	return true;
+					}
+				}
 			}
 		}
 
-		//not ignored, ok!
+		else if(net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)){
 
+			if (this.hasIgnoreType(npcs)) {
+				return true;
+			}
+
+			NPC npc =  net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(aTarget);
+
+			if (npc !=null) {
+
+				String name =npc.getName();
+
+				if (this.hasIgnoreType(namednpcs) && this.containsIgnore("NPC:" + name)) 	return true;
+
+				else if(hasIgnoreType(groups)) {
+
+					String[] groups1 = plugin.perms.getPlayerGroups(aTarget.getWorld(),name); // world perms
+					String[] groups2 = plugin.perms.getPlayerGroups((World)null,name); //global perms
+
+					if (groups1 !=null){
+						for (int i = 0; i < groups1.length; i++) {
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
+							if (this.containsIgnore("GROUP:" + groups1[i]))	return true;
+						}	
+					}
+
+					if ( groups2 !=null){
+						for (int i = 0; i < groups2.length; i++) {
+							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
+							if (this.containsIgnore("GROUP:" + groups2[i]))		return true;
+						}	
+					}
+				}
+			}
+		}
+
+
+		else if (aTarget instanceof Monster && hasIgnoreType(monsters)) return true;
+
+		else if (aTarget instanceof LivingEntity && hasIgnoreType(namedentities)) {
+			if (this.containsIgnore("ENTITY:" + aTarget.getType()))	return true;
+		}
+
+
+		//not ignored, ok!
+		return false;
+	}
+
+	public boolean isTarget(LivingEntity aTarget){
+
+		if (targets == 0 || targets == events) return false;
 
 		if (this.hasTargetType(all)) 	return true;
 
@@ -339,21 +342,19 @@ public class SentryInstance {
 
 				if(this.hasTargetType(faction) || this.hasTargetType(factionenemies) ) {
 					if (Sentry.FactionsActive){
-						String faction = plugin.getFactionsTag((Player)aTarget);
+						String faction = FactionsUtil.getFactionsTag((Player)aTarget);
 
 						if (faction !=null) {
 							if (this.containsTarget("FACTION:" + faction))return true;
 
 							if(this.hasTargetType(factionenemies)){
 								for (String s : FactionEnemies) {
-									if (FactionsUtil.isFactionEnemy(s, faction)) return true;
+									if (FactionsUtil.isFactionEnemy( myNPC.getBukkitEntity().getWorld().getName(),s, faction)) return true;
 								}	
 							}
 						}
 					}
 				}
-
-
 
 				if(this.hasTargetType(war) ) {
 					String team = plugin.getWarTeam((Player)aTarget);
@@ -411,11 +412,11 @@ public class SentryInstance {
 		else if (aTarget instanceof LivingEntity && hasTargetType(namedentities)) {
 			if (this.containsTarget("ENTITY:" + aTarget.getType())) return true;
 		}
-
-
 		return false;
 
 	}
+
+
 
 	// private Random r = new Random();
 
@@ -446,86 +447,71 @@ public class SentryInstance {
 		if(runscripts && plugin.DenizenActive){
 			handled = DenizenHook.SentryDeath(_myDamamgers, myNPC);
 		}
+		if(handled) return;
 
-		if(!handled){
+		if (plugin.DenizenActive){
+			Entity killer = myNPC.getBukkitEntity().getKiller();
 
-			//Denizen is NOT handling this death
-
-			if (plugin.DenizenActive){
-				Entity killer = myNPC.getBukkitEntity().getKiller();
-
-				DenizenHook.DenizenAction(myNPC, "death", null);
-				DenizenHook.DenizenAction(myNPC, "death by" + cause.toString().replace(" " ,"_"), null);
-				if(killer !=null){
-					if(killer instanceof Player){
-						DenizenHook.DenizenAction(myNPC, "death by player", (Player) killer);
-					}
-					else {
-						DenizenHook.DenizenAction(myNPC, "death by entity", null);
-						DenizenHook.DenizenAction(myNPC, "death by " + killer.getType().toString(), null);
-					}
+			DenizenHook.DenizenAction(myNPC, "death", null);
+			DenizenHook.DenizenAction(myNPC, "death by" + cause.toString().replace(" " ,"_"), null);
+			if(killer !=null){
+				if(killer instanceof Player){
+					DenizenHook.DenizenAction(myNPC, "death by player", (Player) killer);
+				}
+				else {
+					DenizenHook.DenizenAction(myNPC, "death by entity", null);
+					DenizenHook.DenizenAction(myNPC, "death by " + killer.getType().toString(), null);
 				}
 			}
+		}
 
 
-			myNPC.getBukkitEntity().playEffect(EntityEffect.DEATH);
+		myNPC.getBukkitEntity().playEffect(EntityEffect.DEATH);
 
-			sentryStatus = Status.isDEAD;
+		sentryStatus = Status.isDEAD;
 
-			if (this.DropInventory)  myNPC.getBukkitEntity().getLocation().getWorld().spawn(myNPC.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(plugin.SentryEXP);
+		if (this.DropInventory)  myNPC.getBukkitEntity().getLocation().getWorld().spawn(myNPC.getBukkitEntity().getLocation(), ExperienceOrb.class).setExperience(plugin.SentryEXP);
 
-			if (plugin.DieLikePlayers){
-				if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
-					//delete armor so it wont drop naturally.
-					((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
-					((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
-				}
-
-				myNPC.getBukkitEntity().setHealth(0);		
-
-
-				if (RespawnDelaySeconds == -1) {
-					cancelRunnable();
-					myNPC.destroy();
-					return;
-				} else {
-					isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
-				}
-
+		if (plugin.DieLikePlayers){
+			if (myNPC.getBukkitEntity() instanceof HumanEntity && !this.DropInventory) {
+				//delete armor so it wont drop naturally.
+				((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
+				((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
 			}
-			else{
+			//die!
+			myNPC.getBukkitEntity().setHealth(0);		
+		}
+		else{
 
-				List<ItemStack> items = new java.util.LinkedList<ItemStack>();
+			List<ItemStack> items = new java.util.LinkedList<ItemStack>();
 
-				if (myNPC.getBukkitEntity() instanceof HumanEntity && this.DropInventory) {
-					//manually drop inventory.
-					for( ItemStack is:	((HumanEntity) myNPC.getBukkitEntity()).getInventory().getArmorContents()){
-						if (is.getTypeId()>0)	items.add(is);  
-					}	
-					ItemStack is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
+			if (myNPC.getBukkitEntity() instanceof HumanEntity && this.DropInventory) {
+				//manually drop inventory.
+				for( ItemStack is:	((HumanEntity) myNPC.getBukkitEntity()).getInventory().getArmorContents()){
 					if (is.getTypeId()>0)	items.add(is);  
-				}		
+				}	
+				ItemStack is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
+				if (is.getTypeId()>0)	items.add(is);  
+			}		
 
-				org.bukkit.event.entity.EntityDeathEvent ed = new org.bukkit.event.entity.EntityDeathEvent(myNPC.getBukkitEntity(), items);
-				net.citizensnpcs.api.event.NPCDeathEvent nd = new net.citizensnpcs.api.event.NPCDeathEvent(myNPC, ed);
+			org.bukkit.event.entity.EntityDeathEvent ed = new org.bukkit.event.entity.EntityDeathEvent(myNPC.getBukkitEntity(), items);
+			net.citizensnpcs.api.event.NPCDeathEvent nd = new net.citizensnpcs.api.event.NPCDeathEvent(myNPC, ed);
 
-				plugin.getServer().getPluginManager().callEvent(nd);
+			plugin.getServer().getPluginManager().callEvent(nd);
 
-				for (ItemStack is : items){
-					myNPC.getBukkitEntity().getWorld().dropItemNaturally(myNPC.getBukkitEntity().getLocation(), is);
-				}
-
-				myNPC.despawn();
-
-				if (RespawnDelaySeconds == -1) {
-					cancelRunnable();
-					myNPC.destroy();
-					return;
-				} else {
-					isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
-				}
-
+			for (ItemStack is : items){
+				myNPC.getBukkitEntity().getWorld().dropItemNaturally(myNPC.getBukkitEntity().getLocation(), is);
 			}
+			//die-ish!
+			myNPC.despawn();
+		}
+
+		if (RespawnDelaySeconds == -1) {
+			cancelRunnable();
+			myNPC.destroy();
+			return;
+		} else {
+			isRespawnable = System.currentTimeMillis() + RespawnDelaySeconds * 1000;
 		}
 	}
 
@@ -570,7 +556,8 @@ public class SentryInstance {
 			if (!(aTarget instanceof LivingEntity)) continue;
 
 			// find closest target
-			if (checkTarget((LivingEntity) aTarget)) {
+
+			if (!isIgnored((LivingEntity) aTarget) && isTarget((LivingEntity) aTarget)) {
 
 				// can i see it?
 				// too dark?
@@ -1068,16 +1055,23 @@ public class SentryInstance {
 			player = (LivingEntity) event.getDamager();
 		}
 
-
 		if (Invincible)
 			return;
+
+		
+		
+		if(plugin.IgnoreListInvincibility ){
+			if(isIgnored(player)) return;
+		}
 
 		// can i kill it? lets go kill it.
 		if (player != null) {
 			if (this.Retaliate) {
 				if (!(event.getDamager() instanceof Projectile) || (net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(player) ==null)) {
 					// only retaliate to players or non-projectlies. Prevents stray sentry arrows from causing retaliation.
-					setTarget(player, true);	
+
+					setTarget(player, true);
+
 				}
 			}
 		}

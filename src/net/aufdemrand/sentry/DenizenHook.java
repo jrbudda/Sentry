@@ -97,14 +97,11 @@ public class DenizenHook {
 			}
 		}
 
-
 		@Override
 		public void parseArgs(ScriptEntry arg0) throws InvalidArgumentsException {
 
 		}
-
 	}
-
 
 	private class DieCommand extends net.aufdemrand.denizen.scripts.commands.AbstractCommand {
 
@@ -131,7 +128,6 @@ public class DenizenHook {
 			// TODO Auto-generated method stub
 
 		}
-
 	}
 
 	private class NpcdeathTriggerOwner extends net.aufdemrand.denizen.scripts.triggers.AbstractTrigger{
