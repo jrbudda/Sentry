@@ -1293,10 +1293,10 @@ public class Sentry extends JavaPlugin {
 
 			if  (checkPlugin("Denizen")){	
 				String vers = getServer().getPluginManager().getPlugin("Denizen").getDescription().getVersion();
-				if(vers.startsWith("0.7")) {
-					getLogger().log(Level.WARNING, "Sentry is not compatible with Denizen .7");
+				if(vers.startsWith("0.7") || vers.startsWith("0.8")) {
+					getLogger().log(Level.WARNING, "Sentry is not compatible with Denizen .7 or .8");
 				}
-				else if(vers.startsWith("0.8") || vers.startsWith("0.9")){
+				else if(vers.startsWith("0.9")){
 					DenizenHook.SentryPlugin = this;
 					DenizenHook.DenizenPlugin = getServer().getPluginManager().getPlugin("Denizen");
 					DenizenHook.setupDenizenHook();
