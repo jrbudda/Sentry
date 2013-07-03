@@ -1296,7 +1296,7 @@ public class Sentry extends JavaPlugin {
 				if(vers.startsWith("0.7")) {
 					getLogger().log(Level.WARNING, "Sentry is not compatible with Denizen .7");
 				}
-				else if(vers.startsWith("0.8") || vers.startsWith("0.9")){
+				else if(vers.startsWith("0.8")){
 					DenizenHook.SentryPlugin = this;
 					DenizenHook.DenizenPlugin = getServer().getPluginManager().getPlugin("Denizen");
 					DenizenHook.setupDenizenHook();
