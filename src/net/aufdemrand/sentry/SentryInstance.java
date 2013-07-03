@@ -1457,7 +1457,7 @@ public class SentryInstance {
 							myNPC.getBukkitEntity().teleport(guardEntity.getLocation().add(1,0,1));
 						}
 						else if(dist > FollowDistance && !myNPC.getNavigator().isNavigating()) {
-							myNPC.getNavigator().setTarget(guardEntity, false);
+							myNPC.getNavigator().setTarget((Entity)guardEntity, false);
 							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);	
 						}
 						else if (dist < FollowDistance && myNPC.getNavigator().isNavigating()) {
@@ -1645,7 +1645,7 @@ public class SentryInstance {
 						return;
 					}
 
-					myNPC.getNavigator().setTarget(guardEntity, false);
+					myNPC.getNavigator().setTarget((Entity)guardEntity, false);
 					//		myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
 					myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
 				}
