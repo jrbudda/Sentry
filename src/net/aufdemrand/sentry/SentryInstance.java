@@ -104,7 +104,7 @@ public class SentryInstance {
 	private long oktoheal = System.currentTimeMillis();
 	private long oktoreasses= System.currentTimeMillis();
 	private long okToTakedamage = 0;
-	/* plugin Constructer */
+	/* plugin Constructor */
 	Sentry plugin;
 	public List<PotionEffect> potionEffects = null;
 	ItemStack potiontype = null;
@@ -157,7 +157,7 @@ public class SentryInstance {
 	}
 
 	private boolean checkTarget (LivingEntity aTarget){
-		//cheak ignores
+		//check ignores
 
 		if(ignores > 0){
 
@@ -1526,7 +1526,11 @@ public class SentryInstance {
 	public void setHealth(int health){
 		if (myNPC == null) return;
 		if (myNPC.getBukkitEntity() == null) return;
-		myNPC.getBukkitEntity().setHealth(health);
+		if (myNPC.getBukkitEntity().getMaxHealth() < health)
+		{
+			myNPC.getBukkitEntity().setMaxHealth((double)health);
+		}
+		myNPC.getBukkitEntity().setHealth((double)health);
 	}
 
 
@@ -1614,7 +1618,7 @@ public class SentryInstance {
 		if (guardTarget != null && guardEntity == null) theEntity =null; //dont go aggro when bodyguard target isnt around.
 
 		if (theEntity == null) {
-			plugin.debug("Set Target Null");
+			plugin.debug(myNPC.getName() + "- Set Target Null");
 			// this gets called while npc is dead, reset things.
 			sentryStatus = Status.isLOOKING;
 			projectileTarget = null;
@@ -1636,7 +1640,6 @@ public class SentryInstance {
 			//plugin.getServer().broadcastMessage(((Boolean)myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused()).toString());
 
 			if (guardEntity != null) {
-				// yarr... im a guarrrd.
 
 				myNPC.getDefaultGoalController().setPaused(true);
 				//	if (!myNPC.getTrait(Waypoints.class).getCurrentProvider().isPaused())  myNPC.getTrait(Waypoints.class).getCurrentProvider().setPaused(true);
@@ -1686,7 +1689,7 @@ public class SentryInstance {
 		{
 			//melee
 			// Manual Attack
-			plugin.debug("Set Target melee");
+			plugin.debug(myNPC.getName() + "- Set Target melee");
 			meleeTarget = theEntity;
 			projectileTarget = null;
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
