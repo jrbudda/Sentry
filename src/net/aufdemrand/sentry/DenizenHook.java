@@ -9,7 +9,8 @@ import org.bukkit.plugin.Plugin;
 import net.aufdemrand.denizen.Denizen;
 import net.aufdemrand.denizen.exceptions.CommandExecutionException;
 import net.aufdemrand.denizen.exceptions.InvalidArgumentsException;
-import net.aufdemrand.denizen.npc.dNPC;
+import net.aufdemrand.denizen.objects.dNPC;
+import net.aufdemrand.denizen.objects.dPlayer;
 import net.aufdemrand.denizen.npc.traits.TriggerTrait;
 import net.aufdemrand.denizen.scripts.ScriptEntry;
 import net.aufdemrand.denizen.scripts.commands.AbstractCommand;
@@ -60,8 +61,8 @@ public class DenizenHook {
 	public static void DenizenAction(NPC npc, String action, Player player){
 		if(DenizenActive){
 			net.aufdemrand.denizen.Denizen d = (Denizen) DenizenPlugin;
-			net.aufdemrand.denizen.npc.dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
-			dnpc.action(action, player);
+			net.aufdemrand.denizen.objects.dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
+			dnpc.action(action, dPlayer.valueOf(player.getName()));
 		}
 	}
 
@@ -152,23 +153,23 @@ public class DenizenHook {
 				return false;
 			}
 
-			dNPC theDenizen = denizen.getNPCRegistry().getDenizen(npc);
+			dNPC theDenizen = ((Denizen) DenizenPlugin).getNPCRegistry().getDenizen(npc);
 
 			dB.echoDebug(DebugElement.Header, "Parsing NPCDeath/Owner Trigger.");
 
 			String owner = npc.getTrait(net.citizensnpcs.api.trait.trait.Owner.class).getOwner();
 
-			Player thePlayer =this.denizen.getServer().getPlayer(owner);
+			Player thePlayer = ((Denizen) DenizenPlugin).getServer().getPlayer(owner);
 
 			if (thePlayer ==null) {
 				dB.echoDebug(DebugElement.Header,  "Owner not found!");
 				return false;
 			}
 
-			InteractScriptContainer script = theDenizen.getInteractScriptQuietly(thePlayer, this.getClass());
+			InteractScriptContainer script = theDenizen.getInteractScriptQuietly(dPlayer.valueOf(thePlayer.getName()), this.getClass());
 
 
-			return	parse(theDenizen, thePlayer, script);
+			return	parse(theDenizen, dPlayer.valueOf(thePlayer.getName()), script);
 
 		}
 
@@ -192,7 +193,7 @@ public class DenizenHook {
 				return false;
 			}
 
-			dNPC theDenizen = denizen.getNPCRegistry().getDenizen(npc);
+			dNPC theDenizen = ((Denizen) DenizenPlugin).getNPCRegistry().getDenizen(npc);
 
 			dB.echoDebug(DebugElement.Header, "Parsing NPCDeath/Killers Trigger");
 
@@ -205,9 +206,9 @@ public class DenizenHook {
 					continue;
 				}
 
-				InteractScriptContainer script = theDenizen.getInteractScriptQuietly(thePlayer, this.getClass());
+				InteractScriptContainer script = theDenizen.getInteractScriptQuietly(dPlayer.valueOf(thePlayer.getName()), this.getClass());
 
-				if (parse(theDenizen, thePlayer, script))	founone = true;
+				if (parse(theDenizen, dPlayer.valueOf(thePlayer.getName()), script))	founone = true;
 			}
 
 			return founone;

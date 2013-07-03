@@ -198,7 +198,8 @@ public class Sentry extends JavaPlugin {
 	public  String getFactionsTag(Player player) {
 		if (FactionsActive == false)return null;
 		try {
-			return	com.massivecraft.factions.FPlayers.i.get(player).getFaction().getTag();
+			return null;
+			//return	com.massivecraft.factions.FPlayers.i.get(player).getFaction().getTag();
 		} catch (Exception e) {
 			getLogger().info("Error getting Faction " + e.getMessage());
 			return null;
@@ -1301,7 +1302,7 @@ public class Sentry extends JavaPlugin {
 				if(vers.contains("0.7")) {
 					getLogger().log(Level.WARNING, "Sentry is not compatible with Denizen .7");
 				}
-				else if(vers.contains("0.8")){
+				else if(vers.contains("0.8") || vers.contains("0.9")){
 					DenizenHook.SentryPlugin = this;
 					DenizenHook.DenizenPlugin = getServer().getPluginManager().getPlugin("Denizen");
 					DenizenHook.setupDenizenHook();
