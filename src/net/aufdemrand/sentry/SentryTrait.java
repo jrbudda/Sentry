@@ -40,7 +40,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.Invincible=	key.getBoolean("Invincinble", plugin.getConfig().getBoolean("DefaultOptions.Invincible",false));
 		thisInstance.DropInventory=	key.getBoolean("DropInventory", plugin.getConfig().getBoolean("DefaultOptions.Drops",false));
 		thisInstance.LuckyHits=	key.getBoolean("CriticalHits", plugin.getConfig().getBoolean("DefaultOptions.Criticals",true));
-		thisInstance.sentryHealth=	key.getInt("Health", plugin.getConfig().getInt("DefaultStats.Health",20));
+		thisInstance.sentryHealth=	key.getDouble("Health", plugin.getConfig().getInt("DefaultStats.Health",20));
 		thisInstance.sentryRange=	key.getInt("Range", plugin.getConfig().getInt("DefaultStats.Range",10));
 		thisInstance.RespawnDelaySeconds=	key.getInt("RespawnDelay", plugin.getConfig().getInt("DefaultStats.Respawn",10));
 		thisInstance.sentrySpeed=	(float) (key.getDouble("Speed", plugin.getConfig().getDouble("DefaultStats.Speed",1.0)));
@@ -190,7 +190,7 @@ public class SentryTrait extends Trait implements Toggleable {
 			key.setDouble("Spawn.pitch", thisInstance.Spawn.getPitch());		
 		}
 
-		key.setInt("Health", thisInstance.sentryHealth);
+		key.getDouble("Health", thisInstance.sentryHealth);
 		key.setInt("Range", thisInstance.sentryRange);
 		key.setInt("RespawnDelay", thisInstance.RespawnDelaySeconds);
 		key.setDouble("Speed", (double) thisInstance.sentrySpeed);

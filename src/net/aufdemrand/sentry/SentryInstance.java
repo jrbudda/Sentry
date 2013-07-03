@@ -14,14 +14,14 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_5_R3.EntityHuman;
-import net.minecraft.server.v1_5_R3.EntityPotion;
-import net.minecraft.server.v1_5_R3.Packet;
-import net.minecraft.server.v1_5_R3.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_5_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_5_R3.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_5_R3.inventory.CraftItemStack;
+import net.minecraft.server.v1_6_R1.EntityHuman;
+import net.minecraft.server.v1_6_R1.EntityPotion;
+import net.minecraft.server.v1_6_R1.Packet;
+import net.minecraft.server.v1_6_R1.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_6_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_6_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_6_R1.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -112,7 +112,7 @@ public class SentryInstance {
 	Random r = new Random();
 	public Integer RespawnDelaySeconds = 10;
 	public Boolean Retaliate = true;
-	public Integer sentryHealth = 20;
+	public double sentryHealth = 20;
 
 	public Integer sentryRange = 10;
 
@@ -787,7 +787,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_5_R3.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_6_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -866,10 +866,10 @@ public class SentryInstance {
 		return this.guardEntity;
 	}
 
-	public int getHealth(){
+	public double getHealth(){
 		if (myNPC == null) return 0;
 		if (myNPC.getBukkitEntity() == null) return 0;
-		return ((CraftLivingEntity) myNPC.getBukkitEntity()).getHandle().getHealth(); 
+		return myNPC.getBukkitEntity().getHealth();
 	}
 
 	public float getSpeed(){
@@ -883,7 +883,7 @@ public class SentryInstance {
 	}
 	public String getStats() {
 		DecimalFormat df = new DecimalFormat("#.0");
-		int h = getHealth();
+		double h = getHealth();
 
 		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + getArmor() + 
 				ChatColor.RED + " [STR]:" + ChatColor.WHITE + getStrength() + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(getSpeed()) + 
@@ -1044,7 +1044,7 @@ public class SentryInstance {
 
 		hittype hit = hittype.normal;
 
-		int finaldamage = event.getDamage();
+		double finaldamage = event.getDamage();
 
 		// Find the attacker
 		if (event.getDamager() instanceof Projectile) {
@@ -1099,7 +1099,7 @@ public class SentryInstance {
 				hit = hittype.miss;
 			}
 
-			finaldamage = (int) Math.round(damagemodifer);
+			finaldamage = Math.round(damagemodifer);
 		}
 
 		int arm = getArmor();
@@ -1187,7 +1187,7 @@ public class SentryInstance {
 
 		myNPC.getBukkitEntity().setLastDamageCause(event);
 
-		int finaldamage = event.getDamage();
+		double finaldamage = event.getDamage();
 
 		if (event.getCause() == DamageCause.CONTACT || event.getCause() == DamageCause.BLOCK_EXPLOSION){
 			finaldamage -= getArmor();
@@ -1457,7 +1457,7 @@ public class SentryInstance {
 							myNPC.getBukkitEntity().teleport(guardEntity.getLocation().add(1,0,1));
 						}
 						else if(dist > FollowDistance && !myNPC.getNavigator().isNavigating()) {
-							myNPC.getNavigator().setTarget(guardEntity, false);
+							myNPC.getNavigator().setTarget((Entity)guardEntity, false);
 							myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);	
 						}
 						else if (dist < FollowDistance && myNPC.getNavigator().isNavigating()) {
@@ -1519,7 +1519,7 @@ public class SentryInstance {
 		return false;
 	}
 
-	public void setHealth(int health){
+	public void setHealth(double health){
 		if (myNPC == null) return;
 		if (myNPC.getBukkitEntity() == null) return;
 		myNPC.getBukkitEntity().setHealth(health);
@@ -1610,7 +1610,7 @@ public class SentryInstance {
 		if (guardTarget != null && guardEntity == null) theEntity =null; //dont go aggro when bodyguard target isnt around.
 
 		if (theEntity == null) {
-			plugin.debug("Set Target Null");
+			 plugin.debug(myNPC.getName() + "- Set Target Null"); 
 			// this gets called while npc is dead, reset things.
 			sentryStatus = Status.isLOOKING;
 			projectileTarget = null;
@@ -1645,7 +1645,7 @@ public class SentryInstance {
 						return;
 					}
 
-					myNPC.getNavigator().setTarget(guardEntity, false);
+					myNPC.getNavigator().setTarget((Entity)guardEntity, false);
 					//		myNPC.getNavigator().getLocalParameters().stuckAction(bgteleport);
 					myNPC.getNavigator().getLocalParameters().stationaryTicks(3*20);
 				}
@@ -1673,7 +1673,7 @@ public class SentryInstance {
 
 		if(UpdateWeapon()){
 			//ranged
-			plugin.debug("Set Target ranged");
+			 plugin.debug(myNPC.getName() + "- Set Target melee"); 
 			projectileTarget = theEntity;	
 			meleeTarget = null;
 
@@ -1682,7 +1682,7 @@ public class SentryInstance {
 		{
 			//melee
 			// Manual Attack
-			plugin.debug("Set Target melee");
+			 plugin.debug(myNPC.getName() + "- Set Target melee"); 
 			meleeTarget = theEntity;
 			projectileTarget = null;
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.

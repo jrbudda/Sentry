@@ -9,8 +9,9 @@ import org.bukkit.plugin.Plugin;
 import net.aufdemrand.denizen.Denizen;
 import net.aufdemrand.denizen.exceptions.CommandExecutionException;
 import net.aufdemrand.denizen.exceptions.InvalidArgumentsException;
-import net.aufdemrand.denizen.npc.dNPC;
 import net.aufdemrand.denizen.npc.traits.TriggerTrait;
+import net.aufdemrand.denizen.objects.dNPC;
+import net.aufdemrand.denizen.objects.dPlayer;
 import net.aufdemrand.denizen.scripts.ScriptEntry;
 import net.aufdemrand.denizen.scripts.commands.AbstractCommand;
 import net.aufdemrand.denizen.scripts.containers.core.InteractScriptContainer;
@@ -60,8 +61,8 @@ public class DenizenHook {
 	public static void DenizenAction(NPC npc, String action, Player player){
 		if(DenizenActive){
 			net.aufdemrand.denizen.Denizen d = (Denizen) DenizenPlugin;
-			net.aufdemrand.denizen.npc.dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
-			dnpc.action(action, player);
+			 dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
+			dnpc.action(action, net.aufdemrand.denizen.objects.dPlayer.mirrorBukkitPlayer(player));
 		}
 	}
 
@@ -148,13 +149,13 @@ public class DenizenHook {
 				return false;
 			}
 
-			dNPC theDenizen = denizen.getNPCRegistry().getDenizen(npc);
+			dNPC theDenizen = dNPC.mirrorCitizensNPC(npc);
 
 			dB.echoDebug(DebugElement.Header, "Parsing NPCDeath/Owner Trigger.");
 
 			String owner = npc.getTrait(net.citizensnpcs.api.trait.trait.Owner.class).getOwner();
 
-			Player thePlayer =this.denizen.getServer().getPlayer(owner);
+			dPlayer thePlayer = net.aufdemrand.denizen.objects.dPlayer.valueOf(owner);
 
 			if (thePlayer ==null) {
 				dB.echoDebug(DebugElement.Header,  "Owner not found!");
@@ -188,7 +189,7 @@ public class DenizenHook {
 				return false;
 			}
 
-			dNPC theDenizen = denizen.getNPCRegistry().getDenizen(npc);
+			dNPC theDenizen = dNPC.mirrorCitizensNPC(npc);
 
 			dB.echoDebug(DebugElement.Header, "Parsing NPCDeath/Killers Trigger");
 
@@ -201,9 +202,9 @@ public class DenizenHook {
 					continue;
 				}
 
-				InteractScriptContainer script = theDenizen.getInteractScriptQuietly(thePlayer, this.getClass());
+				InteractScriptContainer script = theDenizen.getInteractScriptQuietly(dPlayer.mirrorBukkitPlayer(thePlayer), this.getClass());
 
-				if (parse(theDenizen, thePlayer, script))	founone = true;
+				if (parse(theDenizen, dPlayer.mirrorBukkitPlayer(thePlayer), script))	founone = true;
 			}
 
 			return founone;
