@@ -937,11 +937,9 @@ public class SentryInstance {
 		if (Spawn == null)
 			Spawn = myNPC.getBukkitEntity().getLocation();
 
-
 		if(plugin.DenizenActive){
 			if (myNPC.hasTrait(net.aufdemrand.denizen.npc.traits.HealthTrait.class)) myNPC.removeTrait(net.aufdemrand.denizen.npc.traits.HealthTrait.class);
 		}
-
 
 		myNPC.getBukkitEntity().setMaxHealth(sentryHealth);
 		setHealth(sentryHealth);
@@ -1340,11 +1338,11 @@ public class SentryInstance {
 			if (sentryStatus != Status.isDEAD &&  HealRate > 0) {
 				if(System.currentTimeMillis() > oktoheal ){
 					if (getHealth() < sentryHealth && sentryStatus !=  Status.isDEAD && sentryStatus != Status.isDYING) {
-						int heal = 1;
-						if (HealRate <0.5) heal = (int) (0.5 / HealRate);
+						double heal = 1;
+						if (HealRate <0.5) heal = (0.5 / HealRate);
 
 						if (getHealth() + heal <= sentryHealth){
-							setHealth(	getHealth() + heal);
+							setHealth(getHealth() + heal);
 						}
 						else{
 							setHealth(sentryHealth);

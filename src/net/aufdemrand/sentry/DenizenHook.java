@@ -60,9 +60,8 @@ public class DenizenHook {
 
 	public static void DenizenAction(NPC npc, String action, Player player){
 		if(DenizenActive){
-			net.aufdemrand.denizen.Denizen d = (Denizen) DenizenPlugin;
-			 dNPC dnpc = d.getNPCRegistry().getDenizen(npc);
-			dnpc.action(action, net.aufdemrand.denizen.objects.dPlayer.mirrorBukkitPlayer(player));
+			dNPC dnpc = dNPC.mirrorCitizensNPC(npc);	
+			if (dnpc != null) dnpc.action(action, net.aufdemrand.denizen.objects.dPlayer.mirrorBukkitPlayer(player));
 		}
 	}
 
