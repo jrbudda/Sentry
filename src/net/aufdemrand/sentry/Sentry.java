@@ -796,7 +796,6 @@ public class Sentry extends JavaPlugin {
 
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " health set to " + HPs + ".");   // Talk to the player.
 				inst.sentryHealth = HPs;
-				inst.myNPC.getBukkitEntity().setMaxHealth(HPs);
 				inst.setHealth(HPs);
 			}
 

@@ -14,14 +14,14 @@ import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_6_R1.EntityHuman;
-import net.minecraft.server.v1_6_R1.EntityPotion;
-import net.minecraft.server.v1_6_R1.Packet;
-import net.minecraft.server.v1_6_R1.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_6_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_6_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_6_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_6_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_6_R2.EntityHuman;
+import net.minecraft.server.v1_6_R2.EntityPotion;
+import net.minecraft.server.v1_6_R2.Packet;
+import net.minecraft.server.v1_6_R2.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_6_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_6_R2.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_6_R2.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -787,7 +787,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_6_R1.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_6_R2.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -941,7 +941,6 @@ public class SentryInstance {
 			if (myNPC.hasTrait(net.aufdemrand.denizen.npc.traits.HealthTrait.class)) myNPC.removeTrait(net.aufdemrand.denizen.npc.traits.HealthTrait.class);
 		}
 
-		myNPC.getBukkitEntity().setMaxHealth(sentryHealth);
 		setHealth(sentryHealth);
 		//		}
 		//		else {
@@ -1056,8 +1055,8 @@ public class SentryInstance {
 		if (Invincible)
 			return;
 
-		
-		
+
+
 		if(plugin.IgnoreListInvincibility ){
 			if(isIgnored(player)) return;
 		}
@@ -1341,12 +1340,9 @@ public class SentryInstance {
 						double heal = 1;
 						if (HealRate <0.5) heal = (0.5 / HealRate);
 
-						if (getHealth() + heal <= sentryHealth){
+				
 							setHealth(getHealth() + heal);
-						}
-						else{
-							setHealth(sentryHealth);
-						}
+				
 
 						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(myNPC.getBukkitEntity().getLocation(),healanim);
 
@@ -1520,6 +1516,9 @@ public class SentryInstance {
 	public void setHealth(double health){
 		if (myNPC == null) return;
 		if (myNPC.getBukkitEntity() == null) return;
+		if (myNPC.getBukkitEntity().getMaxHealth() != sentryHealth) myNPC.getBukkitEntity().setMaxHealth(sentryHealth); 
+		if(health > sentryHealth) health = sentryHealth;
+		
 		myNPC.getBukkitEntity().setHealth(health);
 	}
 
@@ -1608,7 +1607,7 @@ public class SentryInstance {
 		if (guardTarget != null && guardEntity == null) theEntity =null; //dont go aggro when bodyguard target isnt around.
 
 		if (theEntity == null) {
-			 plugin.debug(myNPC.getName() + "- Set Target Null"); 
+			plugin.debug(myNPC.getName() + "- Set Target Null"); 
 			// this gets called while npc is dead, reset things.
 			sentryStatus = Status.isLOOKING;
 			projectileTarget = null;
@@ -1671,7 +1670,7 @@ public class SentryInstance {
 
 		if(UpdateWeapon()){
 			//ranged
-			 plugin.debug(myNPC.getName() + "- Set Target melee"); 
+			plugin.debug(myNPC.getName() + "- Set Target melee"); 
 			projectileTarget = theEntity;	
 			meleeTarget = null;
 
@@ -1680,7 +1679,7 @@ public class SentryInstance {
 		{
 			//melee
 			// Manual Attack
-			 plugin.debug(myNPC.getName() + "- Set Target melee"); 
+			plugin.debug(myNPC.getName() + "- Set Target melee"); 
 			meleeTarget = theEntity;
 			projectileTarget = null;
 			if (myNPC.getNavigator().getEntityTarget() != null && myNPC.getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
