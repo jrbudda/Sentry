@@ -19,14 +19,20 @@ public class BodyguardTeleportStuckAction implements StuckAction{
 	@Override
 	public boolean run(final NPC npc, Navigator navigator) {
 
-		if (!npc.isSpawned())
-			return false;
+		if (!npc.isSpawned()) return false;
+		
 		Location base = navigator.getTargetAsLocation();
 
 		if (base.getWorld() == npc.getBukkitEntity().getLocation().getWorld()){
 			if (npc.getBukkitEntity().getLocation().distanceSquared(base) <= 4)
+				//do nothing
 				return true;
 		}
+		else {
+			//do nothing, next logic tick will clear the entity.
+			if (inst.guardEntity ==null || !Util.CanWarp(inst.guardEntity, npc)) return true; 
+		}
+			
 
 		Block block = base.getBlock();
 		int iterations = 0;
@@ -38,7 +44,7 @@ public class BodyguardTeleportStuckAction implements StuckAction{
 		}
 
 		final Location loc = block.getLocation();
-		
+
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
 
 			@Override
@@ -48,7 +54,6 @@ public class BodyguardTeleportStuckAction implements StuckAction{
 
 		},2);
 
-		//	inst.plugin.getServer().broadcastMessage("bgtp stuck teleport");
 		return false;
 	}
 	private static int MAX_ITERATIONS = 10;

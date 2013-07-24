@@ -171,6 +171,10 @@ public class SentryListener implements Listener {
 					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 				}
 
+				if (inst.getNPCMount() !=null && inst.getNPCMount().getBukkitEntity() == entto ){
+					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
+				}
+
 				if (inst.hasTargetType(16)  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false ){
 					//pv-something event.
 					if (npc.getBukkitEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getBukkitEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
@@ -198,7 +202,7 @@ public class SentryListener implements Listener {
 		plugin.debug("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
 
 		if (from !=null) {
-			
+
 			//projectiles go thru ignore targets.
 			if (event.getDamager() instanceof org.bukkit.entity.Projectile) {
 				if (entto instanceof LivingEntity && from.isIgnored((LivingEntity) entto)){
@@ -211,9 +215,9 @@ public class SentryListener implements Listener {
 					return;
 				}
 			}
-			
+
 			//from a sentry
-			event.setDamage(from.getStrength());
+			event.setDamage((double)from.getStrength());
 
 			//uncancel if not bodyguard.
 			if (from.guardTarget == null || plugin.BodyguardsObeyProtection == false) event.setCancelled(false);	
@@ -288,7 +292,36 @@ public class SentryListener implements Listener {
 		return;
 	}
 
+	@EventHandler(ignoreCancelled = true)
+	public void onEntityDeath(net.citizensnpcs.api.event.NPCDeathEvent event){
+		final NPC hnpc = event.getNPC();
+		//if the mount dies carry aggression over.
+		for (NPC npc : CitizensAPI.getNPCRegistry()) {
+			final SentryInstance inst =plugin.getSentry(npc);
+			if (inst == null || !npc.isSpawned() || !inst.isMounted()) continue; //not a sentry, dead, or not mounted
+			if (hnpc.getId() == inst.MountID){
+				///nooooo butterstuff!
 
+				final LivingEntity perp = hnpc.getBukkitEntity().getKiller();
+
+				if (plugin.DenizenActive){
+					DenizenHook.DenizenAction(npc, "mount death", (Player) (perp instanceof Player ? perp: null) );
+				}
+
+				if (perp == null) return;
+				if(inst.isIgnored( perp)) return;
+
+				plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+					//delay so the mount is gone.
+					public void run(){
+						inst.setTarget(perp, true);	
+					}	
+				},2);
+
+				return;
+			}
+		}
+	}
 
 
 }

@@ -58,9 +58,9 @@ public class Sentry extends JavaPlugin {
 	public boolean DieLikePlayers = false;
 
 	public boolean BodyguardsObeyProtection = true;
-	
+
 	public boolean IgnoreListInvincibility = true;
-	
+
 	//FactionsSuport
 	static boolean FactionsActive = false;
 	public int GlanceChance;
@@ -595,7 +595,6 @@ public class Sentry extends JavaPlugin {
 			return true;
 
 		}
-
 		//		if (args[0].equalsIgnoreCase("derp")) {
 		//			org.bukkit.inventory.PlayerInventory inv = ((Player)sender).getInventory();
 		//
@@ -715,6 +714,28 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + "'s kills will not drop items or exp.");   // Talk to the player.
 			}
 
+			return true;
+		}
+		else if (args[0].equalsIgnoreCase("mount")) {
+			if(!player.hasPermission("sentry.options.mount")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			set = set ==null? !inst.isMounted() : set;
+
+
+			if (set){
+				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + "' is now Mounted");   // Talk to the player.
+				inst.MountID =	Util.getOrCreateMount(inst).getId();
+				inst.mount();
+			}
+			else {
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + "'s is no longer Mounted");   // Talk to the player.
+				Util.removeMount(ThisNPC);	
+				inst.MountID = -1;
+			}
+	
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("guard")) {
@@ -1424,7 +1445,7 @@ public class Sentry extends JavaPlugin {
 			}
 
 			return (perms != null);
-			
+
 		} catch (Exception e) {
 			e.printStackTrace();
 			return false;

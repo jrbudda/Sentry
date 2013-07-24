@@ -1,7 +1,7 @@
 name: Sentry
 authors: [aufdemrand, jrbudda]
 description: Sentry is a Citizens 2.0 character trait that gives NPCs the ability to Attack, Kill, Guard, Use ranged or melee weapons and work with Denizen.
-version: 1.4.1
+version: 1.4.2
 main: net.aufdemrand.sentry.Sentry
 dev-url: http://dev.bukkit.org/server-mods/sentry-citizens2/
 website: http://wiki.citizensnpcs.com/Sentry
@@ -28,6 +28,7 @@ permissions:
        sentry.greeting: true
        sentry.reload: true   
        sentry.equip: true
+       sentry.bodyguard.*: true
   sentry.stats.*:
      default: op
      children:
@@ -50,6 +51,7 @@ permissions:
        sentry.options.drops: true
        sentry.options.killdrops: true
        sentry.options.criticals: true 
+       sentry.options.mount: true
   sentry.spawn:
      deafult: op
   sentry.target:
@@ -97,4 +99,8 @@ permissions:
   sentry.options.killdrops: 
      default: op
   sentry.options.criticals: 
+     default: op
+  sentry.bodyguard.*:
+     default: true
+  sentry.options.mount: 
      default: op

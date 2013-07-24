@@ -56,6 +56,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.HealRate =  key.getDouble("HealRate", plugin.getConfig().getDouble("DefaultStats.HealRate",0.0));
 		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision",16));
 		thisInstance.KillsDropInventory = key.getBoolean("KillDrops", plugin.getConfig().getBoolean("DefaultOptions.KillDrops", true));
+		thisInstance.MountID = key.getInt("MountID", (int)-1);
 
 		if( key.keyExists("Spawn")){
 			try {
@@ -165,6 +166,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		if(thisInstance != null){
 			thisInstance.isRespawnable = System.currentTimeMillis() + thisInstance.RespawnDelaySeconds * 1000;
 			thisInstance.sentryStatus = Status.isDEAD;
+			thisInstance.dismount();
 		}
 	}
 
@@ -176,6 +178,9 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("Invincinble", thisInstance.Invincible);
 		key.setBoolean("DropInventory", thisInstance.DropInventory);
 		key.setBoolean("KillDrops", thisInstance.KillsDropInventory);
+
+		key.setInt("MountID", thisInstance.MountID);
+
 
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
 		key.setRaw("Targets", thisInstance.validTargets);
@@ -202,7 +207,7 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setDouble("AttackRate", thisInstance.AttackRateSeconds);
 		key.setInt("NightVision", thisInstance.NightVision);
 		key.setInt("FollowDistance", thisInstance.FollowDistance);
-		
+
 		if (thisInstance.guardTarget !=null) key.setString("GuardTarget", thisInstance.guardTarget);
 		else if (key.keyExists("GuardTarget")) key.removeKey("GuardTarget");
 

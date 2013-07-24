@@ -70,7 +70,7 @@ public class DenizenHook {
 		}
 	}
 
-
+	
 	private class LiveCommand extends AbstractCommand {
 
 		@Override
