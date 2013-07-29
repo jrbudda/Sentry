@@ -62,10 +62,11 @@ public class SentryTrait extends Trait implements Toggleable {
 			try {
 				thisInstance.Spawn = new Location(plugin.getServer().getWorld(key.getString("Spawn.world")), key.getDouble("Spawn.x"),key.getDouble("Spawn.y"), key.getDouble("Spawn.z"), (float) key.getDouble("Spawn.yaw"), (float) key.getDouble("Spawn.pitch"));
 			} catch (Exception e) {
+				e.printStackTrace();
 				thisInstance.Spawn = null;
 			}
 
-			if(  thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
+			if(thisInstance.Spawn.getWorld() == null ) thisInstance.Spawn = null;
 		}
 
 		if (thisInstance.guardTarget != null && thisInstance.guardTarget.isEmpty()) thisInstance.guardTarget = null;

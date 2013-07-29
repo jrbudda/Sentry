@@ -1060,7 +1060,7 @@ public class SentryInstance {
 
 		NPC npc = myNPC;
 
-		LivingEntity player = null;
+		LivingEntity attacker = null;
 
 		hittype hit = hittype.normal;
 
@@ -1069,10 +1069,10 @@ public class SentryInstance {
 		// Find the attacker
 		if (event.getDamager() instanceof Projectile) {
 			if (((Projectile) event.getDamager()).getShooter() instanceof LivingEntity) {
-				player = ((Projectile) event.getDamager()).getShooter();
+				attacker = ((Projectile) event.getDamager()).getShooter();
 			}
 		} else if (event.getDamager() instanceof LivingEntity) {
-			player = (LivingEntity) event.getDamager();
+			attacker = (LivingEntity) event.getDamager();
 		}
 
 		if (Invincible)
@@ -1081,16 +1081,16 @@ public class SentryInstance {
 
 
 		if(plugin.IgnoreListInvincibility ){
-			if(isIgnored(player)) return;
+			if(isIgnored(attacker)) return;
 		}
 
 		// can i kill it? lets go kill it.
-		if (player != null) {
+		if (attacker != null) {
 			if (this.Retaliate) {
-				if (!(event.getDamager() instanceof Projectile) || (net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(player) ==null)) {
+				if ( !(event.getDamager() instanceof Projectile) || (net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getNPC(attacker) == null)) {
 					// only retaliate to players or non-projectlies. Prevents stray sentry arrows from causing retaliation.
 
-					setTarget(player, true);
+					setTarget(attacker, true);
 
 				}
 			}
@@ -1126,9 +1126,9 @@ public class SentryInstance {
 
 		if (finaldamage > 0) {
 
-			if (player != null) {
+			if (attacker != null) {
 				// knockback
-				npc.getBukkitEntity().setVelocity( player.getLocation().getDirection().multiply(1.0 / (sentryWeight + (arm/5))));
+				npc.getBukkitEntity().setVelocity( attacker.getLocation().getDirection().multiply(1.0 / (sentryWeight + (arm/5))));
 			}
 
 			// Apply armor
@@ -1141,9 +1141,9 @@ public class SentryInstance {
 			}
 		}
 
-		if (player instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(player)) {
+		if (attacker instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(attacker)) {
 
-			_myDamamgers.add((Player) player);
+			_myDamamgers.add((Player) attacker);
 			String msg = null;
 			// Messages
 			switch (hit) {
@@ -1171,7 +1171,7 @@ public class SentryInstance {
 			}
 
 			if(msg!=null && msg.isEmpty() == false){
-				((Player) player).sendMessage(Util.format(msg, npc, (CommandSender) player, ((Player) player).getItemInHand().getTypeId(), finaldamage+""));
+				((Player) attacker).sendMessage(Util.format(msg, npc, (CommandSender) attacker, ((Player) attacker).getItemInHand().getTypeId(), finaldamage+""));
 			}	
 		}
 

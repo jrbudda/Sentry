@@ -171,6 +171,7 @@ public class SentryListener implements Listener {
 					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 				}
 
+				//are u attacking mai horse?
 				if (inst.getMount() !=null && inst.getMount().getBukkitEntity() == entto ){
 					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 				}

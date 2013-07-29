@@ -10,12 +10,14 @@ public class MountAttackStrategy implements net.citizensnpcs.api.ai.AttackStrate
 	@Override
     public boolean handle(LivingEntity attacker, LivingEntity bukkitTarget) {
 		if(attacker == bukkitTarget) return true;
+	
 		if(attacker.getPassenger() !=null){
 			return CitizensAPI.getNPCRegistry().getNPC(attacker).getNavigator().getDefaultParameters().attackStrategy().handle((LivingEntity) attacker.getPassenger(), bukkitTarget);
 		}
 		else {
-			return CitizensAPI.getNPCRegistry().getNPC(attacker).getNavigator().getDefaultParameters().attackStrategy().handle((LivingEntity) attacker, bukkitTarget);
+			//I think this does the default attack.
+		    return false;
 		}		
 	}
-
+	
 }
