@@ -110,6 +110,7 @@ public class Sentry extends JavaPlugin {
 		}
 		return false;
 	}
+	
 	public void debug(String s){
 		if(debug) this.getServer().getLogger().info(s);
 	}
@@ -175,15 +176,7 @@ public class Sentry extends JavaPlugin {
 
 	}
 
-	public String format(String input, NPC npc, CommandSender player, int item, String amount){
-		if(input == null) return null;
-		input = input.replace("<NPC>",npc.getName());
-		input = input.replace("<PLAYER>", player == null ? "" : player.getName());
-		input = input.replace("<ITEM>", Util.getLocalItemName(item));
-		input = input.replace("<AMOUNT>", amount.toString());
-		input =	ChatColor.translateAlternateColorCodes('&', input);
-		return input;
-	}
+
 
 	public  String getClan(Player player) {
 		if (ClansActive == false)return null;
@@ -196,11 +189,6 @@ public class Sentry extends JavaPlugin {
 		}
 		return null;
 	}
-
-
-
-
-
 
 
 
@@ -727,7 +715,7 @@ public class Sentry extends JavaPlugin {
 
 			if (set){
 				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + "' is now Mounted");   // Talk to the player.
-				inst.MountID =	Util.getOrCreateMount(inst).getId();
+				inst.createMount();
 				inst.mount();
 			}
 			else {

@@ -171,7 +171,7 @@ public class SentryListener implements Listener {
 					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 				}
 
-				if (inst.getNPCMount() !=null && inst.getNPCMount().getBukkitEntity() == entto ){
+				if (inst.getMount() !=null && inst.getMount().getBukkitEntity() == entto ){
 					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 				}
 
@@ -323,6 +323,18 @@ public class SentryListener implements Listener {
 		}
 	}
 
+	
+	@EventHandler
+	public void onNPCRightClick(net.citizensnpcs.api.event.NPCRightClickEvent event){
+		SentryInstance inst = plugin.getSentry(event.getNPC());
+		if(inst == null) return;
 
+		if(inst.myNPC.getBukkitEntity() instanceof org.bukkit.entity.Horse){
+			if (inst.guardEntity != event.getClicker()){
+				event.setCancelled(true);
+			}
+		}
+	}
+	
 }
 

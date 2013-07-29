@@ -3,13 +3,13 @@ package net.aufdemrand.sentry;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.citizensnpcs.api.trait.trait.MobType;
-import net.citizensnpcs.api.trait.trait.Owner;
 import net.minecraft.server.v1_6_R2.Block;
 import net.minecraft.server.v1_6_R2.Item;
 import net.minecraft.server.v1_6_R2.LocaleI18n;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -47,45 +47,6 @@ public class Util {
 			}
 		}
 
-	}
-
-	public static NPC getOrCreateMount(SentryInstance inst){
-		NPC sentry = inst.myNPC;
-		
-		if( sentry.isSpawned()){
-
-			NPC horseNPC = null;
-
-			if (inst.isMounted()) {
-				horseNPC =	net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getById(inst.MountID);
-				if(horseNPC !=null){
-					horseNPC.despawn();
-				}
-			}
-			
-			
-			else {
-				horseNPC =	net.citizensnpcs.api.CitizensAPI.getNPCRegistry().createNPC(org.bukkit.entity.EntityType.HORSE, sentry.getName() + "_Mount");
-			}
-
-			//look at my horse, my horse is amazing.
-			horseNPC.spawn(sentry.getBukkitEntity().getLocation());
-			horseNPC.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
-			horseNPC.getNavigator().getDefaultParameters().attackStrategy(new MountAttackStrategy());
-			horseNPC.getNavigator().getDefaultParameters().useNewPathfinder(false);
-			horseNPC.getNavigator().getDefaultParameters().range(sentry.getNavigator().getDefaultParameters().range());
-
-			horseNPC.getTrait(MobType.class).setType(org.bukkit.entity.EntityType.HORSE);
-
-			Owner o = horseNPC.getTrait(Owner.class);
-			o.setOwner(sentry.getTrait(Owner.class).getOwner());
-
-
-			return horseNPC;
-
-		}
-
-		return null;
 	}
 
 	public static boolean CanWarp(Entity player, NPC bodyguyard){
@@ -174,7 +135,15 @@ public class Util {
 
 	}
 
-
+	public static String format(String input, NPC npc, CommandSender player, int item, String amount){
+		if(input == null) return null;
+		input = input.replace("<NPC>",npc.getName());
+		input = input.replace("<PLAYER>", player == null ? "" : player.getName());
+		input = input.replace("<ITEM>", Util.getLocalItemName(item));
+		input = input.replace("<AMOUNT>", amount.toString());
+		input =	ChatColor.translateAlternateColorCodes('&', input);
+		return input;
+	}
 
 	public static Vector normalizeVector(Vector victor){
 		double	mag = Math.sqrt(Math.pow(victor.getX(), 2) + Math.pow(victor.getY(), 2)  + Math.pow(victor.getZ(), 2)) ;

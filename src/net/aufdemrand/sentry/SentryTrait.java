@@ -181,7 +181,6 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		key.setInt("MountID", thisInstance.MountID);
 
-
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
 		key.setRaw("Targets", thisInstance.validTargets);
 		key.setRaw("Ignores", thisInstance.ignoreTargets);
@@ -195,7 +194,7 @@ public class SentryTrait extends Trait implements Toggleable {
 			key.setDouble("Spawn.pitch", thisInstance.Spawn.getPitch());		
 		}
 
-		key.getDouble("Health", thisInstance.sentryHealth);
+		key.setDouble("Health", thisInstance.sentryHealth);
 		key.setInt("Range", thisInstance.sentryRange);
 		key.setInt("RespawnDelay", thisInstance.RespawnDelaySeconds);
 		key.setDouble("Speed", (double) thisInstance.sentrySpeed);

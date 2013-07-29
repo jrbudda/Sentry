@@ -28,18 +28,22 @@ public class DenizenHook {
 
 	public static boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
 		if (!DenizenActive) return false;
+		
+		try {
+			boolean a = false, b = false, c = false;
 
-		boolean a = false, b = false, c = false;
+			net.aufdemrand.denizen.Denizen d = (Denizen)DenizenPlugin;
 
-		net.aufdemrand.denizen.Denizen d = (Denizen)DenizenPlugin;
+			NpcdeathTrigger npcd = d.getTriggerRegistry().get(NpcdeathTrigger.class);
+			NpcdeathTriggerOwner npcdo = d.getTriggerRegistry().get(NpcdeathTriggerOwner.class);
 
-		NpcdeathTrigger npcd = d.getTriggerRegistry().get(NpcdeathTrigger.class);
-		NpcdeathTriggerOwner npcdo = d.getTriggerRegistry().get(NpcdeathTriggerOwner.class);
-
-		if (npc !=null) a=	npcd.Die(_myDamamgers, npc);
-		if (npc !=null) c=	npcdo.Die(npc);
-		return (a||b||c);
-
+			if (npc !=null) a=	npcd.Die(_myDamamgers, npc);
+			if (npc !=null) c=	npcdo.Die(npc);
+			return (a||b||c);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	static void setupDenizenHook()  {
@@ -54,23 +58,23 @@ public class DenizenHook {
 
 		dc.activate().as("die").withOptions("die", 0);
 		lc.activate().as("live").withOptions("live", 0);
-		
+
 		DenizenActive  =true;
 	}
 
-	public static void DenizenAction(NPC npc, String action, Player player){
+	public static void DenizenAction(NPC npc, String action, org.bukkit.OfflinePlayer player){
 		if(DenizenActive){
 			dNPC dnpc = dNPC.mirrorCitizensNPC(npc);	
 			if (dnpc != null) {
 				try {
-					dnpc.action(action, net.aufdemrand.denizen.objects.dPlayer.mirrorBukkitPlayer(player));	
+					dnpc.action(action, dPlayer.mirrorBukkitPlayer(player));	
 				} catch (Exception e) {	
 				}
 			}
 		}
 	}
 
-	
+
 	private class LiveCommand extends AbstractCommand {
 
 		@Override
