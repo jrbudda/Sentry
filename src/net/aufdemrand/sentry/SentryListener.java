@@ -66,8 +66,7 @@ public class SentryListener implements Listener {
 	public void entteleportevent(org.bukkit.event.player.PlayerTeleportEvent event) {
 		SentryInstance sentry = plugin.getSentry(event.getPlayer());
 		if(sentry !=null){
-			//	plugin.debug("teleport!!: " + event.getPlayer()  + event.isCancelled() + " "+ sentry.epcount);
-			if(	sentry.epcount != 0 && sentry.isWarlock1() ){
+			if(	sentry.epcount != 0 && sentry.isWarlock1() && event.getCause() == org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.ENDER_PEARL ){
 				event.setCancelled(true);
 			}
 		}
@@ -173,7 +172,9 @@ public class SentryListener implements Listener {
 
 				//are u attacking mai horse?
 				if (inst.getMount() !=null && inst.getMount().getBukkitEntity() == entto ){
-					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
+					if(entfrom == inst.guardEntity)event.setCancelled(true);
+					else if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
+
 				}
 
 				if (inst.hasTargetType(16)  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false ){
@@ -324,7 +325,7 @@ public class SentryListener implements Listener {
 		}
 	}
 
-	
+
 	@EventHandler
 	public void onNPCRightClick(net.citizensnpcs.api.event.NPCRightClickEvent event){
 		SentryInstance inst = plugin.getSentry(event.getNPC());
@@ -336,6 +337,6 @@ public class SentryListener implements Listener {
 			}
 		}
 	}
-	
+
 }
 

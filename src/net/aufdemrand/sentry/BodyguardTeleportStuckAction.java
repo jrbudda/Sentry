@@ -49,7 +49,7 @@ public class BodyguardTeleportStuckAction implements StuckAction{
 
 			@Override
 			public void run() {
-				npc.getBukkitEntity().teleport(loc);	
+				npc.teleport(loc, org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.PLUGIN);	
 			}
 
 		},2);

@@ -36,17 +36,14 @@ public class Util {
 
 	}
 
-	public static void removeMount(NPC npc){
-
-		if(npc.isSpawned() && npc.getBukkitEntity().isInsideVehicle()) {
-			Entity v = npc.getBukkitEntity().getVehicle();
-			v.setPassenger(null);
-			NPC vnpc = CitizensAPI.getNPCRegistry().getNPC(v);
-			if (vnpc != null){
-				vnpc.destroy();
+	public static void removeMount(int npcid){
+		NPC vnpc = CitizensAPI.getNPCRegistry().getById(npcid);
+		if (vnpc!=null) {
+			if (vnpc.getBukkitEntity() != null) {
+				vnpc.getBukkitEntity().setPassenger(null);
 			}
+			vnpc.destroy();
 		}
-
 	}
 
 	public static boolean CanWarp(Entity player, NPC bodyguyard){

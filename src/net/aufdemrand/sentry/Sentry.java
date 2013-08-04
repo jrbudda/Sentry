@@ -714,13 +714,13 @@ public class Sentry extends JavaPlugin {
 
 
 			if (set){
-				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + "' is now Mounted");   // Talk to the player.
+				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now Mounted");   // Talk to the player.
 				inst.createMount();
 				inst.mount();
 			}
 			else {
-				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + "'s is no longer Mounted");   // Talk to the player.
-				Util.removeMount(ThisNPC);	
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " is no longer Mounted");   // Talk to the player.
+				Util.removeMount(inst.MountID);	
 				inst.MountID = -1;
 			}
 	

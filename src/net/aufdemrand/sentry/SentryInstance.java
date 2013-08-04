@@ -46,6 +46,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
@@ -476,7 +477,7 @@ public class SentryInstance {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		
+
 		}
 
 
@@ -492,25 +493,25 @@ public class SentryInstance {
 			for( ItemStack is:	((HumanEntity) myNPC.getBukkitEntity()).getInventory().getArmorContents()){
 				if (is.getTypeId()>0)	items.add(is);  
 			}	
-			
+
 			ItemStack is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
 			if (is.getTypeId()>0)	items.add(is);  
-			
+
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().setItemInHand(null);
 		}		
-		
+
 		if(items.isEmpty())	myNPC.getBukkitEntity().playEffect(EntityEffect.DEATH);
 		else myNPC.getBukkitEntity().playEffect(EntityEffect.HURT);
-		
+
 		if (!DropInventory) items.clear();
-		
+
 		for (ItemStack is : items){
 			myNPC.getBukkitEntity().getWorld().dropItemNaturally(myNPC.getBukkitEntity().getLocation(), is);
 		}
-		
-				
+
+
 		if (plugin.DieLikePlayers){
 			//die!
 			myNPC.getBukkitEntity().setHealth((double)0);		
@@ -523,11 +524,12 @@ public class SentryInstance {
 
 		}
 
-		
-		
-		
+
+
+
 		if (RespawnDelaySeconds == -1) {
 			cancelRunnable();
+			Util.removeMount(MountID);
 			myNPC.destroy();
 			return;
 		} else {
@@ -563,6 +565,11 @@ public class SentryInstance {
 		net.citizensnpcs.util.NMS.look((LivingEntity) myNPC.getBukkitEntity(), 0, 0);
 	}
 
+	private void faceAlignWithVehicle(){
+		org.bukkit.entity.Entity v = myNPC.getBukkitEntity().getVehicle();
+		net.citizensnpcs.util.NMS.look((LivingEntity) myNPC.getBukkitEntity(), v.getLocation().getYaw(), 0);
+	}
+	
 	public LivingEntity findTarget(Integer Range) {
 		Range+=WarningRange; 
 		List<Entity> EntitiesWithinRange = myNPC.getBukkitEntity().getNearbyEntities(Range, Range, Range);
@@ -977,7 +984,7 @@ public class SentryInstance {
 		//	Packet derp = new net.minecraft.server.Packet15Place();
 
 		if (guardTarget == null){
-			myNPC.getBukkitEntity().teleport(Spawn); //it should be there... but maybe not if the position was saved elsewhere.
+			myNPC.teleport(Spawn,TeleportCause.PLUGIN); //it should be there... but maybe not if the position was saved elsewhere.
 		}
 
 		float pf = myNPC.getNavigator().getDefaultParameters().range();
@@ -1005,12 +1012,12 @@ public class SentryInstance {
 		if (taskID == null) {
 			taskID = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, new SentryLogic(), 40 + this.myNPC.getId(),  plugin.LogicTicks);
 		}
-		
+
 		mountCreated = false;
 	}
 
 	private boolean mountCreated = false;
-	
+
 	public boolean isPyromancer(){
 		return (myProjectile == Fireball.class || myProjectile == SmallFireball.class) ;
 	}
@@ -1379,7 +1386,7 @@ public class SentryInstance {
 			}
 
 			if(myNPC.isSpawned() && myNPC.getBukkitEntity().isInsideVehicle() == false && isMounted() && isMyChunkLoaded()) mount();
-
+		
 			if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0 & Spawn.getWorld().isChunkLoaded(Spawn.getBlockX()>>4, Spawn.getBlockZ()>>4)) {
 				// Respawn
 
@@ -1452,6 +1459,9 @@ public class SentryInstance {
 
 			else if (sentryStatus == Status.isLOOKING && myNPC.isSpawned()) {
 
+				if(myNPC.getBukkitEntity().isInsideVehicle() == true) faceAlignWithVehicle(); //sync the rider with the vehicle.
+				
+				
 				if (guardEntity instanceof Player){
 					if (((Player)guardEntity).isOnline() == false){
 						guardEntity = null;
@@ -1482,7 +1492,7 @@ public class SentryInstance {
 						double dist = npcLoc.distanceSquared(guardEntity.getLocation());
 						plugin.debug(myNPC.getName() + dist + getNavigator().isNavigating() + " " +getNavigator().getEntityTarget() + " " );
 						if(dist > 1024) {
-							myNPC.getBukkitEntity().teleport(guardEntity.getLocation().add(1,0,1));
+							myNPC.teleport(guardEntity.getLocation().add(1,0,1),TeleportCause.PLUGIN);
 						}
 						else if(dist > FollowDistance && !getNavigator().isNavigating()) {
 							getNavigator().setTarget((Entity)guardEntity, false);
@@ -1762,37 +1772,39 @@ public class SentryInstance {
 		if (myNPC.isSpawned()){
 			if (myNPC.getBukkitEntity().isInsideVehicle()) myNPC.getBukkitEntity().getVehicle().setPassenger(null);
 			NPC n = getMount();
-	
+
 			if(n == null || (!n.isSpawned() && !mountCreated)) {
 				n = createMount();
-				mountCreated = true;
 			}
 			
 			if (n!=null){
+				mountCreated = true;
 				if(n.isSpawned() == false) return; //dead mount
 				n.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
 				n.getNavigator().getDefaultParameters().attackStrategy(new MountAttackStrategy());
 				n.getNavigator().getDefaultParameters().useNewPathfinder(false);
-				n.getNavigator().getDefaultParameters().range(myNPC.getNavigator().getDefaultParameters().range());
+				n.getNavigator().getDefaultParameters().speedModifier(myNPC.getNavigator().getDefaultParameters().speedModifier()*2);
+				n.getNavigator().getDefaultParameters().range(myNPC.getNavigator().getDefaultParameters().range() + 5);
 				n.getBukkitEntity().setCustomNameVisible(false);
 				n.getBukkitEntity().setPassenger(null);
 				n.getBukkitEntity().setPassenger(myNPC.getBukkitEntity());
 			}		
 			else this.MountID = -1;
-			
+
 		}
 	}
 
 	public  NPC createMount(){
-
+		plugin.debug("Creating mount for " + this.myNPC.getName());
+		
 		if (myNPC.isSpawned()){
 
 			NPC horseNPC = null;
 
 			if (isMounted()) {
-				
+
 				horseNPC =	net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getById(MountID);
-			
+
 				if(horseNPC !=null){
 					horseNPC.despawn();
 				}
@@ -1800,7 +1812,7 @@ public class SentryInstance {
 					plugin.getServer().getLogger().info("Cannot find mount NPC " + MountID);
 				}
 			}		
-			
+
 			else {
 				horseNPC =	net.citizensnpcs.api.CitizensAPI.getNPCRegistry().createNPC(org.bukkit.entity.EntityType.HORSE, myNPC.getName() + "_Mount");
 				horseNPC.getTrait(MobType.class).setType(org.bukkit.entity.EntityType.HORSE);
@@ -1809,15 +1821,17 @@ public class SentryInstance {
 			if(horseNPC == null){
 				plugin.getServer().getLogger().info("Cannot create mount NPC!");
 			}		
-			
+
 			if(myNPC.getBukkitEntity() == null){
 				plugin.getServer().getLogger().info("why is this spawned but bukkit entity is null???");
 			}
-			
+
 			//look at my horse, my horse is amazing.
 			horseNPC.spawn(myNPC.getBukkitEntity().getLocation());
 			Owner o = horseNPC.getTrait(Owner.class);
 			o.setOwner(myNPC.getTrait(Owner.class).getOwner());
+			//cant do this is screws up the pathfinding.
+			//	((Horse)horseNPC.getBukkitEntity()).getInventory().setSaddle(new ItemStack(org.bukkit.Material.SADDLE));
 
 			this.MountID = horseNPC.getId();
 
@@ -1830,9 +1844,9 @@ public class SentryInstance {
 
 	protected NPC getMount(){
 		if(this.isMounted() && net.citizensnpcs.api.CitizensAPI.hasImplementation()){
-			
+
 			return net.citizensnpcs.api.CitizensAPI.getNPCRegistry().getById(this.MountID);
-			
+
 		}
 		return null;
 	}
