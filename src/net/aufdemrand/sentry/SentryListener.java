@@ -37,8 +37,20 @@ public class SentryListener implements Listener {
 		//dont mess with player death.
 		if (event.getEntity() instanceof Player && event.getEntity().hasMetadata("NPC") == false) return;
 
-		SentryInstance sentry = plugin.getSentry(event.getEntity().getKiller());
+		
+		Entity killer = event.getEntity().getKiller();
+		if(killer ==null){
+			//might have been a projectile.
+			EntityDamageEvent ev = event.getEntity().getLastDamageCause();
+			if(ev !=null && ev instanceof EntityDamageByEntityEvent){
+				killer = ((EntityDamageByEntityEvent)ev).getDamager();		
+				if (killer instanceof Projectile) killer = ((Projectile) killer).getShooter();
+			}
+		}
+		
+		SentryInstance sentry = plugin.getSentry(killer);
 
+		
 		if(sentry !=null && sentry.KillsDropInventory == false){
 			event.getDrops().clear();
 			event.setDroppedExp(0);	
@@ -105,13 +117,13 @@ public class SentryListener implements Listener {
 		}
 	}
 
-	@EventHandler(ignoreCancelled = true, priority =org.bukkit.event.EventPriority.HIGH)
-	public void tarsdfget(EntityTargetEvent event) {
-		SentryInstance inst = plugin.getSentry(event.getTarget());
-		if(inst!=null){
-			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
-		}
-	}
+//	@EventHandler(ignoreCancelled = true, priority =org.bukkit.event.EventPriority.HIGH)
+//	public void tarsdfget(EntityTargetEvent event) {
+//		SentryInstance inst = plugin.getSentry(event.getTarget());
+//		if(inst!=null){
+//			event.setCancelled(false); //inst.myNPC.data().get(NPC.DEFAULT_PROTECTED_METADATA, false));
+//		}
+//	}
 
 	@EventHandler(priority =org.bukkit.event.EventPriority.HIGHEST)
 	public void EnvDamage(EntityDamageEvent event) {
@@ -183,7 +195,7 @@ public class SentryListener implements Listener {
 						// in range
 						if(inst.NightVision  >= entfrom.getLocation().getBlock().getLightLevel() || inst.NightVision  >= entto.getLocation().getBlock().getLightLevel() ){
 							//can see
-							if (npc.getBukkitEntity().hasLineOfSight(entfrom) || npc.getBukkitEntity().hasLineOfSight(entto)){
+							if (inst.hasLOS(entfrom) || inst.hasLOS(entto)){
 								//have los
 								if ( (!(entto instanceof Player) && inst.containsTarget("event:pve")) ||
 										(entto instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp")) || 
@@ -304,10 +316,20 @@ public class SentryListener implements Listener {
 			if (hnpc.getId() == inst.MountID){
 				///nooooo butterstuff!
 
-				final LivingEntity perp = hnpc.getBukkitEntity().getKiller();
-
+				Entity killer = hnpc.getBukkitEntity().getKiller();	
+				if(killer ==null){
+					//might have been a projectile.
+					EntityDamageEvent ev = hnpc.getBukkitEntity().getLastDamageCause();
+					if(ev !=null && ev instanceof EntityDamageByEntityEvent){
+						killer =  ((EntityDamageByEntityEvent)ev).getDamager();				
+						if (killer instanceof Projectile) killer = ((Projectile) killer).getShooter();
+					}
+				}
+				
+				final LivingEntity perp = killer instanceof LivingEntity ? (LivingEntity) killer : null;
+				
 				if (plugin.DenizenActive){
-					DenizenHook.DenizenAction(npc, "mount death", (Player) (perp instanceof Player ? perp: null) );
+					DenizenHook.DenizenAction(npc, "mount death",  (perp instanceof Player ? (Player) perp: null) );
 				}
 
 				if (perp == null) return;

@@ -110,7 +110,7 @@ public class Sentry extends JavaPlugin {
 		}
 		return false;
 	}
-	
+
 	public void debug(String s){
 		if(debug) this.getServer().getLogger().info(s);
 	}
@@ -177,7 +177,6 @@ public class Sentry extends JavaPlugin {
 	}
 
 
-
 	public  String getClan(Player player) {
 		if (ClansActive == false)return null;
 		try {
@@ -189,8 +188,6 @@ public class Sentry extends JavaPlugin {
 		}
 		return null;
 	}
-
-
 
 	private int GetMat(String S){
 		int item = -1;
@@ -484,7 +481,11 @@ public class Sentry extends JavaPlugin {
 			player.sendMessage(ChatColor.GOLD + "/sentry drops");
 			player.sendMessage(ChatColor.GOLD + "  Toggle the Sentry to drop equipped items on death");
 			player.sendMessage(ChatColor.GOLD + "/sentry killdrops");
-			player.sendMessage(ChatColor.GOLD + "  Toggle whether or not the sentries victims drop items and exp");
+			player.sendMessage(ChatColor.GOLD + "  Toggle whether or not the sentry's victims drop items and exp");
+			player.sendMessage(ChatColor.GOLD + "/sentry mount");
+			player.sendMessage(ChatColor.GOLD + "  Toggle whether or not the sentry rides a mount");
+			player.sendMessage(ChatColor.GOLD + "/sentry targetable");
+			player.sendMessage(ChatColor.GOLD + "  Toggle whether or not the sentry is attacked by hostile mobs");
 			player.sendMessage(ChatColor.GOLD + "/sentry spawn");
 			player.sendMessage(ChatColor.GOLD + "  Set the sentry to respawn at its current location");
 			player.sendMessage(ChatColor.GOLD + "/sentry warning 'The Test to use'");
@@ -704,7 +705,24 @@ public class Sentry extends JavaPlugin {
 
 			return true;
 		}
-		else if (args[0].equalsIgnoreCase("mount")) {
+		else if (args[0].equalsIgnoreCase("targetable")) {
+			if(!player.hasPermission("sentry.options.targetable")) {
+				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
+				return true;
+			}
+
+			inst.Targetable = set ==null ?  !inst.Targetable: set;
+			ThisNPC.data().set(NPC.TARGETABLE_METADATA, inst.Targetable);
+			
+			if (inst.Targetable) {
+				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + "'will be targeted by mobs");   // Talk to the player.
+			}
+			else{
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + "'will not be targeted by mobs");   // Talk to the player.
+			}
+
+			return true;
+		}	else if (args[0].equalsIgnoreCase("mount")) {
 			if(!player.hasPermission("sentry.options.mount")) {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
@@ -720,10 +738,10 @@ public class Sentry extends JavaPlugin {
 			}
 			else {
 				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " is no longer Mounted");   // Talk to the player.
-				Util.removeMount(inst.MountID);	
+				if(inst.isMounted()) Util.removeMount(inst.MountID);	
 				inst.MountID = -1;
 			}
-	
+
 			return true;
 		}
 		else if (args[0].equalsIgnoreCase("guard")) {

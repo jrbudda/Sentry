@@ -111,7 +111,6 @@ public class SentryTrait extends Trait implements Toggleable {
 	@Override
 	public void onSpawn() {
 		plugin.debug(npc.getName() + " onSpawn");
-
 		ensureInst();
 
 		if (!thisInstance.loaded){
@@ -122,10 +121,7 @@ public class SentryTrait extends Trait implements Toggleable {
 			}
 		}
 
-
 		if (!plugin.GroupsChecked) plugin.doGroups(); // lazy checking for lazy vault.
-
-		npc.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
 
 		thisInstance.initialize();	
 
