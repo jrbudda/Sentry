@@ -715,10 +715,10 @@ public class Sentry extends JavaPlugin {
 			ThisNPC.data().set(NPC.TARGETABLE_METADATA, inst.Targetable);
 			
 			if (inst.Targetable) {
-				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + "'will be targeted by mobs");   // Talk to the player.
+				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " will be targeted by mobs");   // Talk to the player.
 			}
 			else{
-				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + "'will not be targeted by mobs");   // Talk to the player.
+				player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will not be targeted by mobs");   // Talk to the player.
 			}
 
 			return true;
