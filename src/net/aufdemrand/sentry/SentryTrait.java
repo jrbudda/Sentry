@@ -57,7 +57,8 @@ public class SentryTrait extends Trait implements Toggleable {
 		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision",16));
 		thisInstance.KillsDropInventory = key.getBoolean("KillDrops", plugin.getConfig().getBoolean("DefaultOptions.KillDrops", true));
 		thisInstance.MountID = key.getInt("MountID", (int)-1);
-
+		thisInstance.Targetable = key.getBoolean("Targetable", plugin.getConfig().getBoolean("DefaultOptions.Targetable",true));
+		
 		if( key.keyExists("Spawn")){
 			try {
 				thisInstance.Spawn = new Location(plugin.getServer().getWorld(key.getString("Spawn.world")), key.getDouble("Spawn.x"),key.getDouble("Spawn.y"), key.getDouble("Spawn.z"), (float) key.getDouble("Spawn.yaw"), (float) key.getDouble("Spawn.pitch"));
@@ -175,7 +176,8 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("Invincinble", thisInstance.Invincible);
 		key.setBoolean("DropInventory", thisInstance.DropInventory);
 		key.setBoolean("KillDrops", thisInstance.KillsDropInventory);
-
+		key.setBoolean("Targetable", thisInstance.Targetable);
+		
 		key.setInt("MountID", thisInstance.MountID);
 
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);

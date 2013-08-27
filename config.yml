@@ -36,6 +36,7 @@ DefaultOptions:
  Invincible: false
  Retaliate: true
  FriendlyFire: false
+ Targetable: true
  
 #Default texts for new Sentries. You can use <NPC> and <PLAYER> as placeholders.
 DefaultTexts:
