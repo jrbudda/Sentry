@@ -3,9 +3,9 @@ package net.aufdemrand.sentry;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.minecraft.server.v1_6_R2.Block;
-import net.minecraft.server.v1_6_R2.Item;
-import net.minecraft.server.v1_6_R2.LocaleI18n;
+import net.minecraft.server.v1_6_R3.Block;
+import net.minecraft.server.v1_6_R3.Item;
+import net.minecraft.server.v1_6_R3.LocaleI18n;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -53,25 +53,25 @@ public class Util {
 			if (((Player) player).hasPermission("sentry.bodyguard.*")){
 				//have * perm, which all players do by default.
 
-				if (((Player) player).isPermissionSet("sentry.bodyguard." + player.getWorld().getName())){			
+				if (((Player) player).isPermissionSet("sentry.bodyguard." + player.getWorld().getName())){
 
-					if (!((Player) player).hasPermission("sentry.bodyguard." + player.getWorld().getName())){	
+					if (!((Player) player).hasPermission("sentry.bodyguard." + player.getWorld().getName())){
 						//denied this world.
-						return false;			
+						return false;
 					}
 
-				}		
+				}
 				else 	return true;
 
 			}
 
 
-			if (((Player) player).hasPermission("sentry.bodyguard." + player.getWorld().getName())){	
+			if (((Player) player).hasPermission("sentry.bodyguard." + player.getWorld().getName())){
 				//no * but specifically allowed this world.
-				return true;			
+				return true;
 			}
 
-		}		
+		}
 
 		return false;
 	}
