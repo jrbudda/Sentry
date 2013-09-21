@@ -16,15 +16,15 @@ import net.citizensnpcs.api.trait.trait.MobType;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_6_R2.EntityHuman;
-import net.minecraft.server.v1_6_R2.EntityPotion;
-import net.minecraft.server.v1_6_R2.EntityProjectile;
-import net.minecraft.server.v1_6_R2.Packet;
-import net.minecraft.server.v1_6_R2.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_6_R2.CraftWorld;
-import org.bukkit.craftbukkit.v1_6_R2.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_6_R2.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_6_R2.inventory.CraftItemStack;
+import net.minecraft.server.v1_6_R3.EntityHuman;
+import net.minecraft.server.v1_6_R3.EntityPotion;
+import net.minecraft.server.v1_6_R3.EntityProjectile;
+import net.minecraft.server.v1_6_R3.Packet;
+import net.minecraft.server.v1_6_R3.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_6_R3.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_6_R3.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_6_R3.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -75,7 +75,7 @@ public class SentryInstance {
 	public boolean KillsDropInventory = true;
 	public boolean DropInventory = false;
     public boolean Targetable = true;
-    
+
 	public int MountID = -1;
 
 	public boolean isMounted(){
@@ -178,7 +178,7 @@ public class SentryInstance {
 
 		if (aTarget instanceof Player && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget)) {
 
-			if (hasIgnoreType(players)) return true;		
+			if (hasIgnoreType(players)) return true;
 
 			else{
 				String name = ((Player) aTarget).getName();
@@ -199,14 +199,14 @@ public class SentryInstance {
 						for (int i = 0; i < groups1.length; i++) {
 							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
 							if (this.containsIgnore("GROUP:" + groups1[i]))	return true;
-						}	
+						}
 					}
 
 					if ( groups2 !=null){
 						for (int i = 0; i < groups2.length; i++) {
 							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
 							if (this.containsIgnore("GROUP:" + groups2[i]))		return true;
-						}	
+						}
 					}
 				}
 
@@ -269,14 +269,14 @@ public class SentryInstance {
 						for (int i = 0; i < groups1.length; i++) {
 							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
 							if (this.containsIgnore("GROUP:" + groups1[i]))	return true;
-						}	
+						}
 					}
 
 					if ( groups2 !=null){
 						for (int i = 0; i < groups2.length; i++) {
 							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
 							if (this.containsIgnore("GROUP:" + groups2[i]))		return true;
-						}	
+						}
 					}
 				}
 			}
@@ -323,14 +323,14 @@ public class SentryInstance {
 						for (int i = 0; i < groups1.length; i++) {
 							//			plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
 							if (this.containsTarget("GROUP:" + groups1[i]))	return true;
-						}	
+						}
 					}
 
 					if ( groups2 !=null){
 						for (int i = 0; i < groups2.length; i++) {
 							//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
 							if (this.containsTarget("GROUP:" + groups2[i]))	return true;
-						}	
+						}
 					}
 				}
 
@@ -347,7 +347,7 @@ public class SentryInstance {
 						if(this.hasTargetType(townyenemies)){
 							for (String s : NationsEnemies) {
 								if (plugin.isNationEnemy(s,  info[0]))	return true;
-							}	
+							}
 						}
 
 					}
@@ -363,7 +363,7 @@ public class SentryInstance {
 							if(this.hasTargetType(factionenemies)){
 								for (String s : FactionEnemies) {
 									if (FactionsUtil.isFactionEnemy( myNPC.getBukkitEntity().getWorld().getName(),s, faction)) return true;
-								}	
+								}
 							}
 						}
 					}
@@ -409,16 +409,16 @@ public class SentryInstance {
 					for (int i = 0; i < groups1.length; i++) {
 						//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found world1 group " + groups1[i] + " on " + name);
 						if (this.containsTarget("GROUP:" + groups1[i]))	return true;
-					}	
+					}
 				}
 
 				if ( groups2 !=null){
 					for (int i = 0; i < groups2.length; i++) {
 						//	plugin.getLogger().log(java.util.logging.Level.INFO , myNPC.getName() + "  found global group " + groups2[i] + " on " + name);
 						if (this.containsTarget("GROUP:" + groups2[i]))		return true;
-					}	
+					}
 				}
-			}	
+			}
 		}
 		else if (aTarget instanceof Monster && this.hasTargetType(monsters)) 		return true;
 
@@ -511,16 +511,16 @@ public class SentryInstance {
 		if (myNPC.getBukkitEntity() instanceof HumanEntity) {
 			//get drop inventory.
 			for( ItemStack is:	((HumanEntity) myNPC.getBukkitEntity()).getInventory().getArmorContents()){
-				if (is.getTypeId()>0)	items.add(is);  
-			}	
+				if (is.getTypeId()>0)	items.add(is);
+			}
 
 			ItemStack is = ((HumanEntity) myNPC.getBukkitEntity()).getInventory().getItemInHand();
-			if (is.getTypeId()>0)	items.add(is);  
+			if (is.getTypeId()>0)	items.add(is);
 
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().clear();
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().setArmorContents(null);
 			((HumanEntity) myNPC.getBukkitEntity()).getInventory().setItemInHand(null);
-		}		
+		}
 
 		if(items.isEmpty())	myNPC.getBukkitEntity().playEffect(EntityEffect.DEATH);
 		else myNPC.getBukkitEntity().playEffect(EntityEffect.HURT);
@@ -534,9 +534,9 @@ public class SentryInstance {
 
 		if (plugin.DieLikePlayers){
 			//die!
-			myNPC.getBukkitEntity().setHealth((double)0);		
+			myNPC.getBukkitEntity().setHealth((double)0);
 		}
-		else{		
+		else{
 			org.bukkit.event.entity.EntityDeathEvent ed = new org.bukkit.event.entity.EntityDeathEvent(myNPC.getBukkitEntity(), items);
 
 			plugin.getServer().getPluginManager().callEvent(ed);
@@ -591,7 +591,7 @@ public class SentryInstance {
 	}
 
 	public LivingEntity findTarget(Integer Range) {
-		Range+=WarningRange; 
+		Range+=WarningRange;
 		List<Entity> EntitiesWithinRange = myNPC.getBukkitEntity().getNearbyEntities(Range, Range, Range);
 		LivingEntity theTarget = null;
 		Double distanceToBeat = 99999.0;
@@ -620,7 +620,7 @@ public class SentryInstance {
 
 					double dist = aTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
 
-					if (hasLOS(aTarget)) {					
+					if (hasLOS(aTarget)) {
 
 
 						if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  dist > (Range - WarningRange) && !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget) & !(WarningMessage.isEmpty())){
@@ -629,13 +629,13 @@ public class SentryInstance {
 								//already warned u in last 30 seconds.
 							}
 							else{
-								((Player)aTarget).sendMessage(getWarningMessage((Player) aTarget)); 
+								((Player)aTarget).sendMessage(getWarningMessage((Player) aTarget));
 								if(!getNavigator().isNavigating())	faceEntity(myNPC.getBukkitEntity(), aTarget);
 								Warnings.put((Player) aTarget,System.currentTimeMillis());
 							}
 
 						}
-						else if	(dist < distanceToBeat) {				
+						else if	(dist < distanceToBeat) {
 							// now find closes mob
 							distanceToBeat = dist;
 							theTarget = (LivingEntity) aTarget;
@@ -651,12 +651,12 @@ public class SentryInstance {
 
 				if (WarningRange >0 && sentryStatus == Status.isLOOKING && aTarget instanceof Player &&  !net.citizensnpcs.api.CitizensAPI.getNPCRegistry().isNPC(aTarget) && !(GreetingMessage.isEmpty())){
 					boolean LOS = myNPC.getBukkitEntity().hasLineOfSight(aTarget);
-					if (LOS) {			
+					if (LOS) {
 						if (Warnings.containsKey(aTarget) && System.currentTimeMillis() < Warnings.get(aTarget) + 60*1000){
 							//already greeted u in last 30 seconds.
 						}
 						else{
-							((Player)aTarget).sendMessage(getGreetingMEssage((Player) aTarget)); 
+							((Player)aTarget).sendMessage(getGreetingMEssage((Player) aTarget));
 							faceEntity(myNPC.getBukkitEntity(), aTarget);
 							Warnings.put((Player) aTarget,System.currentTimeMillis());
 						}
@@ -787,10 +787,10 @@ public class SentryInstance {
 			// victor = victor.add(noise);
 
 			if (myProjectile == Arrow.class || myProjectile == org.bukkit.entity.ThrownPotion.class){
-				v = v + (1.188 * Math.pow(hangtime, 2));		
+				v = v + (1.188 * Math.pow(hangtime, 2));
 			}
 			else {
-				v = v + (.5 * Math.pow(hangtime, 2));	
+				v = v + (.5 * Math.pow(hangtime, 2));
 			}
 
 			v = v+ (r.nextDouble() - .8)/2;
@@ -820,7 +820,7 @@ public class SentryInstance {
 			else if (lightninglevel == 1){
 				to.getWorld().strikeLightningEffect(to);
 				theEntity.damage((double)getStrength(), myNPC.getBukkitEntity());
-			}	
+			}
 			else if (lightninglevel == 3){
 				to.getWorld().strikeLightningEffect(to);
 				theEntity.setHealth((double)0);
@@ -833,7 +833,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_6_R2.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_6_R3.World nmsWorld = ((CraftWorld)myNPC.getBukkitEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -841,11 +841,11 @@ public class SentryInstance {
 			}
 
 			else if(myProjectile == org.bukkit.entity.EnderPearl.class){
-				theArrow = myNPC.getBukkitEntity().launchProjectile(myProjectile);	
+				theArrow = myNPC.getBukkitEntity().launchProjectile(myProjectile);
 			}
 
 			else{
-				theArrow = myNPC.getBukkitEntity().getWorld().spawn(loc, myProjectile);	
+				theArrow = myNPC.getBukkitEntity().getWorld().spawn(loc, myProjectile);
 			}
 
 
@@ -896,7 +896,7 @@ public class SentryInstance {
 		double mod = 0;
 		if ( myNPC.getBukkitEntity() instanceof Player){
 			for (ItemStack is:((Player)myNPC.getBukkitEntity()).getInventory().getArmorContents()){
-				if (plugin.ArmorBuffs.containsKey(is.getTypeId())) mod += plugin.ArmorBuffs.get(is.getTypeId());		
+				if (plugin.ArmorBuffs.containsKey(is.getTypeId())) mod += plugin.ArmorBuffs.get(is.getTypeId());
 			}
 		}
 
@@ -923,17 +923,17 @@ public class SentryInstance {
 		double mod = 0;
 		if ( myNPC.getBukkitEntity() instanceof Player){
 			for (ItemStack is:((Player)myNPC.getBukkitEntity()).getInventory().getArmorContents()){
-				if (plugin.SpeedBuffs.containsKey(is.getTypeId())) mod += plugin.SpeedBuffs.get(is.getTypeId());		
+				if (plugin.SpeedBuffs.containsKey(is.getTypeId())) mod += plugin.SpeedBuffs.get(is.getTypeId());
 			}
-		}	
+		}
 		return (float) (sentrySpeed + mod) * (this.myNPC.getBukkitEntity().isInsideVehicle() ? 2 : 1);
 	}
 	public String getStats() {
 		DecimalFormat df = new DecimalFormat("#.0");
 		double h = getHealth();
 
-		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + getArmor() + 
-				ChatColor.RED + " [STR]:" + ChatColor.WHITE + getStrength() + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(getSpeed()) + 
+		return ChatColor.RED + "[HP]:" + ChatColor.WHITE + h + "/" + sentryHealth + ChatColor.RED + " [AP]:" + ChatColor.WHITE + getArmor() +
+				ChatColor.RED + " [STR]:" + ChatColor.WHITE + getStrength() + ChatColor.RED + " [SPD]:" + ChatColor.WHITE + df.format(getSpeed()) +
 				ChatColor.RED + " [RNG]:" + ChatColor.WHITE + sentryRange + ChatColor.RED + " [ATK]:" + ChatColor.WHITE + AttackRateSeconds + ChatColor.RED + " [VIS]:" + ChatColor.WHITE + NightVision +
 				ChatColor.RED + " [HEAL]:" + ChatColor.WHITE + HealRate + ChatColor.RED + " [WARN]:" + ChatColor.WHITE + WarningRange + ChatColor.RED + " [FOL]:" + ChatColor.WHITE + Math.sqrt(FollowDistance);
 
@@ -943,7 +943,7 @@ public class SentryInstance {
 		double mod = 0;
 
 		if ( myNPC.getBukkitEntity() instanceof Player){
-			if (plugin.StrengthBuffs.containsKey(((Player)myNPC.getBukkitEntity()).getInventory().getItemInHand().getTypeId())) mod += plugin.StrengthBuffs.get(((Player)myNPC.getBukkitEntity()).getInventory().getItemInHand().getTypeId());		
+			if (plugin.StrengthBuffs.containsKey(((Player)myNPC.getBukkitEntity()).getInventory().getItemInHand().getTypeId())) mod += plugin.StrengthBuffs.get(((Player)myNPC.getBukkitEntity()).getInventory().getItemInHand().getTypeId());
 		}
 
 		return (int) (Strength + mod);
@@ -1013,11 +1013,11 @@ public class SentryInstance {
 		if(pf < sentryRange+5){
 			pf=sentryRange+5;
 		}
-		
+
 		myNPC.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
 		myNPC.data().set(NPC.TARGETABLE_METADATA, this.Targetable);
-		
-		
+
+
 		myNPC.getNavigator().getDefaultParameters().range(pf);
 		myNPC.getNavigator().getDefaultParameters().stationaryTicks(5*20);
 		myNPC.getNavigator().getDefaultParameters().useNewPathfinder(false);
@@ -1086,7 +1086,7 @@ public class SentryInstance {
 		if (guardTarget != null && guardEntity == null) return; //dont take damage when bodyguard target isnt around.
 
 		if (System.currentTimeMillis() <  okToTakedamage + 500) return;
-		okToTakedamage = System.currentTimeMillis(); 
+		okToTakedamage = System.currentTimeMillis();
 
 		event.getEntity().setLastDamageCause(event);
 
@@ -1204,7 +1204,7 @@ public class SentryInstance {
 
 			if(msg!=null && msg.isEmpty() == false){
 				((Player) attacker).sendMessage(Util.format(msg, npc, (CommandSender) attacker, ((Player) attacker).getItemInHand().getTypeId(), finaldamage+""));
-			}	
+			}
 		}
 
 		if (finaldamage > 0) {
@@ -1236,7 +1236,7 @@ public class SentryInstance {
 		if (guardTarget != null && guardEntity == null) return; //dont take damage when bodyguard target isnt around.
 
 		if (System.currentTimeMillis() <  okToTakedamage + 500) return;
-		okToTakedamage = System.currentTimeMillis(); 
+		okToTakedamage = System.currentTimeMillis();
 
 		myNPC.getBukkitEntity().setLastDamageCause(event);
 
@@ -1268,7 +1268,7 @@ public class SentryInstance {
 		}
 
 
-	} 
+	}
 
 	@EventHandler
 	public void onRightClick(NPCRightClickEvent event) {
@@ -1308,7 +1308,7 @@ public class SentryInstance {
 			FactionEnemies.clear();
 
 			for (String t: validTargets){
-				if (t.contains("ENTITY:ALL")) targets |= all;	
+				if (t.contains("ENTITY:ALL")) targets |= all;
 				else	if(t.contains("ENTITY:MONSTER")) targets |= monsters;
 				else	if(t.contains("ENTITY:PLAYER")) targets |= players;
 				else	if(t.contains("ENTITY:NPC")) targets |= npcs;
@@ -1335,13 +1335,13 @@ public class SentryInstance {
 				}
 			}
 			for (String t: ignoreTargets){
-				if(t.contains("ENTITY:ALL")) ignores |= all;	
+				if(t.contains("ENTITY:ALL")) ignores |= all;
 				else	if(t.contains("ENTITY:MONSTER")) ignores |= monsters;
 				else	if(t.contains("ENTITY:PLAYER")) ignores |= players;
 				else	if(t.contains("ENTITY:NPC")) ignores |= npcs;
 				else	if(t.contains("ENTITY:OWNER")) ignores |= owner;
 				else{
-					_ignoreTargets.add(t);	
+					_ignoreTargets.add(t);
 					if (plugin.perms!=null && plugin.perms.isEnabled() && t.contains("GROUP:")) ignores |= groups;
 					else	if(t.contains("NPC:")) ignores |= namednpcs;
 					else	if(t.contains("PLAYER:")) ignores |= namedplayers;
@@ -1364,7 +1364,7 @@ public class SentryInstance {
 
 		@Override
 		public void run() {
-			// plugin.getServer().broadcastMessage("tick " + (myNPC ==null) +			
+			// plugin.getServer().broadcastMessage("tick " + (myNPC ==null) +
 			if (myNPC.getBukkitEntity() == null ) sentryStatus = Status.isDEAD; // incase it dies in a way im not handling.....
 
 			if (UpdateWeapon()){
@@ -1385,7 +1385,7 @@ public class SentryInstance {
 					LivingEntity derp = projectileTarget;
 					setTarget(null, false);
 					setTarget(derp, ret);
-				}	
+				}
 			}
 
 			if (sentryStatus != Status.isDEAD &&  HealRate > 0) {
@@ -1462,7 +1462,7 @@ public class SentryInstance {
 
 					if (meleeTarget.getWorld() == myNPC.getBukkitEntity().getLocation().getWorld()) {
 						double dist=  meleeTarget.getLocation().distance(myNPC.getBukkitEntity().getLocation());
-						//block if in range 
+						//block if in range
 						Draw(dist < 3);
 						// Did it get away?
 						if(dist > sentryRange) {
@@ -1497,7 +1497,7 @@ public class SentryInstance {
 				if (guardTarget != null && guardEntity == null) {
 					// daddy? where are u?
 					setGuardTarget(guardTarget);
-				}	
+				}
 
 				if (guardEntity !=null){
 
@@ -1509,7 +1509,7 @@ public class SentryInstance {
 							myNPC.spawn((guardEntity.getLocation().add(1, 0, 1)));
 						}
 						else {
-							((Player) guardEntity).sendMessage(myNPC.getName() + " cannot follow you to " + guardEntity.getWorld().getName());		
+							((Player) guardEntity).sendMessage(myNPC.getName() + " cannot follow you to " + guardEntity.getWorld().getName());
 							guardEntity = null;
 						}
 
@@ -1522,7 +1522,7 @@ public class SentryInstance {
 						}
 						else if(dist > FollowDistance && !getNavigator().isNavigating()) {
 							getNavigator().setTarget((Entity)guardEntity, false);
-							getNavigator().getLocalParameters().stationaryTicks(3*20);	
+							getNavigator().getLocalParameters().stationaryTicks(3*20);
 						}
 						else if (dist < FollowDistance && getNavigator().isNavigating()) {
 							getNavigator().cancelNavigation();
@@ -1533,7 +1533,7 @@ public class SentryInstance {
 				LivingEntity target = null;
 
 				if(targets > 0){
-					target = findTarget(sentryRange);		
+					target = findTarget(sentryRange);
 				}
 
 				if (target !=null)	{
@@ -1597,7 +1597,7 @@ public class SentryInstance {
 		if (myNPC == null) return;
 		if (myNPC.getBukkitEntity() == null) return;
 		if (((CraftLivingEntity)myNPC.getBukkitEntity()).getMaxHealth() != sentryHealth)
-			myNPC.getBukkitEntity().setMaxHealth(sentryHealth); 
+			myNPC.getBukkitEntity().setMaxHealth(sentryHealth);
 		if(health > sentryHealth) health = sentryHealth;
 
 		myNPC.getBukkitEntity().setHealth(health);
@@ -1653,7 +1653,7 @@ public class SentryInstance {
 		}
 		else if(weapon == plugin.witchdoctor || myNPC.getBukkitEntity() instanceof org.bukkit.entity.Witch ){
 			if (is == null){
-				is = new ItemStack(373,1,(short) 16396);	
+				is = new ItemStack(373,1,(short) 16396);
 			}
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			potiontype = is;
@@ -1661,17 +1661,17 @@ public class SentryInstance {
 		else if(weapon == plugin.sc1){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			lightning = true;
-			lightninglevel = 1;	
+			lightninglevel = 1;
 		}
 		else if (weapon == plugin.sc2){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			lightning = true;
-			lightninglevel = 2;	
+			lightninglevel = 2;
 		}
 		else if (weapon == plugin.sc3){
 			myProjectile = org.bukkit.entity.ThrownPotion.class;
 			lightning = true;
-			lightninglevel = 3;	
+			lightninglevel = 3;
 		}
 		else{
 			return false; //melee
@@ -1688,7 +1688,7 @@ public class SentryInstance {
 		if (guardTarget != null && guardEntity == null) theEntity =null; //dont go aggro when bodyguard target isnt around.
 
 		if (theEntity == null) {
-			plugin.debug(myNPC.getName() + "- Set Target Null"); 
+			plugin.debug(myNPC.getName() + "- Set Target Null");
 			// this gets called while npc is dead, reset things.
 			sentryStatus = Status.isLOOKING;
 			projectileTarget = null;
@@ -1733,7 +1733,7 @@ public class SentryInstance {
 
 				faceForward();
 
-				if (getGoalController().isPaused()) 
+				if (getGoalController().isPaused())
 					getGoalController().setPaused(false);
 			}
 			return;
@@ -1750,20 +1750,20 @@ public class SentryInstance {
 
 		if(UpdateWeapon()){
 			//ranged
-			plugin.debug(myNPC.getName() + "- Set Target melee"); 
-			projectileTarget = theEntity;	
+			plugin.debug(myNPC.getName() + "- Set Target melee");
+			projectileTarget = theEntity;
 			meleeTarget = null;
 		}
 		else
 		{
 			//melee
 			// Manual Attack
-			plugin.debug(myNPC.getName() + "- Set Target melee"); 
+			plugin.debug(myNPC.getName() + "- Set Target melee");
 			meleeTarget = theEntity;
 			projectileTarget = null;
 			if (getNavigator().getEntityTarget() != null && getNavigator().getEntityTarget().getTarget() == theEntity) return; //already attacking this, dummy.
-			if (!getGoalController().isPaused()) 
-				getGoalController().setPaused(true);		
+			if (!getGoalController().isPaused())
+				getGoalController().setPaused(true);
 			getNavigator().setTarget((Entity)theEntity, true);
 			getNavigator().getLocalParameters().speedModifier(getSpeed());
 			getNavigator().getLocalParameters().stuckAction(giveup);
@@ -1773,13 +1773,13 @@ public class SentryInstance {
 
 	protected net.citizensnpcs.api.ai.Navigator getNavigator(){
 		NPC npc = getMount();
-		if (npc == null || npc.isSpawned() == false) npc = myNPC; 
+		if (npc == null || npc.isSpawned() == false) npc = myNPC;
 		return npc.getNavigator();
 	}
 
 	protected net.citizensnpcs.api.ai.GoalController getGoalController(){
 		NPC npc = getMount();
-		if (npc == null || npc.isSpawned() == false) npc = myNPC; 
+		if (npc == null || npc.isSpawned() == false) npc = myNPC;
 		return npc.getDefaultGoalController();
 	}
 
@@ -1790,7 +1790,7 @@ public class SentryInstance {
 				NPC n = getMount();
 				if (n!=null){
 					myNPC.getBukkitEntity().getVehicle().setPassenger(null);
-					n.despawn(net.citizensnpcs.api.event.DespawnReason.PLUGIN);			
+					n.despawn(net.citizensnpcs.api.event.DespawnReason.PLUGIN);
 				}
 			}
 		}
@@ -1816,7 +1816,7 @@ public class SentryInstance {
 				n.getBukkitEntity().setCustomNameVisible(false);
 				n.getBukkitEntity().setPassenger(null);
 				n.getBukkitEntity().setPassenger(myNPC.getBukkitEntity());
-			}		
+			}
 			else this.MountID = -1;
 
 		}
@@ -1838,7 +1838,7 @@ public class SentryInstance {
 				else {
 					plugin.getServer().getLogger().info("Cannot find mount NPC " + MountID);
 				}
-			}		
+			}
 
 			else {
 				horseNPC =	net.citizensnpcs.api.CitizensAPI.getNPCRegistry().createNPC(org.bukkit.entity.EntityType.HORSE, myNPC.getName() + "_Mount");
@@ -1847,7 +1847,7 @@ public class SentryInstance {
 
 			if(horseNPC == null){
 				plugin.getServer().getLogger().info("Cannot create mount NPC!");
-			}		
+			}
 
 			if(myNPC.getBukkitEntity() == null){
 				plugin.getServer().getLogger().info("why is this spawned but bukkit entity is null???");
