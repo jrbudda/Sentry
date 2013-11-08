@@ -575,11 +575,11 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			if (ThisNPC.getBukkitEntity() == null) {
+			if (ThisNPC.getEntity() == null) {
 				player.sendMessage(ChatColor.RED + "Cannot set spawn while " +  ThisNPC.getName()  + " is dead.");
 				return true;
 			}
-			inst.Spawn = ThisNPC.getBukkitEntity().getLocation();
+			inst.Spawn = ThisNPC.getEntity().getLocation();
 			player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will respawn at its present location.");   // Talk to the player.
 			return true;
 
@@ -1053,7 +1053,7 @@ public class Sentry extends JavaPlugin {
 			else {
 
 
-				if(ThisNPC.getBukkitEntity().getType() == org.bukkit.entity.EntityType.ENDERMAN || ThisNPC.getBukkitEntity().getType() == org.bukkit.entity.EntityType.PLAYER){
+				if(ThisNPC.getEntity().getType() == org.bukkit.entity.EntityType.ENDERMAN || ThisNPC.getEntity().getType() == org.bukkit.entity.EntityType.PLAYER){
 					if(args[1].equalsIgnoreCase("none")){
 						//remove equipment
 						equip(ThisNPC, null);
@@ -1172,7 +1172,7 @@ public class Sentry extends JavaPlugin {
 
 
 				if(arg.equalsIgnoreCase("nationenemies") && inst.myNPC.isSpawned()){
-					String natname = getNationNameForLocation(inst.myNPC.getBukkitEntity().getLocation());
+					String natname = getNationNameForLocation(inst.myNPC.getEntity().getLocation());
 					if (natname !=null) {
 						arg += ":" + natname;
 					}

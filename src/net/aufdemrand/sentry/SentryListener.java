@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.util.Vector;
 
 
@@ -176,14 +175,14 @@ public class SentryListener implements Listener {
 			for (NPC npc : CitizensAPI.getNPCRegistry()) {
 				SentryInstance inst =plugin.getSentry(npc);
 
-				if (inst == null || !npc.isSpawned() || npc.getBukkitEntity().getWorld() != entto.getWorld()) continue; //not a sentry, or not this world, or dead.
+				if (inst == null || !npc.isSpawned() || npc.getEntity().getWorld() != entto.getWorld()) continue; //not a sentry, or not this world, or dead.
 
 				if (inst.guardEntity == entto ){
 					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 				}
 
 				//are u attacking mai horse?
-				if (inst.getMount() !=null && inst.getMount().getBukkitEntity() == entto ){
+				if (inst.getMount() !=null && inst.getMount().getEntity() == entto ){
 					if(entfrom == inst.guardEntity)event.setCancelled(true);
 					else if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
 
@@ -191,7 +190,7 @@ public class SentryListener implements Listener {
 
 				if (inst.hasTargetType(16)  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false ){
 					//pv-something event.
-					if (npc.getBukkitEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getBukkitEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
+					if (npc.getEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
 						// in range
 						if(inst.NightVision  >= entfrom.getLocation().getBlock().getLightLevel() || inst.NightVision  >= entto.getLocation().getBlock().getLightLevel() ){
 							//can see
@@ -316,10 +315,10 @@ public class SentryListener implements Listener {
 			if (hnpc.getId() == inst.MountID){
 				///nooooo butterstuff!
 
-				Entity killer = hnpc.getBukkitEntity().getKiller();	
+				Entity killer = ((LivingEntity)hnpc.getEntity()).getKiller();	
 				if(killer ==null){
 					//might have been a projectile.
-					EntityDamageEvent ev = hnpc.getBukkitEntity().getLastDamageCause();
+					EntityDamageEvent ev = hnpc.getEntity().getLastDamageCause();
 					if(ev !=null && ev instanceof EntityDamageByEntityEvent){
 						killer =  ((EntityDamageByEntityEvent)ev).getDamager();				
 						if (killer instanceof Projectile) killer = ((Projectile) killer).getShooter();
@@ -353,7 +352,7 @@ public class SentryListener implements Listener {
 		SentryInstance inst = plugin.getSentry(event.getNPC());
 		if(inst == null) return;
 
-		if(inst.myNPC.getBukkitEntity() instanceof org.bukkit.entity.Horse){
+		if(inst.myNPC.getEntity() instanceof org.bukkit.entity.Horse){
 			if (inst.guardEntity != event.getClicker()){
 				event.setCancelled(true);
 			}

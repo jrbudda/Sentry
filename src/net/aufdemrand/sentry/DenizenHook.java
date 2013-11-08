@@ -2,7 +2,7 @@ package net.aufdemrand.sentry;
 
 import java.util.Set;
 
-import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -79,7 +79,7 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = theEntry.getNPC().getEntity();
+			Entity ent = theEntry.getNPC().getEntity();
 
 			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
 
@@ -116,7 +116,7 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = theEntry.getNPC().getEntity();
+			Entity ent = theEntry.getNPC().getEntity();
 
 			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
 
@@ -205,7 +205,7 @@ public class DenizenHook {
 
 			for (Player thePlayer:_myDamamgers){
 
-				if(thePlayer !=null && thePlayer.getLocation().distance(npc.getBukkitEntity().getLocation()) > 300) {
+				if(thePlayer !=null && thePlayer.getLocation().distance(npc.getEntity().getLocation()) > 300) {
 					dB.echoDebug(DebugElement.Header,  thePlayer.getName()+ " is to far away.");
 					continue;
 				}

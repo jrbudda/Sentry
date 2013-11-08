@@ -39,8 +39,8 @@ public class Util {
 	public static void removeMount(int npcid){
 		NPC vnpc = CitizensAPI.getNPCRegistry().getById(npcid);
 		if (vnpc!=null) {
-			if (vnpc.getBukkitEntity() != null) {
-				vnpc.getBukkitEntity().setPassenger(null);
+			if (vnpc.getEntity() != null) {
+				vnpc.getEntity().setPassenger(null);
 			}
 			vnpc.destroy();
 		}
