@@ -45,7 +45,7 @@ public class Sentry extends JavaPlugin {
     public List<Integer> Boots = new LinkedList<Integer>(java.util.Arrays.asList(301, 305, 309, 313, 317));
 
     public List<Integer> Chestplates = new LinkedList<Integer>(java.util.Arrays.asList(299, 303, 307, 311, 315));
-    //SimpleClans sSuport
+    //SimpleClans Support
     boolean ClansActive = false;
     public int Crit1Chance;
     public String Crit1Message = "";
@@ -61,7 +61,7 @@ public class Sentry extends JavaPlugin {
 
     public boolean IgnoreListInvincibility = true;
 
-    //FactionsSuport
+    //Factions Support
     static boolean FactionsActive = false;
     public int GlanceChance;
     public String GlanceMessage = "";
@@ -92,9 +92,9 @@ public class Sentry extends JavaPlugin {
     public int SentryEXP = 5;
     public Map<Integer, Double> SpeedBuffs = new HashMap<Integer, Double>();
     public Map<Integer, Double> StrengthBuffs = new HashMap<Integer, Double>();
-    //TownySupport
+    // Towny Support
     boolean TownyActive = false;
-    //War sSuport
+    //War Support
     boolean WarActive = false;
     public int warlock1 = -1;
     public int warlock2 = -1;
@@ -104,7 +104,7 @@ public class Sentry extends JavaPlugin {
 
     boolean checkPlugin(String name) {
         if (getServer().getPluginManager().getPlugin(name) != null) {
-            if (getServer().getPluginManager().getPlugin(name).isEnabled() == true) {
+            if (getServer().getPluginManager().getPlugin(name).isEnabled()) {
                 return true;
             }
         }
@@ -548,17 +548,10 @@ public class Sentry extends JavaPlugin {
                 //OK!
             } else {
                 //not player is owner
-                if (((Player) sender).hasPermission("citizens.admin") == false) {
+                if (!sender.hasPermission("citizens.admin")) {
                     //no c2 admin.
                     player.sendMessage(ChatColor.RED + "You must be the owner of this Sentry to execute commands.");
                     return true;
-                } else {
-                    //has citizens.admin
-                    if (!ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase("server")) {
-                        //not server-owned NPC
-                        player.sendMessage(ChatColor.RED + "You, or the server, must be the owner of this Sentry to execute commands.");
-                        return true;
-                    }
                 }
             }
         }
