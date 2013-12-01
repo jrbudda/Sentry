@@ -24,9 +24,7 @@ public class Util {
         norman = normalizeVector(norman);
         norman.multiply(.5);
 
-        Location loc = loco.add(norman);
-
-        return loc;
+        return loco.add(norman);
 
     }
 
@@ -130,7 +128,7 @@ public class Util {
         input = input.replace("<NPC>", npc.getName());
         input = input.replace("<PLAYER>", player == null ? "" : player.getName());
         input = input.replace("<ITEM>", Util.getLocalItemName(item));
-        input = input.replace("<AMOUNT>", amount.toString());
+        input = input.replace("<AMOUNT>", amount);
         input = ChatColor.translateAlternateColorCodes('&', input);
         return input;
     }

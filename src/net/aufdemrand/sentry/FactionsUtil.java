@@ -8,7 +8,7 @@ import com.massivecraft.factions.entity.FactionColls;
 public class FactionsUtil {
 
     static boolean isFactionEnemy(String world, String faction1, String faction2) {
-        if (Sentry.FactionsActive == false) return false;
+        if (!Sentry.FactionsActive) return false;
         if (faction1.equalsIgnoreCase(faction2)) return false;
         try {
 
@@ -24,7 +24,7 @@ public class FactionsUtil {
 
 
     static String getFactionsTag(Player player) {
-        if (Sentry.FactionsActive == false) return null;
+        if (!Sentry.FactionsActive) return null;
         try {
             return com.massivecraft.factions.entity.UPlayer.get(player).getFactionName();
         } catch (Exception e) {

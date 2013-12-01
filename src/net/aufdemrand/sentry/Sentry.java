@@ -158,6 +158,7 @@ public class Sentry extends JavaPlugin {
                     try {
                         trait.set(i, null);
                     } catch (Exception e) {
+                        // TODO: Handle?
                     }
                 }
             }
@@ -178,7 +179,7 @@ public class Sentry extends JavaPlugin {
 
 
     public String getClan(Player player) {
-        if (ClansActive == false) return null;
+        if (!ClansActive) return null;
         try {
             net.sacredlabyrinth.phaed.simpleclans.Clan c = net.sacredlabyrinth.phaed.simpleclans.SimpleClans.getInstance().getClanManager().getClanByPlayerName(player.getName());
             if (c != null) return c.getName();
@@ -203,6 +204,7 @@ public class Sentry extends JavaPlugin {
             try {
                 item = Integer.parseInt(S.split(":")[0]);
             } catch (Exception e) {
+                // TODO: Handle?
             }
         }
 
@@ -215,7 +217,7 @@ public class Sentry extends JavaPlugin {
 
 
     public String getNationNameForLocation(Location l) {
-        if (TownyActive == false) return null;
+        if (!TownyActive) return null;
         try {
             TownBlock tb = com.palmergames.bukkit.towny.object.TownyUniverse.getTownBlock(l);
             if (tb != null) {
@@ -243,6 +245,7 @@ public class Sentry extends JavaPlugin {
             try {
                 type = PotionEffectType.getById(Integer.parseInt(args[0]));
             } catch (Exception e) {
+                // TODO: Handle?
             }
         }
 
@@ -252,6 +255,7 @@ public class Sentry extends JavaPlugin {
             try {
                 dur = Integer.parseInt(args[1]);
             } catch (Exception e) {
+                // TODO: Handle?
             }
         }
 
@@ -259,6 +263,7 @@ public class Sentry extends JavaPlugin {
             try {
                 amp = Integer.parseInt(args[2]);
             } catch (Exception e) {
+                // TODO: Handle?
             }
         }
 
@@ -268,7 +273,7 @@ public class Sentry extends JavaPlugin {
     public String[] getResidentTownyInfo(Player player) {
         String[] info = {null, null};
 
-        if (TownyActive == false) return info;
+        if (!TownyActive) return info;
 
         com.palmergames.bukkit.towny.object.Resident resident;
         try {
@@ -307,7 +312,7 @@ public class Sentry extends JavaPlugin {
     }
 
     public String getWarTeam(Player player) {
-        if (WarActive == false) return null;
+        if (!WarActive) return null;
         try {
             com.tommytony.war.Team t = com.tommytony.war.Team.getTeamByPlayerName(player.getName());
             if (t != null) return t.getName();
@@ -319,7 +324,7 @@ public class Sentry extends JavaPlugin {
     }
 
     boolean isNationEnemy(String Nation1, String Nation2) {
-        if (TownyActive == false) return false;
+        if (!TownyActive) return false;
         if (Nation1.equalsIgnoreCase(Nation2)) return false;
         try {
 
@@ -363,6 +368,7 @@ public class Sentry extends JavaPlugin {
             try {
                 val = Double.parseDouble(args[1]);
             } catch (Exception e) {
+                // TODO: Handle?
             }
 
             int item = GetMat(args[0]);
@@ -391,7 +397,7 @@ public class Sentry extends JavaPlugin {
 
             }
 
-            if (item > 0 && list.isEmpty() == false) map.put(item, list);
+            if (item > 0 && !list.isEmpty()) map.put(item, list);
 
 
         }
@@ -405,7 +411,7 @@ public class Sentry extends JavaPlugin {
             return true;
         }
 
-        CommandSender player = (CommandSender) sender;
+        CommandSender player = sender;
 
         int npcid = -1;
         int i = 0;
@@ -544,9 +550,7 @@ public class Sentry extends JavaPlugin {
 
         if (sender instanceof Player && !CitizensAPI.getNPCRegistry().isNPC((Entity) sender)) {
 
-            if (ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
-                //OK!
-            } else {
+            if (!ThisNPC.getTrait(Owner.class).getOwner().equalsIgnoreCase(player.getName())) {
                 //not player is owner
                 if (!sender.hasPermission("citizens.admin")) {
                     //no c2 admin.
@@ -574,38 +578,6 @@ public class Sentry extends JavaPlugin {
             return true;
 
         }
-        //		if (args[0].equalsIgnoreCase("derp")) {
-        //			org.bukkit.inventory.PlayerInventory inv = ((Player)sender).getInventory();
-        //
-        //			for (org.bukkit.inventory.ItemStack ii:inv.getContents()){
-        //				if (ii ==null) {
-        //					player.sendMessage("item null");
-        //					continue;
-        //				}
-        //				player.sendMessage(ii.getTypeId() + ":" + ii.getData());   // Talk to the player.
-        //
-        //			}
-        //
-        //			org.bukkit.inventory.ItemStack is = new org.bukkit.inventory.ItemStack(358,1,(short)0,(byte)2);
-        //			player.sendMessage(is.getData().toString());
-        //			//Prints MAP(2), OK!
-        //
-        //			org.bukkit.inventory.ItemStack is2 = new org.bukkit.inventory.ItemStack(358);
-        //			is2.setDurability((short)2);
-        //			player.sendMessage(is2.getData().toString());
-        //			//Prints MAP(2), OK!
-        //
-        //			org.bukkit.inventory.ItemStack is3 = new org.bukkit.inventory.ItemStack(358);
-        //			is3.setData(new org.bukkit.material.MaterialData(358,(byte)2));
-        //			player.sendMessage(is3.getData().toString());
-        //			//Prints MAP(0), WHY???
-        //
-        //
-        //			HashMap<Integer, ItemStack> poop = inv.removeItem(is);
-        //
-        //			return true;
-        //
-        //		}
 
         else if (args[0].equalsIgnoreCase("invincible")) {
             if (!player.hasPermission("sentry.options.invincible")) {
@@ -1217,7 +1189,7 @@ public class Sentry extends JavaPlugin {
     @Override
     public void onEnable() {
 
-        if (getServer().getPluginManager().getPlugin("Citizens") == null || getServer().getPluginManager().getPlugin("Citizens").isEnabled() == false) {
+        if (getServer().getPluginManager().getPlugin("Citizens") == null || !getServer().getPluginManager().getPlugin("Citizens").isEnabled()) {
             getLogger().log(Level.SEVERE, "Citizens 2.0 not found or not enabled");
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -1238,9 +1210,8 @@ public class Sentry extends JavaPlugin {
                     getLogger().log(Level.WARNING, "Unknown version of Denizen");
                 }
             }
-        } catch (NoClassDefFoundError e) {
-            getLogger().log(Level.WARNING, "An error occured attempting to register with Denizen " + e.getMessage());
-        } catch (Exception e) {
+        }
+        catch (Throwable e) {
             getLogger().log(Level.WARNING, "An error occured attempting to register with Denizen " + e.getMessage());
         }
 
@@ -1276,16 +1247,14 @@ public class Sentry extends JavaPlugin {
 
         this.getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
             public void run() {
-                //Unloaded chunk arrow cleanup
-                while (arrows.size() > 200) {
+                while (arrows.size() > 150) {
                     Projectile a = arrows.remove();
                     if (a != null) {
                         a.remove();
-                        //	x++;
                     }
                 }
             }
-        }, 40, 20 * 120);
+        }, 40, 20 * 60);
 
         reloadMyConfig();
     }
@@ -1339,7 +1308,7 @@ public class Sentry extends JavaPlugin {
     private boolean setupPermissions() {
         try {
 
-            if (getServer().getPluginManager().getPlugin("Vault") == null || getServer().getPluginManager().getPlugin("Vault").isEnabled() == false) {
+            if (getServer().getPluginManager().getPlugin("Vault") == null || !getServer().getPluginManager().getPlugin("Vault").isEnabled()) {
                 return false;
             }
 

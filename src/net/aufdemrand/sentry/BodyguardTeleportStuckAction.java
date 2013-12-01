@@ -41,6 +41,7 @@ public class BodyguardTeleportStuckAction implements StuckAction {
             if (++iterations >= MAX_ITERATIONS && !block.isEmpty())
                 block = base.getBlock();
             break;
+            // TODO: Make this loop? Or... remove the loop?
         }
 
         final Location loc = block.getLocation();

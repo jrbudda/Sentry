@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 
 import net.aufdemrand.sentry.SentryInstance.Status;
@@ -50,8 +51,8 @@ public class SentryTrait extends Trait implements Toggleable {
         thisInstance.Strength = key.getInt("Strength", plugin.getConfig().getInt("DefaultStats.Strength", 1));
         thisInstance.FollowDistance = key.getInt("FollowDistance", plugin.getConfig().getInt("DefaultStats.FollowDistance", 4));
         thisInstance.guardTarget = (key.getString("GuardTarget", null));
-        thisInstance.GreetingMessage = (key.getString("Greeting", plugin.getConfig().getString("DefaultTexts.Greeting", "'§b<NPC> says Welcome, <PLAYER>'")));
-        thisInstance.WarningMessage = (key.getString("Warning", plugin.getConfig().getString("DefaultTexts.Warning", "'§c<NPC> says Halt! Come no closer!'")));
+        thisInstance.GreetingMessage = (key.getString("Greeting", plugin.getConfig().getString("DefaultTexts.Greeting", "'" + String.valueOf(ChatColor.COLOR_CHAR) + "b<NPC> says Welcome, <PLAYER>'")));
+        thisInstance.WarningMessage = (key.getString("Warning", plugin.getConfig().getString("DefaultTexts.Warning", "'" + String.valueOf(ChatColor.COLOR_CHAR) + "c<NPC> says Halt! Come no closer!'")));
         thisInstance.WarningRange = key.getInt("WarningRange", plugin.getConfig().getInt("DefaultStats.WarningRange", 0));
         thisInstance.AttackRateSeconds = key.getDouble("AttackRate", plugin.getConfig().getDouble("DefaultStats.AttackRate", 2.0));
         thisInstance.HealRate = key.getDouble("HealRate", plugin.getConfig().getDouble("DefaultStats.HealRate", 0.0));
@@ -68,7 +69,7 @@ public class SentryTrait extends Trait implements Toggleable {
                 thisInstance.Spawn = null;
             }
 
-            if (thisInstance.Spawn.getWorld() == null) thisInstance.Spawn = null;
+            if (thisInstance.Spawn != null && thisInstance.Spawn.getWorld() == null) thisInstance.Spawn = null;
         }
 
         if (thisInstance.guardTarget != null && thisInstance.guardTarget.isEmpty()) thisInstance.guardTarget = null;
@@ -120,6 +121,7 @@ public class SentryTrait extends Trait implements Toggleable {
                 plugin.debug(npc.getName() + " onSpawn call load");
                 load(new net.citizensnpcs.api.util.MemoryDataKey());
             } catch (NPCLoadException e) {
+                // TODO: Handle?
             }
         }
 

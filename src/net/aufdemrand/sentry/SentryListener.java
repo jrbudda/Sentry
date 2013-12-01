@@ -34,7 +34,7 @@ public class SentryListener implements Listener {
         if (event.getEntity() == null) return;
 
         //dont mess with player death.
-        if (event.getEntity() instanceof Player && event.getEntity().hasMetadata("NPC") == false) return;
+        if (event.getEntity() instanceof Player && !event.getEntity().hasMetadata("NPC")) return;
 
 
         Entity killer = event.getEntity().getKiller();
@@ -50,7 +50,7 @@ public class SentryListener implements Listener {
         SentryInstance sentry = plugin.getSentry(killer);
 
 
-        if (sentry != null && sentry.KillsDropInventory == false) {
+        if (sentry != null && !sentry.KillsDropInventory) {
             event.getDrops().clear();
             event.setDroppedExp(0);
         }
@@ -180,7 +180,7 @@ public class SentryListener implements Listener {
         SentryInstance to = plugin.getSentry(entto);
 
         //process this event on each sentry to check for respondable events.
-        if (event.isCancelled() == false && entfrom != entto && event.getDamage() > 0) {
+        if (!event.isCancelled() && entfrom != entto && event.getDamage() > 0) {
             for (NPC npc : CitizensAPI.getNPCRegistry()) {
                 SentryInstance inst = plugin.getSentry(npc);
 
@@ -199,7 +199,7 @@ public class SentryListener implements Listener {
 
                 }
 
-                if (inst.hasTargetType(16) && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) == false) {
+                if (inst.hasTargetType(16) && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && !CitizensAPI.getNPCRegistry().isNPC(entfrom)) {
                     //pv-something event.
                     if (npc.getEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange || npc.getEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange) {
                         // in range
@@ -208,8 +208,8 @@ public class SentryListener implements Listener {
                             if (inst.hasLOS(entfrom) || inst.hasLOS(entto)) {
                                 //have los
                                 if ((!(entto instanceof Player) && inst.containsTarget("event:pve")) ||
-                                        (entto instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entto) == false && inst.containsTarget("event:pvp")) ||
-                                        (CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc")) ||
+                                        (entto instanceof Player && !CitizensAPI.getNPCRegistry().isNPC(entto) && inst.containsTarget("event:pvp")) ||
+                                        (CitizensAPI.getNPCRegistry().isNPC(entto) && inst.containsTarget("event:pvnpc")) ||
                                         (to != null && inst.containsTarget("event:pvsentry"))) {
                                     //Valid event, attack
                                     if (!inst.isIgnored((LivingEntity) entfrom)) {
@@ -244,7 +244,7 @@ public class SentryListener implements Listener {
             event.setDamage((double) from.getStrength());
 
             //uncancel if not bodyguard.
-            if (from.guardTarget == null || plugin.BodyguardsObeyProtection == false) event.setCancelled(false);
+            if (from.guardTarget == null || !plugin.BodyguardsObeyProtection) event.setCancelled(false);
 
             //cancel if invulnerable non-sentry npc
             if (to == null) {
@@ -262,12 +262,12 @@ public class SentryListener implements Listener {
             if (entfrom == entto) event.setCancelled(true);
 
             //apply potion effects
-            if (from.potionEffects != null && event.isCancelled() == false) {
+            if (from.potionEffects != null && !event.isCancelled()) {
                 ((LivingEntity) entto).addPotionEffects(from.potionEffects);
             }
 
             if (from.isWarlock1()) {
-                if (event.isCancelled() == false) {
+                if (!event.isCancelled()) {
                     if (to == null)
                         event.setCancelled(true); //warlock 1 should not do direct damamge, except to other sentries which take no fall damage.
 
@@ -314,8 +314,6 @@ public class SentryListener implements Listener {
             if (!event.isCancelled()) to.onDamage(event);
 
         }
-
-        return;
     }
 
     @EventHandler(ignoreCancelled = true)

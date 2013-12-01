@@ -86,7 +86,6 @@ public class SentryInstance {
 
     public String GreetingMessage = "&a<NPC> says: Welcome, <PLAYER>!";
     public LivingEntity guardEntity = null;
-    ;
     public String guardTarget = null;
 
     Packet healanim = null;
@@ -889,7 +888,7 @@ public class SentryInstance {
     }
 
     public float getSpeed() {
-        if (myNPC.isSpawned() == false) return sentrySpeed;
+        if (!myNPC.isSpawned()) return sentrySpeed;
         double mod = 0;
         if (myNPC.getEntity() instanceof Player) {
             for (ItemStack is : ((Player) myNPC.getEntity()).getInventory().getArmorContents()) {
@@ -1173,7 +1172,7 @@ public class SentryInstance {
                     break;
             }
 
-            if (msg != null && msg.isEmpty() == false) {
+            if (msg != null && !msg.isEmpty()) {
                 ((Player) attacker).sendMessage(Util.format(msg, npc, (CommandSender) attacker, ((Player) attacker).getItemInHand().getTypeId(), finaldamage + ""));
             }
         }
@@ -1242,7 +1241,7 @@ public class SentryInstance {
 
     @EventHandler
     public void onRightClick(NPCRightClickEvent event) {
-
+        // TODO: ??
     }
 
     final int all = 1;
@@ -1378,7 +1377,7 @@ public class SentryInstance {
 
             }
 
-            if (myNPC.isSpawned() && myNPC.getEntity().isInsideVehicle() == false && isMounted() && isMyChunkLoaded())
+            if (myNPC.isSpawned() && !myNPC.getEntity().isInsideVehicle() && isMounted() && isMyChunkLoaded())
                 mount();
 
             if (sentryStatus == Status.isDEAD && System.currentTimeMillis() > isRespawnable && RespawnDelaySeconds > 0 & Spawn.getWorld().isChunkLoaded(Spawn.getBlockX() >> 4, Spawn.getBlockZ() >> 4)) {
@@ -1447,12 +1446,12 @@ public class SentryInstance {
 
             } else if (sentryStatus == Status.isLOOKING && myNPC.isSpawned()) {
 
-                if (myNPC.getEntity().isInsideVehicle() == true)
+                if (myNPC.getEntity().isInsideVehicle())
                     faceAlignWithVehicle(); //sync the rider with the vehicle.
 
 
                 if (guardEntity instanceof Player) {
-                    if (((Player) guardEntity).isOnline() == false) {
+                    if (!((Player) guardEntity).isOnline()) {
                         guardEntity = null;
                     }
                 }
@@ -1719,13 +1718,13 @@ public class SentryInstance {
 
     protected net.citizensnpcs.api.ai.Navigator getNavigator() {
         NPC npc = getMount();
-        if (npc == null || npc.isSpawned() == false) npc = myNPC;
+        if (npc == null || !npc.isSpawned()) npc = myNPC;
         return npc.getNavigator();
     }
 
     protected net.citizensnpcs.api.ai.GoalController getGoalController() {
         NPC npc = getMount();
-        if (npc == null || npc.isSpawned() == false) npc = myNPC;
+        if (npc == null || !npc.isSpawned()) npc = myNPC;
         return npc.getDefaultGoalController();
     }
 
@@ -1753,7 +1752,7 @@ public class SentryInstance {
 
             if (n != null) {
                 mountCreated = true;
-                if (n.isSpawned() == false) return; //dead mount
+                if (!n.isSpawned()) return; //dead mount
                 n.data().set(NPC.DEFAULT_PROTECTED_METADATA, false);
                 n.getNavigator().getDefaultParameters().attackStrategy(new MountAttackStrategy());
                 n.getNavigator().getDefaultParameters().useNewPathfinder(false);
@@ -1812,7 +1811,7 @@ public class SentryInstance {
     }
 
     public boolean hasLOS(Entity other) {
-        if (myNPC.isSpawned() == false) return false;
+        if (!myNPC.isSpawned()) return false;
         return ((LivingEntity) myNPC.getEntity()).hasLineOfSight(other);
     }
 
