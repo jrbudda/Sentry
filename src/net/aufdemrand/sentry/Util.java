@@ -3,9 +3,9 @@ package net.aufdemrand.sentry;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.minecraft.server.v1_6_R3.Block;
-import net.minecraft.server.v1_6_R3.Item;
-import net.minecraft.server.v1_6_R3.LocaleI18n;
+import net.minecraft.server.v1_7_R1.Block;
+import net.minecraft.server.v1_7_R1.Item;
+import net.minecraft.server.v1_7_R1.LocaleI18n;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -76,10 +76,10 @@ public class Util {
     public static String getLocalItemName(int MatId) {
         if (MatId == 0) return "Hand";
         if (MatId < 256) {
-            Block b = Block.byId[MatId];
+            Block b = Block.e(MatId);
             return b.getName();
         } else {
-            Item b = Item.byId[MatId];
+            Item b = Item.d(MatId);
             return LocaleI18n.get(b.getName() + ".name");
         }
     }

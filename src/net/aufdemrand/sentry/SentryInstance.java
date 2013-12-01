@@ -16,14 +16,14 @@ import net.citizensnpcs.api.trait.trait.MobType;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_6_R3.EntityHuman;
-import net.minecraft.server.v1_6_R3.EntityPotion;
-import net.minecraft.server.v1_6_R3.Packet;
-import net.minecraft.server.v1_6_R3.Packet18ArmAnimation;
-import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
-import org.bukkit.craftbukkit.v1_6_R3.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_6_R3.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_6_R3.inventory.CraftItemStack;
+import net.minecraft.server.v1_7_R1.EntityHuman;
+import net.minecraft.server.v1_7_R1.EntityPotion;
+import net.minecraft.server.v1_7_R1.Packet;
+//import net.minecraft.server.v1_7_R1.Packet18ArmAnimation;
+import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_7_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_7_R1.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -88,7 +88,7 @@ public class SentryInstance {
     public LivingEntity guardEntity = null;
     public String guardTarget = null;
 
-    Packet healanim = null;
+    // Packet healanim = null;
     public Double HealRate = 0.0;
 
     public List<String> ignoreTargets = new ArrayList<String>();
@@ -811,7 +811,7 @@ public class SentryInstance {
 
 
             if (myProjectile == org.bukkit.entity.ThrownPotion.class) {
-                net.minecraft.server.v1_6_R3.World nmsWorld = ((CraftWorld) myNPC.getEntity().getWorld()).getHandle();
+                net.minecraft.server.v1_7_R1.World nmsWorld = ((CraftWorld) myNPC.getEntity().getWorld()).getHandle();
                 EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
                 nmsWorld.addEntity(ent);
                 theArrow = (Projectile) ent.getBukkitEntity();
@@ -972,7 +972,7 @@ public class SentryInstance {
         this.sentryStatus = Status.isLOOKING;
         faceForward();
 
-        healanim = new Packet18ArmAnimation(((CraftEntity) myNPC.getEntity()).getHandle(), 6);
+        //healanim = new Packet18ArmAnimation(((CraftEntity) myNPC.getEntity()).getHandle(), 6);
 
         //	Packet derp = new net.minecraft.server.Packet15Place();
 
@@ -1365,8 +1365,9 @@ public class SentryInstance {
                         setHealth(getHealth() + heal);
 
 
-                        if (healanim != null)
-                            net.citizensnpcs.util.NMS.sendPacketsNearby(myNPC.getEntity().getLocation(), healanim);
+                        //if (healanim != null)
+                            //net.citizensnpcs.util.NMS.sendPacketsNearby(myNPC.getEntity().getLocation(), healanim);
+                        // TODO: Repair this
 
 
                         if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
