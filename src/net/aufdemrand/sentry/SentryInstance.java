@@ -1092,7 +1092,6 @@ public class SentryInstance {
 
 	public void onDamage(EntityDamageByEntityEvent event) {
 
-		event.setCancelled(true);
 		if(sentryStatus == Status.isDYING) return;
 
 		if (myNPC == null || !myNPC.isSpawned()) {

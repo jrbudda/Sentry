@@ -231,6 +231,8 @@ public class SentryListener implements Listener {
 
 		}
 
+		boolean ok = false;
+		
 		if (to  != null) {
 			//to a sentry
 
@@ -257,12 +259,17 @@ public class SentryListener implements Listener {
 			}
 
 			//process event
-			if (!event.isCancelled()) to.onDamage(event);	
-
+			if (!event.isCancelled()){
+				ok = true;
+				to.onDamage(event);	
+			}
+			
+			//Damage to a sentry cannot be handled by the server. Always cancel the event here.
+			event.setCancelled(true);
 		}
 		
 		//process this event on each sentry to check for respondable events.
-		if (event.isCancelled() == false && entfrom != entto && event.getDamage() > 0){
+		if ((event.isCancelled() == false || ok) && entfrom != entto && event.getDamage() > 0){
 			for (NPC npc : CitizensAPI.getNPCRegistry()) {
 				SentryInstance inst =plugin.getSentry(npc);
 
@@ -302,7 +309,7 @@ public class SentryListener implements Listener {
 				}
 			}
 		}
-			
+		
 		return;
 	}
 
