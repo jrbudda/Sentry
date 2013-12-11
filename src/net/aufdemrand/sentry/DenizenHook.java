@@ -79,7 +79,7 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = theEntry.getNPC().getEntity();
+			LivingEntity ent = (LivingEntity) theEntry.getNPC().getEntity();
 
 			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
 
@@ -116,7 +116,7 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = theEntry.getNPC().getEntity();
+			LivingEntity ent = (LivingEntity) theEntry.getNPC().getEntity();
 
 			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
 
@@ -205,7 +205,7 @@ public class DenizenHook {
 
 			for (Player thePlayer:_myDamamgers){
 
-				if(thePlayer !=null && thePlayer.getLocation().distance(npc.getBukkitEntity().getLocation()) > 300) {
+				if(thePlayer !=null && thePlayer.getLocation().distance(npc.getEntity().getLocation()) > 300) {
 					dB.echoDebug(DebugElement.Header,  thePlayer.getName()+ " is to far away.");
 					continue;
 				}

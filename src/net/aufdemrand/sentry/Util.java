@@ -3,9 +3,9 @@ package net.aufdemrand.sentry;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.minecraft.server.v1_6_R3.Block;
-import net.minecraft.server.v1_6_R3.Item;
-import net.minecraft.server.v1_6_R3.LocaleI18n;
+import net.minecraft.server.v1_7_R1.Block;
+import net.minecraft.server.v1_7_R1.Item;
+import net.minecraft.server.v1_7_R1.LocaleI18n;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -39,8 +39,8 @@ public class Util {
 	public static void removeMount(int npcid){
 		NPC vnpc = CitizensAPI.getNPCRegistry().getById(npcid);
 		if (vnpc!=null) {
-			if (vnpc.getBukkitEntity() != null) {
-				vnpc.getBukkitEntity().setPassenger(null);
+			if (vnpc.getEntity() != null) {
+				vnpc.getEntity().setPassenger(null);
 			}
 			vnpc.destroy();
 		}
@@ -79,18 +79,16 @@ public class Util {
 	public static String getLocalItemName(int MatId){
 		if (MatId==0) return  "Hand";
 		if(MatId < 256){
-			Block b =Block.byId[MatId];
+			Block b =getMCBlock(MatId);
 			return	b.getName();
 		}
 		else{
-			Item b =Item.byId[MatId];
+			Item b =getMCItem(MatId);
 			return LocaleI18n.get(b.getName() + ".name");
 		}
 	}
 
 	public static double hangtime(double launchAngle, double v, double elev, double g){
-
-
 
 		double a = v * Math.sin(launchAngle);
 		double b = -2*g*elev;
@@ -103,7 +101,16 @@ public class Util {
 
 	}
 
-
+	
+	//check for obfuscation change
+	public static Item getMCItem(int id) {
+		return Item.d(id);
+	}
+	//check for obfuscation change
+	public static Block getMCBlock(int id) {
+		return Block.e(id);
+	}
+	
 	public static Double launchAngle(Location from, Location to, double v, double elev, double g){
 
 		Vector victor = from.clone().subtract(to).toVector();
