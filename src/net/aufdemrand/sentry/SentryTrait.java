@@ -8,7 +8,6 @@ import org.bukkit.Location;
 import net.aufdemrand.sentry.SentryInstance.Status;
 import net.citizensnpcs.api.exception.NPCLoadException;
 
-import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.trait.Toggleable;
@@ -111,7 +110,7 @@ public class SentryTrait extends Trait implements Toggleable {
 
 	@Override
 	public void onSpawn() {
-		plugin.debug(npc.getName() + " onSpawn");
+		plugin.debug(npc.getName() + ":" + npc.getId() + " onSpawn");
 		ensureInst();
 
 		if (!thisInstance.loaded){
@@ -154,13 +153,13 @@ public class SentryTrait extends Trait implements Toggleable {
 
 	@Override
 	public void onAttach() {
-		plugin.debug(npc.getName() + " onAttach");
+		plugin.debug(npc.getName() + ":" + npc.getId() + " onAttach");
 		isToggled = true;
 	}
 
 	@Override
 	public void onDespawn() {
-		plugin.debug(npc.getName() + " onDespawn");
+		plugin.debug(npc.getName() + ":" + npc.getId() + " onDespawn");
 		if(thisInstance != null){
 			thisInstance.isRespawnable = System.currentTimeMillis() + thisInstance.RespawnDelaySeconds * 1000;
 			thisInstance.sentryStatus = Status.isDEAD;
@@ -213,6 +212,18 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setString("Greeting",thisInstance.GreetingMessage);
 	}
 
+	@Override
+	public void onCopy() {
+		plugin.debug(npc.getName() + ":" + npc.getId() + " onCopy");
+		if(thisInstance != null){
+			plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, new Runnable(){
+				//the new npc is not in the new location immediately.
+				public void run(){
+					thisInstance.Spawn = npc.getEntity().getLocation().clone();
+				}},10);
+		}
+	}
+	
 	@Override
 	public boolean toggle() {
 		isToggled = !isToggled;

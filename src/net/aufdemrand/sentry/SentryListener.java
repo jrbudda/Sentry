@@ -171,48 +171,6 @@ public class SentryListener implements Listener {
 		SentryInstance from = plugin.getSentry(entfrom);
 		SentryInstance to = plugin.getSentry(entto);
 
-		//process this event on each sentry to check for respondable events.
-		if (event.isCancelled() == false && entfrom != entto && event.getDamage() > 0){
-			for (NPC npc : CitizensAPI.getNPCRegistry()) {
-				SentryInstance inst =plugin.getSentry(npc);
-
-				if (inst == null || !npc.isSpawned() || npc.getEntity().getWorld() != entto.getWorld()) continue; //not a sentry, or not this world, or dead.
-
-				if (inst.guardEntity == entto ){
-					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
-				}
-
-				//are u attacking mai horse?
-				if (inst.getMountNPC() !=null && inst.getMountNPC().getEntity() == entto ){
-					if(entfrom == inst.guardEntity)event.setCancelled(true);
-					else if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
-
-				}
-
-				if (inst.hasTargetType(16)  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false ){
-					//pv-something event.
-					if (npc.getEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
-						// in range
-						if(inst.NightVision  >= entfrom.getLocation().getBlock().getLightLevel() || inst.NightVision  >= entto.getLocation().getBlock().getLightLevel() ){
-							//can see
-							if (inst.hasLOS(entfrom) || inst.hasLOS(entto)){
-								//have los
-								if ( (!(entto instanceof Player) && inst.containsTarget("event:pve")) ||
-										(entto instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp")) || 
-										(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc")) ||
-										(to !=null && inst.containsTarget("event:pvsentry")))	{
-									//Valid event, attack
-									if (!inst.isIgnored((LivingEntity)entfrom)){
-										inst.setTarget( (LivingEntity) entfrom, true); //attack the aggressor
-									}
-								}
-							}
-						}	
-					}
-				}
-			}
-		}
-
 		plugin.debug("start: from: " + entfrom + " to " + entto + " cancelled " + event.isCancelled() + " damage " + event.getDamage() + " cause " + event.getCause());
 
 		if (from !=null) {
@@ -302,7 +260,49 @@ public class SentryListener implements Listener {
 			if (!event.isCancelled()) to.onDamage(event);	
 
 		}
+		
+		//process this event on each sentry to check for respondable events.
+		if (event.isCancelled() == false && entfrom != entto && event.getDamage() > 0){
+			for (NPC npc : CitizensAPI.getNPCRegistry()) {
+				SentryInstance inst =plugin.getSentry(npc);
 
+				if (inst == null || !npc.isSpawned() || npc.getEntity().getWorld() != entto.getWorld()) continue; //not a sentry, or not this world, or dead.
+
+				if (inst.guardEntity == entto ){
+					if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
+				}
+
+				//are u attacking mai horse?
+				if (inst.getMountNPC() !=null && inst.getMountNPC().getEntity() == entto ){
+					if(entfrom == inst.guardEntity)event.setCancelled(true);
+					else if (inst.Retaliate && entfrom instanceof LivingEntity)  inst.setTarget((LivingEntity) entfrom, true);
+
+				}
+
+				if (inst.hasTargetType(16)  && inst.sentryStatus == net.aufdemrand.sentry.SentryInstance.Status.isLOOKING && entfrom instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entfrom) ==false ){
+					//pv-something event.
+					if (npc.getEntity().getLocation().distance(entto.getLocation()) <= inst.sentryRange ||npc.getEntity().getLocation().distance(entfrom.getLocation()) <= inst.sentryRange){
+						// in range
+						if(inst.NightVision  >= entfrom.getLocation().getBlock().getLightLevel() || inst.NightVision  >= entto.getLocation().getBlock().getLightLevel() ){
+							//can see
+							if (inst.hasLOS(entfrom) || inst.hasLOS(entto)){
+								//have los
+								if ( (!(entto instanceof Player) && inst.containsTarget("event:pve")) ||
+										(entto instanceof Player && CitizensAPI.getNPCRegistry().isNPC(entto) ==false && inst.containsTarget("event:pvp")) || 
+										(CitizensAPI.getNPCRegistry().isNPC(entto) == true && inst.containsTarget("event:pvnpc")) ||
+										(to !=null && inst.containsTarget("event:pvsentry")))	{
+									//Valid event, attack
+									if (!inst.isIgnored((LivingEntity)entfrom)){
+										inst.setTarget( (LivingEntity) entfrom, true); //attack the aggressor
+									}
+								}
+							}
+						}	
+					}
+				}
+			}
+		}
+			
 		return;
 	}
 
