@@ -1417,7 +1417,7 @@ public class SentryInstance {
 						setHealth(getHealth() + heal);
 
 
-						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(getMyEntity().getLocation(),healanim);
+						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(null, getMyEntity().getLocation(),healanim);
 
 
 						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
@@ -1517,7 +1517,7 @@ public class SentryInstance {
 					// daddy? where are u?
 					setGuardTarget(guardTarget, false);
 				}
-				
+
 				if (guardTarget != null && guardEntity == null) {
 					// daddy? where are u?
 					setGuardTarget(guardTarget, true);
@@ -1588,7 +1588,7 @@ public class SentryInstance {
 			setTarget(null, false);// clear active hostile target
 			return true;
 		}
-		
+
 		if (!forcePlayer){
 
 			List<Entity> EntitiesWithinRange = getMyEntity().getNearbyEntities(sentryRange, sentryRange, sentryRange);
@@ -1618,16 +1618,16 @@ public class SentryInstance {
 			}
 		}
 		else {
-			Player[] players = plugin.getServer().getOnlinePlayers();	
-			
-			for (Player player : players) {			
+			Player[] players = plugin.getServer().getOnlinePlayers();
+
+			for (Player player : players) {
 				if (player.getName().equals(name)) {
 					guardEntity = (LivingEntity) player;
 					guardTarget = player.getName();
 					setTarget(null, false); // clear active hostile target
 					return true;
 				}
-				
+
 			}
 
 		}
@@ -1921,7 +1921,7 @@ public class SentryInstance {
 
 	public LivingEntity getMyEntity() {
 		if (myNPC == null) return null;
-		if (myNPC.getEntity() == null) return null;	
+		if (myNPC.getEntity() == null) return null;
 		if (myNPC.getEntity().isDead()) return null;
 		if (!( myNPC.getEntity() instanceof LivingEntity)){
 			plugin.getServer().getLogger().info("Sentry " + myNPC.getName() + " is not a living entity! Errors inbound....");
