@@ -16,14 +16,14 @@ import net.citizensnpcs.api.trait.trait.MobType;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_7_R1.EntityHuman;
-import net.minecraft.server.v1_7_R1.EntityPotion;
-import net.minecraft.server.v1_7_R1.Packet;
-import net.minecraft.server.v1_7_R1.PacketPlayOutAnimation;
-import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_7_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_7_R2.EntityHuman;
+import net.minecraft.server.v1_7_R2.EntityPotion;
+import net.minecraft.server.v1_7_R2.Packet;
+import net.minecraft.server.v1_7_R2.PacketPlayOutAnimation;
+import org.bukkit.craftbukkit.v1_7_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_7_R2.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_7_R2.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -494,7 +494,9 @@ public class SentryInstance {
 
 				if(killer !=null){
 
-					if(killer instanceof Projectile && ((Projectile) killer).getShooter() != null) killer = ((Projectile) killer).getShooter();
+					if(killer instanceof Projectile && ((Projectile) killer).getShooter() != null
+                            && ((Projectile)killer).getShooter() instanceof Entity)
+                        killer = (Entity) ((Projectile) killer).getShooter();
 
 					plugin.debug("Running Denizen actions for " + myNPC.getName() + " with killer: " + killer.toString());
 
@@ -850,7 +852,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_7_R1.World nmsWorld = ((CraftWorld)getMyEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_7_R2.World nmsWorld = ((CraftWorld)getMyEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -1117,7 +1119,7 @@ public class SentryInstance {
 		// Find the attacker
 		if (event.getDamager() instanceof Projectile) {
 			if (((Projectile) event.getDamager()).getShooter() instanceof LivingEntity) {
-				attacker = ((Projectile) event.getDamager()).getShooter();
+				attacker = (LivingEntity) ((Projectile) event.getDamager()).getShooter();
 			}
 		} else if (event.getDamager() instanceof LivingEntity) {
 			attacker = (LivingEntity) event.getDamager();
