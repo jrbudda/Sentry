@@ -11,7 +11,9 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+
 
 
 import net.citizensnpcs.api.CitizensAPI;
@@ -166,7 +168,10 @@ public class SentryListener implements Listener {
 		Entity entto = event.getEntity();
 
 		if(	entfrom  instanceof org.bukkit.entity.Projectile && entfrom instanceof Entity){
-			entfrom = (Entity) ((org.bukkit.entity.Projectile) entfrom).getShooter();
+			ProjectileSource source = ((Projectile) entfrom).getShooter();
+			if (source instanceof Entity){
+				entfrom = (Entity) ((org.bukkit.entity.Projectile) entfrom).getShooter();
+			}
 		}
 
 		SentryInstance from = plugin.getSentry(entfrom);
