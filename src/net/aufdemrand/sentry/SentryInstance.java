@@ -124,6 +124,7 @@ public class SentryInstance {
 	public Integer RespawnDelaySeconds = 10;
 	public Boolean Retaliate = true;
 	public double sentryHealth = 20;
+    public boolean IgnoreLOS;
 
 	public Integer sentryRange = 10;
 
@@ -1797,7 +1798,7 @@ public class SentryInstance {
 
 		if(UpdateWeapon()){
 			//ranged
-			plugin.debug(myNPC.getName() + "- Set Target melee");
+			plugin.debug(myNPC.getName() + "- Set Target projectile");
 			projectileTarget = theEntity;
 			meleeTarget = null;
 		}
@@ -1917,7 +1918,8 @@ public class SentryInstance {
 	}
 
 	public boolean hasLOS(Entity other){
-		if (myNPC.isSpawned() ==false) return false;
+		if (!myNPC.isSpawned()) return false;
+        if (IgnoreLOS) return true;
 		return getMyEntity().hasLineOfSight(other);
 	}
 
