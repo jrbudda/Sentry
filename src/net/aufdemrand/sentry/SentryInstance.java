@@ -384,7 +384,7 @@ public class SentryInstance {
 						if (this.containsTarget("WARTEAM:" + team))	return true;
 					}
 				}
-				if( this.hasIgnoreType(mcTeams) ) {
+				if( this.hasTargetType(mcTeams) ) {
 					String team = plugin.getMCTeamName((Player)aTarget);
 					//	plugin.getLogger().info(faction);
 					if (team !=null) {
