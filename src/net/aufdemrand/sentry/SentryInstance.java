@@ -16,14 +16,14 @@ import net.citizensnpcs.api.trait.trait.MobType;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_7_R1.EntityHuman;
-import net.minecraft.server.v1_7_R1.EntityPotion;
-import net.minecraft.server.v1_7_R1.Packet;
-import net.minecraft.server.v1_7_R1.PacketPlayOutAnimation;
-import org.bukkit.craftbukkit.v1_7_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_7_R1.inventory.CraftItemStack;
+import net.minecraft.server.v1_7_R3.EntityHuman;
+import net.minecraft.server.v1_7_R3.EntityPotion;
+import net.minecraft.server.v1_7_R3.Packet;
+import net.minecraft.server.v1_7_R3.PacketPlayOutAnimation;
+import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R3.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_7_R3.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_7_R3.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -124,6 +124,7 @@ public class SentryInstance {
 	public Integer RespawnDelaySeconds = 10;
 	public Boolean Retaliate = true;
 	public double sentryHealth = 20;
+    public boolean IgnoreLOS;
 
 	public Integer sentryRange = 10;
 
@@ -383,7 +384,7 @@ public class SentryInstance {
 						if (this.containsTarget("WARTEAM:" + team))	return true;
 					}
 				}
-				if( this.hasIgnoreType(mcTeams) ) {
+				if( this.hasTargetType(mcTeams) ) {
 					String team = plugin.getMCTeamName((Player)aTarget);
 					//	plugin.getLogger().info(faction);
 					if (team !=null) {
@@ -494,7 +495,9 @@ public class SentryInstance {
 
 				if(killer !=null){
 
-					if(killer instanceof Projectile && ((Projectile) killer).getShooter() != null) killer = ((Projectile) killer).getShooter();
+					if(killer instanceof Projectile && ((Projectile) killer).getShooter() != null
+                            && ((Projectile)killer).getShooter() instanceof Entity)
+                        killer = (Entity) ((Projectile) killer).getShooter();
 
 					plugin.debug("Running Denizen actions for " + myNPC.getName() + " with killer: " + killer.toString());
 
@@ -850,7 +853,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_7_R1.World nmsWorld = ((CraftWorld)getMyEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_7_R3.World nmsWorld = ((CraftWorld)getMyEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -1117,7 +1120,7 @@ public class SentryInstance {
 		// Find the attacker
 		if (event.getDamager() instanceof Projectile) {
 			if (((Projectile) event.getDamager()).getShooter() instanceof LivingEntity) {
-				attacker = ((Projectile) event.getDamager()).getShooter();
+				attacker = (LivingEntity) ((Projectile) event.getDamager()).getShooter();
 			}
 		} else if (event.getDamager() instanceof LivingEntity) {
 			attacker = (LivingEntity) event.getDamager();
@@ -1417,7 +1420,7 @@ public class SentryInstance {
 						setHealth(getHealth() + heal);
 
 
-						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(getMyEntity().getLocation(),healanim);
+						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(null, getMyEntity().getLocation(),healanim);
 
 
 						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
@@ -1517,7 +1520,7 @@ public class SentryInstance {
 					// daddy? where are u?
 					setGuardTarget(guardTarget, false);
 				}
-				
+
 				if (guardTarget != null && guardEntity == null) {
 					// daddy? where are u?
 					setGuardTarget(guardTarget, true);
@@ -1588,7 +1591,7 @@ public class SentryInstance {
 			setTarget(null, false);// clear active hostile target
 			return true;
 		}
-		
+
 		if (!forcePlayer){
 
 			List<Entity> EntitiesWithinRange = getMyEntity().getNearbyEntities(sentryRange, sentryRange, sentryRange);
@@ -1618,16 +1621,16 @@ public class SentryInstance {
 			}
 		}
 		else {
-			Player[] players = plugin.getServer().getOnlinePlayers();	
-			
-			for (Player player : players) {			
+			Player[] players = plugin.getServer().getOnlinePlayers();
+
+			for (Player player : players) {
 				if (player.getName().equals(name)) {
 					guardEntity = (LivingEntity) player;
 					guardTarget = player.getName();
 					setTarget(null, false); // clear active hostile target
 					return true;
 				}
-				
+
 			}
 
 		}
@@ -1795,7 +1798,7 @@ public class SentryInstance {
 
 		if(UpdateWeapon()){
 			//ranged
-			plugin.debug(myNPC.getName() + "- Set Target melee");
+			plugin.debug(myNPC.getName() + "- Set Target projectile");
 			projectileTarget = theEntity;
 			meleeTarget = null;
 		}
@@ -1915,13 +1918,14 @@ public class SentryInstance {
 	}
 
 	public boolean hasLOS(Entity other){
-		if (myNPC.isSpawned() ==false) return false;
+		if (!myNPC.isSpawned()) return false;
+        if (IgnoreLOS) return true;
 		return getMyEntity().hasLineOfSight(other);
 	}
 
 	public LivingEntity getMyEntity() {
 		if (myNPC == null) return null;
-		if (myNPC.getEntity() == null) return null;	
+		if (myNPC.getEntity() == null) return null;
 		if (myNPC.getEntity().isDead()) return null;
 		if (!( myNPC.getEntity() instanceof LivingEntity)){
 			plugin.getServer().getLogger().info("Sentry " + myNPC.getName() + " is not a living entity! Errors inbound....");

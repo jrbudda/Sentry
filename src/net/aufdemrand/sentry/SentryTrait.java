@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.ChatColor;
 
 import net.aufdemrand.sentry.SentryInstance.Status;
 import net.citizensnpcs.api.exception.NPCLoadException;
@@ -35,29 +36,30 @@ public class SentryTrait extends Trait implements Toggleable {
 		if(key.keyExists("traits")) key = key.getRelative("traits");
 
 		isToggled=	key.getBoolean("toggled", isToggled());
-		thisInstance.Retaliate=	key.getBoolean("Retaliate", plugin.getConfig().getBoolean("DefaultOptions.Retaliate",true));
+		thisInstance.Retaliate=	key.getBoolean("Retaliate", plugin.getConfig().getBoolean("DefaultOptions.Retaliate", true));
 		thisInstance.Invincible=	key.getBoolean("Invincinble", plugin.getConfig().getBoolean("DefaultOptions.Invincible",false));
 		thisInstance.DropInventory=	key.getBoolean("DropInventory", plugin.getConfig().getBoolean("DefaultOptions.Drops",false));
 		thisInstance.LuckyHits=	key.getBoolean("CriticalHits", plugin.getConfig().getBoolean("DefaultOptions.Criticals",true));
-		thisInstance.sentryHealth=	key.getDouble("Health", plugin.getConfig().getInt("DefaultStats.Health",20));
-		thisInstance.sentryRange=	key.getInt("Range", plugin.getConfig().getInt("DefaultStats.Range",10));
+		thisInstance.sentryHealth=	key.getDouble("Health", plugin.getConfig().getInt("DefaultStats.Health", 20));
+		thisInstance.sentryRange=	key.getInt("Range", plugin.getConfig().getInt("DefaultStats.Range", 10));
 		thisInstance.RespawnDelaySeconds=	key.getInt("RespawnDelay", plugin.getConfig().getInt("DefaultStats.Respawn",10));
 		thisInstance.sentrySpeed=	(float) (key.getDouble("Speed", plugin.getConfig().getDouble("DefaultStats.Speed",1.0)));
 		thisInstance.sentryWeight=	 key.getDouble("Weight", plugin.getConfig().getDouble("DefaultStats.Weight",1.0));
-		thisInstance.Armor=		key.getInt("Armor", plugin.getConfig().getInt("DefaultStats.Armor",0));
+		thisInstance.Armor=		key.getInt("Armor", plugin.getConfig().getInt("DefaultStats.Armor", 0));
 		thisInstance.Strength=		key.getInt("Strength", plugin.getConfig().getInt("DefaultStats.Strength",1));
 		thisInstance.FollowDistance =  key.getInt("FollowDistance", plugin.getConfig().getInt("DefaultStats.FollowDistance", 4));
 		thisInstance.guardTarget = (key.getString("GuardTarget", null));
-		thisInstance.GreetingMessage = (key.getString("Greeting",plugin.getConfig().getString("DefaultTexts.Greeting", "'§b<NPC> says Welcome, <PLAYER>'")));
-		thisInstance.WarningMessage = (key.getString("Warning",plugin.getConfig().getString("DefaultTexts.Warning", "'§c<NPC> says Halt! Come no closer!'")));
+		thisInstance.GreetingMessage = (key.getString("Greeting",plugin.getConfig().getString("DefaultTexts.Greeting", "'" + ChatColor.COLOR_CHAR + "b<NPC> says Welcome, <PLAYER>'")));
+		thisInstance.WarningMessage = (key.getString("Warning",plugin.getConfig().getString("DefaultTexts.Warning", "'" + ChatColor.COLOR_CHAR + "c<NPC> says Halt! Come no closer!'")));
 		thisInstance.WarningRange = key.getInt("WarningRange", plugin.getConfig().getInt("DefaultStats.WarningRange",0));
-		thisInstance.AttackRateSeconds =  key.getDouble("AttackRate", plugin.getConfig().getDouble("DefaultStats.AttackRate",2.0));
+		thisInstance.AttackRateSeconds =  key.getDouble("AttackRate", plugin.getConfig().getDouble("DefaultStats.AttackRate", 2.0));
 		thisInstance.HealRate =  key.getDouble("HealRate", plugin.getConfig().getDouble("DefaultStats.HealRate",0.0));
-		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision",16));
+		thisInstance.NightVision = key.getInt("NightVision", plugin.getConfig().getInt("DefaultStats.NightVision", 16));
 		thisInstance.KillsDropInventory = key.getBoolean("KillDrops", plugin.getConfig().getBoolean("DefaultOptions.KillDrops", true));
+        thisInstance.IgnoreLOS = key.getBoolean("IgnoreLOS", plugin.getConfig().getBoolean("DefaultOptions.IgnoreLOS", false));
 		thisInstance.MountID = key.getInt("MountID", (int)-1);
 		thisInstance.Targetable = key.getBoolean("Targetable", plugin.getConfig().getBoolean("DefaultOptions.Targetable",true));
-		
+
 		if( key.keyExists("Spawn")){
 			try {
 				thisInstance.Spawn = new Location(plugin.getServer().getWorld(key.getString("Spawn.world")), key.getDouble("Spawn.x"),key.getDouble("Spawn.y"), key.getDouble("Spawn.z"), (float) key.getDouble("Spawn.yaw"), (float) key.getDouble("Spawn.pitch"));
@@ -90,7 +92,7 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		for (String string : ignoretemp) {
 			if(!thisInstance.ignoreTargets.contains(string.toUpperCase())){
-				thisInstance.ignoreTargets.add(string.toUpperCase());		
+				thisInstance.ignoreTargets.add(string.toUpperCase());
 			}
 
 
@@ -123,7 +125,7 @@ public class SentryTrait extends Trait implements Toggleable {
 
 		if (!plugin.GroupsChecked) plugin.doGroups(); // lazy checking for lazy vault.
 
-		thisInstance.initialize();	
+		thisInstance.initialize();
 
 	}
 
@@ -176,10 +178,11 @@ public class SentryTrait extends Trait implements Toggleable {
 		key.setBoolean("DropInventory", thisInstance.DropInventory);
 		key.setBoolean("KillDrops", thisInstance.KillsDropInventory);
 		key.setBoolean("Targetable", thisInstance.Targetable);
-		
+
 		key.setInt("MountID", thisInstance.MountID);
 
 		key.setBoolean("CriticalHits", thisInstance.LuckyHits);
+        key.setBoolean("IgnoreLOS", thisInstance.IgnoreLOS);
 		key.setRaw("Targets", thisInstance.validTargets);
 		key.setRaw("Ignores", thisInstance.ignoreTargets);
 
@@ -189,7 +192,7 @@ public class SentryTrait extends Trait implements Toggleable {
 			key.setDouble("Spawn.z", thisInstance.Spawn.getZ());
 			key.setString("Spawn.world", thisInstance.Spawn.getWorld().getName());
 			key.setDouble("Spawn.yaw", thisInstance.Spawn.getYaw());
-			key.setDouble("Spawn.pitch", thisInstance.Spawn.getPitch());		
+			key.setDouble("Spawn.pitch", thisInstance.Spawn.getPitch());
 		}
 
 		key.setDouble("Health", thisInstance.sentryHealth);
@@ -223,7 +226,7 @@ public class SentryTrait extends Trait implements Toggleable {
 				}},10);
 		}
 	}
-	
+
 	@Override
 	public boolean toggle() {
 		isToggled = !isToggled;
