@@ -3,9 +3,9 @@ package net.aufdemrand.sentry;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.minecraft.server.v1_7_R3.Block;
-import net.minecraft.server.v1_7_R3.Item;
-import net.minecraft.server.v1_7_R3.LocaleI18n;
+import net.minecraft.server.v1_7_R4.Block;
+import net.minecraft.server.v1_7_R4.Item;
+import net.minecraft.server.v1_7_R4.LocaleI18n;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -104,11 +104,11 @@ public class Util {
 
 	//check for obfuscation change
 	public static Item getMCItem(int id) {
-		return Item.d(id);
+		return Item.getById(id);
 	}
 	//check for obfuscation change
 	public static Block getMCBlock(int id) {
-		return Block.e(id);
+		return Block.getById(id);
 	}
 
 	public static Double launchAngle(Location from, Location to, double v, double elev, double g){
