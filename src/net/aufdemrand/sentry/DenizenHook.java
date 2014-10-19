@@ -7,8 +7,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import net.aufdemrand.denizen.Denizen;
-import net.aufdemrand.denizen.exceptions.CommandExecutionException;
-import net.aufdemrand.denizen.exceptions.InvalidArgumentsException;
+import net.aufdemrand.denizencore.exceptions.CommandExecutionException;
+import net.aufdemrand.denizencore.exceptions.InvalidArgumentsException;
 import net.aufdemrand.denizen.npc.traits.TriggerTrait;
 import net.aufdemrand.denizen.objects.dNPC;
 import net.aufdemrand.denizen.objects.dPlayer;
@@ -28,7 +28,7 @@ public class DenizenHook {
 
 	public static boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
 		if (!DenizenActive) return false;
-		
+
 		try {
 			boolean a = false, b = false, c = false;
 
@@ -64,11 +64,11 @@ public class DenizenHook {
 
 	public static void DenizenAction(NPC npc, String action, org.bukkit.OfflinePlayer player){
 		if(DenizenActive){
-			dNPC dnpc = dNPC.mirrorCitizensNPC(npc);	
+			dNPC dnpc = dNPC.mirrorCitizensNPC(npc);
 			if (dnpc != null) {
 				try {
-					dnpc.action(action, dPlayer.mirrorBukkitPlayer(player));	
-				} catch (Exception e) {	
+					dnpc.action(action, dPlayer.mirrorBukkitPlayer(player));
+				} catch (Exception e) {
 				}
 			}
 		}
