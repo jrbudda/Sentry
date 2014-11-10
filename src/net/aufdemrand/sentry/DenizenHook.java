@@ -153,7 +153,6 @@ public class DenizenHook {
 
 			// Check if trigger is enabled.
 			if (!npc.getTrait(TriggerTrait.class).isEnabled(name)) {
-				dB.echoDebug(DebugElement.Header,  this.getName() +  " Trigger not enabled");
 				return false;
 			}
 
@@ -193,7 +192,6 @@ public class DenizenHook {
 
 			// Check if trigger is enabled.
 			if (!npc.getTrait(TriggerTrait.class).isEnabled(name)) {
-				dB.echoDebug(DebugElement.Header,  this.getName() +  " Trigger not enabled");
 				return false;
 			}
 
