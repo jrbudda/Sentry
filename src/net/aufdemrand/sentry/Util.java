@@ -3,9 +3,9 @@ package net.aufdemrand.sentry;
 
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
-import net.minecraft.server.v1_7_R4.Block;
-import net.minecraft.server.v1_7_R4.Item;
-import net.minecraft.server.v1_7_R4.LocaleI18n;
+import net.minecraft.server.v1_8_R1.Block;
+import net.minecraft.server.v1_8_R1.Item;
+import net.minecraft.server.v1_8_R1.LocaleI18n;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;

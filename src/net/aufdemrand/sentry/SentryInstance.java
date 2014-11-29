@@ -10,14 +10,14 @@ import net.citizensnpcs.api.trait.trait.MobType;
 import net.citizensnpcs.api.trait.trait.Owner;
 
 //Version Specifics
-import net.minecraft.server.v1_7_R4.EntityHuman;
-import net.minecraft.server.v1_7_R4.EntityPotion;
-import net.minecraft.server.v1_7_R4.Packet;
-import net.minecraft.server.v1_7_R4.PacketPlayOutAnimation;
-import org.bukkit.craftbukkit.v1_7_R4.CraftWorld;
-import org.bukkit.craftbukkit.v1_7_R4.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_7_R4.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_7_R4.inventory.CraftItemStack;
+import net.minecraft.server.v1_8_R1.EntityHuman;
+import net.minecraft.server.v1_8_R1.EntityPotion;
+import net.minecraft.server.v1_8_R1.Packet;
+import net.minecraft.server.v1_8_R1.PacketPlayOutAnimation;
+import org.bukkit.craftbukkit.v1_8_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_8_R1.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_8_R1.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_8_R1.inventory.CraftItemStack;
 /////////////////////////
 
 import org.bukkit.ChatColor;
@@ -693,7 +693,7 @@ public class SentryInstance {
 
 
 	public void Draw(boolean on){
-		((CraftLivingEntity)(getMyEntity())).getHandle().e(on);
+		((CraftLivingEntity)(getMyEntity())).getHandle().b(on); // TODO: 1.8 UPDATE - IS THIS CORRECT?
 	}
 
 	public void Fire(LivingEntity theEntity) {
@@ -847,7 +847,7 @@ public class SentryInstance {
 
 
 			if(myProjectile == org.bukkit.entity.ThrownPotion.class){
-				net.minecraft.server.v1_7_R4.World nmsWorld = ((CraftWorld)getMyEntity().getWorld()).getHandle();
+				net.minecraft.server.v1_8_R1.World nmsWorld = ((CraftWorld)getMyEntity().getWorld()).getHandle();
 				EntityPotion ent = new EntityPotion(nmsWorld, loc.getX(), loc.getY(), loc.getZ(), CraftItemStack.asNMSCopy(potiontype));
 				nmsWorld.addEntity(ent);
 				theArrow = (Projectile) ent.getBukkitEntity();
@@ -1414,8 +1414,8 @@ public class SentryInstance {
 						setHealth(getHealth() + heal);
 
 
-						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(null, getMyEntity().getLocation(),healanim);
-
+						//if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(null, getMyEntity().getLocation(),healanim);
+						// TODO: 1.8 UPDATE - release when Citizens is ready
 
 						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
 
