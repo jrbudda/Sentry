@@ -1,6 +1,5 @@
 package net.aufdemrand.sentry;
 
-
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.minecraft.server.v1_8_R1.Block;

@@ -1414,8 +1414,7 @@ public class SentryInstance {
 						setHealth(getHealth() + heal);
 
 
-						//if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(null, getMyEntity().getLocation(),healanim);
-						// TODO: 1.8 UPDATE - release when Citizens is ready
+						if (healanim!=null)net.citizensnpcs.util.NMS.sendPacketsNearby(null, getMyEntity().getLocation(),healanim);
 
 						if (getHealth() >= sentryHealth) _myDamamgers.clear(); //healed to full, forget attackers
 
