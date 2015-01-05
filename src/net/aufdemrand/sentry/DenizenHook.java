@@ -2,6 +2,7 @@ package net.aufdemrand.sentry;
 
 import java.util.Set;
 
+import net.aufdemrand.denizen.BukkitScriptEntryData;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -79,19 +80,19 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = (LivingEntity) theEntry.getNPC().getEntity();
+			LivingEntity ent = (LivingEntity) ((BukkitScriptEntryData)theEntry.entryData).getNPC().getEntity();
 
-			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
+			SentryInstance inst = ((BukkitScriptEntryData)theEntry.entryData).getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
 
 			if (ent!=null){
-				if (theEntry.getNPC().getCitizen().hasTrait(SentryTrait.class)){
+				if (((BukkitScriptEntryData)theEntry.entryData).getNPC().getCitizen().hasTrait(SentryTrait.class)){
 					boolean deaggro = false;
 
 					for(String arg : theEntry.getArguments()){
 						if (arg.equalsIgnoreCase("peace")) deaggro = true;
 					}
 
-					String db = "RISE! " + theEntry.getNPC().getName() + "!";
+					String db = "RISE! " + ((BukkitScriptEntryData)theEntry.entryData).getNPC().getName() + "!";
 					if (deaggro) db += " ..And fight no more!";
 					dB.log(db);
 
@@ -116,9 +117,10 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = (LivingEntity) theEntry.getNPC().getEntity();
+			LivingEntity ent = (LivingEntity) ((BukkitScriptEntryData)theEntry.entryData).getNPC().getEntity();
 
-			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
+			SentryInstance inst = ((BukkitScriptEntryData)theEntry.entryData).getNPC()
+					.getCitizen().getTrait(SentryTrait.class).getInstance();
 
 			if (inst!=null){
 				dB.log("Goodbye, cruel world... ");

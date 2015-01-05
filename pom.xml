@@ -7,7 +7,7 @@
     <groupId>net.aufdemrand</groupId>
     <artifactId>sentry</artifactId>
     <packaging>jar</packaging>
-    <version>1.8.3</version>
+    <version>1.8.4</version>
     <name>sentry</name>
     <description>Armed Citizens</description>
 
@@ -108,7 +108,7 @@
         <dependency>
             <groupId>com.massivecraft</groupId>
             <artifactId>factions</artifactId>
-            <version>2.2.2</version>
+            <version>2.7.5</version>
             <type>jar</type>
             <scope>system</scope>
           <systemPath>${project.basedir}/lib/Factions.jar</systemPath>
