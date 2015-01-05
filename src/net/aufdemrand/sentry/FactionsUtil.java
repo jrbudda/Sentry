@@ -3,7 +3,7 @@ package net.aufdemrand.sentry;
 import org.bukkit.entity.Player;
 
 import com.massivecraft.factions.entity.Faction;
-import com.massivecraft.factions.entity.FactionColls;
+import com.massivecraft.factions.entity.FactionColl;
 
 public class FactionsUtil {
 
@@ -12,8 +12,8 @@ public class FactionsUtil {
 		if (faction1.equalsIgnoreCase(faction2)) return false;
 		try {
 
-			Faction f1 =	FactionColls.get().getForWorld(world).getByName(faction1);
-			Faction f2 =	FactionColls.get().getForWorld(world).getByName(faction2);
+			Faction f1 =	FactionColl.get().getByName(faction1);
+			Faction f2 =	FactionColl.get().getByName(faction2);
 
 			return f1.getRelationTo(f2) == com.massivecraft.factions.Rel.ENEMY;
 
@@ -26,7 +26,7 @@ public class FactionsUtil {
 	static  String getFactionsTag(Player player) {
 		if (Sentry.FactionsActive == false)return null;
 		try {
-			return	com.massivecraft.factions.entity.UPlayer.get(player).getFactionName();
+			return	com.massivecraft.factions.entity.MPlayer.get(player).getFactionName();
 		} catch (Exception e) {
 			return null;
 		}
