@@ -13,11 +13,11 @@ import net.aufdemrand.denizencore.exceptions.InvalidArgumentsException;
 import net.aufdemrand.denizen.npc.traits.TriggerTrait;
 import net.aufdemrand.denizen.objects.dNPC;
 import net.aufdemrand.denizen.objects.dPlayer;
-import net.aufdemrand.denizen.scripts.ScriptEntry;
-import net.aufdemrand.denizen.scripts.commands.AbstractCommand;
+import net.aufdemrand.denizencore.scripts.ScriptEntry;
+import net.aufdemrand.denizencore.scripts.commands.AbstractCommand;
 import net.aufdemrand.denizen.scripts.containers.core.InteractScriptContainer;
 import net.aufdemrand.denizen.utilities.debugging.dB;
-import net.aufdemrand.denizen.utilities.debugging.dB.DebugElement;
+import net.aufdemrand.denizencore.utilities.debugging.dB.DebugElement;
 
 import net.citizensnpcs.api.npc.NPC;
 
@@ -113,7 +113,7 @@ public class DenizenHook {
 		}
 	}
 
-	private class DieCommand extends net.aufdemrand.denizen.scripts.commands.AbstractCommand {
+	private class DieCommand extends AbstractCommand {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
