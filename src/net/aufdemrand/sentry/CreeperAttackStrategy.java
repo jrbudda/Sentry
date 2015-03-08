@@ -1,7 +1,7 @@
 package net.aufdemrand.sentry;
 
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.craftbukkit.v1_8_R1.entity.CraftCreeper;
+import org.bukkit.craftbukkit.v1_8_R2.entity.CraftCreeper;
 
 public class CreeperAttackStrategy implements net.citizensnpcs.api.ai.AttackStrategy{
 
