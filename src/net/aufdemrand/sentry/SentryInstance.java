@@ -910,6 +910,9 @@ public class SentryInstance {
 		double mod = 0;
 		if ( getMyEntity() instanceof Player){
 			for (ItemStack is:((Player)getMyEntity()).getInventory().getArmorContents()){
+				if (is == null) {
+					continue;
+				}
 				if (plugin.ArmorBuffs.containsKey(is.getTypeId())) mod += plugin.ArmorBuffs.get(is.getTypeId());
 			}
 		}
