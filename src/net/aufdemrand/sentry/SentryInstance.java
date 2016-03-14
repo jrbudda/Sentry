@@ -693,7 +693,7 @@ public class SentryInstance {
 
 
 	public void Draw(boolean on){
-		((CraftLivingEntity)(getMyEntity())).getHandle().b(on); // TODO: 1.8 UPDATE - IS THIS CORRECT?
+		((CraftLivingEntity)(getMyEntity())).getHandle().b(on); // TODO: 1.9 UPDATE - IS THIS CORRECT?
 	}
 
 	public void Fire(LivingEntity theEntity) {

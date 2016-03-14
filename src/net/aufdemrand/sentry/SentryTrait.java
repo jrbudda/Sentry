@@ -2,6 +2,8 @@ package net.aufdemrand.sentry;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import net.citizensnpcs.api.event.CitizensReloadEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.ChatColor;
@@ -12,6 +14,7 @@ import net.citizensnpcs.api.exception.NPCLoadException;
 import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.util.DataKey;
 import net.citizensnpcs.trait.Toggleable;
+import org.bukkit.event.EventHandler;
 
 
 public class SentryTrait extends Trait implements Toggleable {
@@ -157,6 +160,15 @@ public class SentryTrait extends Trait implements Toggleable {
 	public void onAttach() {
 		plugin.debug(npc.getName() + ":" + npc.getId() + " onAttach");
 		isToggled = true;
+	}
+
+	@EventHandler
+	public void onCitReload(CitizensReloadEvent event) {
+		if (thisInstance != null) {
+			thisInstance.cancelRunnable();
+		}
+		thisInstance = null;
+		isToggled = false;
 	}
 
 	@Override
