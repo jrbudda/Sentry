@@ -522,6 +522,9 @@ public class SentryInstance {
 		if (getMyEntity() instanceof HumanEntity) {
 			//get drop inventory.
 			for( ItemStack is:	((HumanEntity) getMyEntity()).getInventory().getArmorContents()){
+				if (is == null) {
+					continue;
+				}
 				if (is.getTypeId()>0)	items.add(is);
 			}
 
