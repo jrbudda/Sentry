@@ -2,21 +2,22 @@ package net.aufdemrand.sentry;
 
 import java.util.Set;
 
+import net.aufdemrand.denizen.BukkitScriptEntryData;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import net.aufdemrand.denizen.Denizen;
-import net.aufdemrand.denizen.exceptions.CommandExecutionException;
-import net.aufdemrand.denizen.exceptions.InvalidArgumentsException;
+import net.aufdemrand.denizencore.exceptions.CommandExecutionException;
+import net.aufdemrand.denizencore.exceptions.InvalidArgumentsException;
 import net.aufdemrand.denizen.npc.traits.TriggerTrait;
 import net.aufdemrand.denizen.objects.dNPC;
 import net.aufdemrand.denizen.objects.dPlayer;
-import net.aufdemrand.denizen.scripts.ScriptEntry;
-import net.aufdemrand.denizen.scripts.commands.AbstractCommand;
+import net.aufdemrand.denizencore.scripts.ScriptEntry;
+import net.aufdemrand.denizencore.scripts.commands.AbstractCommand;
 import net.aufdemrand.denizen.scripts.containers.core.InteractScriptContainer;
 import net.aufdemrand.denizen.utilities.debugging.dB;
-import net.aufdemrand.denizen.utilities.debugging.dB.DebugElement;
+import net.aufdemrand.denizencore.utilities.debugging.dB.DebugElement;
 
 import net.citizensnpcs.api.npc.NPC;
 
@@ -28,7 +29,7 @@ public class DenizenHook {
 
 	public static boolean SentryDeath(Set<Player> _myDamamgers, NPC npc){
 		if (!DenizenActive) return false;
-		
+
 		try {
 			boolean a = false, b = false, c = false;
 
@@ -64,11 +65,11 @@ public class DenizenHook {
 
 	public static void DenizenAction(NPC npc, String action, org.bukkit.OfflinePlayer player){
 		if(DenizenActive){
-			dNPC dnpc = dNPC.mirrorCitizensNPC(npc);	
+			dNPC dnpc = dNPC.mirrorCitizensNPC(npc);
 			if (dnpc != null) {
 				try {
-					dnpc.action(action, dPlayer.mirrorBukkitPlayer(player));	
-				} catch (Exception e) {	
+					dnpc.action(action, dPlayer.mirrorBukkitPlayer(player));
+				} catch (Exception e) {
 				}
 			}
 		}
@@ -79,19 +80,19 @@ public class DenizenHook {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = theEntry.getNPC().getEntity();
+			LivingEntity ent = (LivingEntity) ((BukkitScriptEntryData)theEntry.entryData).getNPC().getEntity();
 
-			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
+			SentryInstance inst = ((BukkitScriptEntryData)theEntry.entryData).getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
 
 			if (ent!=null){
-				if (theEntry.getNPC().getCitizen().hasTrait(SentryTrait.class)){
+				if (((BukkitScriptEntryData)theEntry.entryData).getNPC().getCitizen().hasTrait(SentryTrait.class)){
 					boolean deaggro = false;
 
 					for(String arg : theEntry.getArguments()){
 						if (arg.equalsIgnoreCase("peace")) deaggro = true;
 					}
 
-					String db = "RISE! " + theEntry.getNPC().getName() + "!";
+					String db = "RISE! " + ((BukkitScriptEntryData)theEntry.entryData).getNPC().getName() + "!";
 					if (deaggro) db += " ..And fight no more!";
 					dB.log(db);
 
@@ -112,13 +113,14 @@ public class DenizenHook {
 		}
 	}
 
-	private class DieCommand extends net.aufdemrand.denizen.scripts.commands.AbstractCommand {
+	private class DieCommand extends AbstractCommand {
 
 		@Override
 		public void execute(ScriptEntry theEntry) throws CommandExecutionException {
-			LivingEntity ent = theEntry.getNPC().getEntity();
+			LivingEntity ent = (LivingEntity) ((BukkitScriptEntryData)theEntry.entryData).getNPC().getEntity();
 
-			SentryInstance inst = theEntry.getNPC().getCitizen().getTrait(SentryTrait.class).getInstance();
+			SentryInstance inst = ((BukkitScriptEntryData)theEntry.entryData).getNPC()
+					.getCitizen().getTrait(SentryTrait.class).getInstance();
 
 			if (inst!=null){
 				dB.log("Goodbye, cruel world... ");
@@ -153,7 +155,6 @@ public class DenizenHook {
 
 			// Check if trigger is enabled.
 			if (!npc.getTrait(TriggerTrait.class).isEnabled(name)) {
-				dB.echoDebug(DebugElement.Header,  this.getName() +  " Trigger not enabled");
 				return false;
 			}
 
@@ -193,7 +194,6 @@ public class DenizenHook {
 
 			// Check if trigger is enabled.
 			if (!npc.getTrait(TriggerTrait.class).isEnabled(name)) {
-				dB.echoDebug(DebugElement.Header,  this.getName() +  " Trigger not enabled");
 				return false;
 			}
 
@@ -205,7 +205,7 @@ public class DenizenHook {
 
 			for (Player thePlayer:_myDamamgers){
 
-				if(thePlayer !=null && thePlayer.getLocation().distance(npc.getBukkitEntity().getLocation()) > 300) {
+				if(thePlayer !=null && thePlayer.getLocation().distance(npc.getEntity().getLocation()) > 300) {
 					dB.echoDebug(DebugElement.Header,  thePlayer.getName()+ " is to far away.");
 					continue;
 				}

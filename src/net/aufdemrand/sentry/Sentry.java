@@ -31,6 +31,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scoreboard.Team;
 
 import com.palmergames.bukkit.towny.object.TownBlock;
 
@@ -317,6 +318,14 @@ public class Sentry extends JavaPlugin {
 		return null;
 	}
 
+	public String getMCTeamName(Player player){
+		Team t = getServer().getScoreboardManager().getMainScoreboard().getPlayerTeam(player);
+		if (t != null){
+			return t.getName();
+		}
+		return null;
+	}
+
 	boolean isNationEnemy(String Nation1, String Nation2) {
 		if (TownyActive == false)return false;
 		if (Nation1.equalsIgnoreCase(Nation2)) return false;
@@ -575,11 +584,11 @@ public class Sentry extends JavaPlugin {
 				player.sendMessage(ChatColor.RED + "You do not have permissions for that command.");
 				return true;
 			}
-			if (ThisNPC.getBukkitEntity() == null) {
+			if (ThisNPC.getEntity() == null) {
 				player.sendMessage(ChatColor.RED + "Cannot set spawn while " +  ThisNPC.getName()  + " is dead.");
 				return true;
 			}
-			inst.Spawn = ThisNPC.getBukkitEntity().getLocation();
+			inst.Spawn = ThisNPC.getEntity().getLocation();
 			player.sendMessage(ChatColor.GREEN + ThisNPC.getName() + " will respawn at its present location.");   // Talk to the player.
 			return true;
 
@@ -713,7 +722,7 @@ public class Sentry extends JavaPlugin {
 
 			inst.Targetable = set ==null ?  !inst.Targetable: set;
 			ThisNPC.data().set(NPC.TARGETABLE_METADATA, inst.Targetable);
-			
+
 			if (inst.Targetable) {
 				player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " will be targeted by mobs");   // Talk to the player.
 			}
@@ -750,22 +759,46 @@ public class Sentry extends JavaPlugin {
 				return true;
 			}		
 
+			boolean localonly = false;
+			boolean playersonly = false;
+			int start = 1;
+
+
 			if (args.length > 1) {
 
+				if (args[1].equalsIgnoreCase("-p")){
+					start = 2;
+					playersonly = true;
+				}
+
+				if (args[1].equalsIgnoreCase("-l")){
+					start = 2;
+					localonly = true;
+				}
+
 				String arg = "";
-				for (i=1;i<args.length;i++){
+				for (i=start;i<args.length;i++){
 					arg += " " + args[i];
 				}
 				arg = arg.trim();
 
+				boolean ok = false;
 
+				if(!playersonly){
+					ok = inst.setGuardTarget(arg, false);
+				}
 
-				if (inst.setGuardTarget(arg)) {
+				if(!localonly){
+					ok = inst.setGuardTarget(arg, true);
+				}
+
+				if (ok) {
 					player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now guarding "+ arg );   // Talk to the player.
 				}
 				else {
-					player.sendMessage(ChatColor.RED +  ThisNPC.getName() + " could not find " + arg + " in range.");   // Talk to the player.
+					player.sendMessage(ChatColor.RED +  ThisNPC.getName() + " could not find " + arg + ".");   // Talk to the player.	
 				}
+				
 			}
 
 			else
@@ -776,7 +809,7 @@ public class Sentry extends JavaPlugin {
 				else{
 					player.sendMessage(ChatColor.GREEN +  ThisNPC.getName() + " is now guarding its immediate area. " );   // Talk to the player.
 				}
-				inst.setGuardTarget(null);
+				inst.setGuardTarget(null, false);
 
 			}
 			return true;
@@ -1053,7 +1086,7 @@ public class Sentry extends JavaPlugin {
 			else {
 
 
-				if(ThisNPC.getBukkitEntity().getType() == org.bukkit.entity.EntityType.ENDERMAN || ThisNPC.getBukkitEntity().getType() == org.bukkit.entity.EntityType.PLAYER){
+				if(ThisNPC.getEntity().getType() == org.bukkit.entity.EntityType.ENDERMAN || ThisNPC.getEntity().getType() == org.bukkit.entity.EntityType.PLAYER){
 					if(args[1].equalsIgnoreCase("none")){
 						//remove equipment
 						equip(ThisNPC, null);
@@ -1172,7 +1205,7 @@ public class Sentry extends JavaPlugin {
 
 
 				if(arg.equalsIgnoreCase("nationenemies") && inst.myNPC.isSpawned()){
-					String natname = getNationNameForLocation(inst.myNPC.getBukkitEntity().getLocation());
+					String natname = getNationNameForLocation(inst.myNPC.getEntity().getLocation());
 					if (natname !=null) {
 						arg += ":" + natname;
 					}
